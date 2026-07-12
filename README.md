@@ -10,7 +10,7 @@
 
 ---
 
-## 🌟 What's Done (Phase 0-12) / ทำอะไรไปแล้ว
+## 🌟 What's Done (Phase 0-13) / ทำอะไรไปแล้ว
 
 | Phase | Status | What was shipped | Deliverable |
 |-------|--------|------------------|-------------|
@@ -168,6 +168,31 @@
 - To ship: `ssh root@5.231.28.248 'cd /mnt/16tb/codehub && python3 builder/ship.py --file /tmp/tokyo-student-life-codehub.html --slug tokyo-student-life --version v1.0 --category Games --description "..."'`
 
 **Live demo (Phase 12):** https://tabv1lol2s17.space.minimax.io
+
+### 🏆 NEW: Achievements + Vending + NPC Time-of-Day Dialogue (Phase 13)
+
+- ✅ **8 Achievements** — First Steps, World Wanderer, Day Master, Night Owl, Early Bird, Chatterbox, Shopaholic, Completionist
+- ✅ **Achievement system** — HUD panel bottom-left, toast notifications, sound on unlock
+- ✅ **Vending machine** — 4 drinks (water/tea/cola/milk) with prices + stamina restore
+- ✅ **Economy** — yen deduction on buy, stamina boost (+20-50), cooldown to prevent spam
+- ✅ **NPC time-of-day dialogue** — 5 NPCs × 4 time periods = 20 unique dialogue sets
+- ✅ **Senpai** says different things morning vs night
+- ✅ **Shopkeeper** says "Sorry, we're closed" at night, "Shop is open" in morning
+- ✅ **Conductor** mentions "Last train 23:30" at night, "Morning train" in morning
+- ✅ **Save/Load** persists yen, stamina, achievements, stats
+
+#### Phase 13 Test Results
+| Test | Result |
+|------|--------|
+| Achievements panel | ✅ 8 badges (locked: "?", unlocked: emoji) |
+| night_owl unlock at 23:00 | ✅ |
+| first_steps at 50m walk | ✅ |
+| world_wanderer at 5 zones | ✅ |
+| NPC night dialogue | ✅ "The night is peaceful here" (Miko) |
+| NPC morning dialogue | ✅ Different from night |
+| 0 JS errors | ✅ |
+
+**Live demo (Phase 13):** https://8bu5eowarv1h.space.minimax.io
 
 ---
 
