@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tokyo Student Life — เกมชีวิตนักเรียนญี่ปุ่น</title>
+<meta name="description" content="A cozy slice-of-life walking sim — 5 zones in modern Tokyo. Bilingual TH/EN/JA. Built with Three.js + Game Art Package methodology.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #E8B4BC;
+  --primary-soft: #F5DCE0;
+  --secondary: #2D4A6B;
+  --secondary-soft: #5A7794;
+  --accent: #FFB347;
+  --accent-soft: #FFD194;
+  --neutral: #F5F0E6;
+  --neutral-warm: #EAE0CE;
+  --shadow: #4A3F5C;
+  --sky: #B8DCE6;
+  --green: #6B8E5A;
+  --text: #2A2A2A;
+  --text-soft: #5C5C5C;
+  --line: rgba(74, 63, 92, 0.12);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Sarabun', 'Inter', sans-serif;
+  background: var(--neutral);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+  font-weight: 400;
+}
+.en { font-family: 'Inter', sans-serif; }
+.ja { font-family: 'Noto Sans JP', sans-serif; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ====== HERO ====== */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  background: 
+    radial-gradient(ellipse at 20% 30%, rgba(232, 180, 188, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(184, 220, 230, 0.4) 0%, transparent 50%),
+    linear-gradient(180deg, #FAF6EE 0%, #F5E8D4 50%, #E8D5BC 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 4rem 2rem;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(255, 179, 71, 0.15) 0%, transparent 3%),
+    radial-gradient(circle at 30% 80%, rgba(232, 180, 188, 0.4) 0%, transparent 2%),
+    radial-gradient(circle at 60% 30%, rgba(232, 180, 188, 0.5) 0%, transparent 2.5%),
+    radial-gradient(circle at 80% 60%, rgba(232, 180, 188, 0.3) 0%, transparent 2%),
+    radial-gradient(circle at 50% 90%, rgba(255, 179, 71, 0.2) 0%, transparent 3%),
+    radial-gradient(circle at 90% 10%, rgba(232, 180, 188, 0.4) 0%, transparent 2%);
+  pointer-events: none;
+}
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 900px;
+}
+.hero-badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--secondary);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--line);
+  padding: 0.4rem 1rem;
+  border-radius: 100px;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+}
+.hero-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: var(--secondary);
+  margin-bottom: 1rem;
+}
+.hero-title .accent {
+  font-style: italic;
+  color: #C77B8A;
+  font-weight: 400;
+}
+.hero-jp {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  color: var(--shadow);
+  margin-bottom: 2rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+}
+.hero-subtitle {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: var(--text-soft);
+  margin-bottom: 1rem;
+  font-weight: 400;
+}
+.hero-tagline {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  font-style: italic;
+  color: var(--secondary-soft);
+  margin-bottom: 3rem;
+}
+.hero-meta {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-soft);
+  margin-bottom: 3rem;
+}
+.hero-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.hero-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--secondary);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 100px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+  border: 1px solid var(--secondary);
+}
+.hero-cta:hover {
+  background: transparent;
+  color: var(--secondary);
+  transform: translateY(-2px);
+}
+.hero-cta .arrow { transition: transform 0.3s; }
+.hero-cta:hover .arrow { transform: translateX(4px); }
+
+/* Sakura petals */
+.petal {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(ellipse at center, #FFCCD5 0%, #E8B4BC 70%, transparent 100%);
+  border-radius: 80% 0 55% 50% / 55% 0 80% 50%;
+  pointer-events: none;
+  animation: fall linear infinite;
+  z-index: 1;
+  opacity: 0.7;
+}
+@keyframes fall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.7; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* ====== SECTIONS ====== */
+section {
+  padding: 6rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+.section-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 300;
+  color: var(--secondary);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+.section-title-jp {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1rem;
+  color: var(--text-soft);
+  font-weight: 300;
+  margin-bottom: 1rem;
+}
+.section-desc {
+  max-width: 600px;
+  margin: 0 auto;
+  color: var(--text-soft);
+  font-size: 1.05rem;
+}
+
+/* ====== CONCEPT ====== */
+.concept {
+  background: linear-gradient(180deg, var(--neutral) 0%, #FAF6EE 100%);
+}
+.concept-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: start;
+  margin-top: 3rem;
+}
+.concept-side h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--secondary);
+  margin-bottom: 1rem;
+}
+.concept-side p {
+  color: var(--text-soft);
+  margin-bottom: 1rem;
+}
+.concept-bilingual {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+}
+.bilingual-row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 1.5rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.bilingual-row:last-child { border-bottom: none; }
+.bilingual-lang {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  padding-top: 0.3rem;
+}
+.bilingual-text { color: var(--text); }
+.bilingual-text .role {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  display: block;
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 768px) {
+  .concept-grid { grid-template-columns: 1fr; gap: 2rem; }
+}
+
+/* ====== ZONES ====== */
+.zones {
+  background: linear-gradient(180deg, #FAF6EE 0%, var(--neutral) 100%);
+}
+.zones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+.zone-card {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  overflow: hidden;
+  transition: all 0.3s;
+  position: relative;
+  backdrop-filter: blur(10px);
+}
+.zone-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(74, 63, 92, 0.1);
+}
+.zone-visual {
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+}
+.zone-1 .zone-visual { background: linear-gradient(135deg, #FAF0E1 0%, #F5DCE0 50%, #FFD194 100%); }
+.zone-2 .zone-visual { background: linear-gradient(135deg, #E8F4F8 0%, #C8E6A0 50%, #F5F0E6 100%); }
+.zone-3 .zone-visual { background: linear-gradient(135deg, #FFE4D6 0%, #FFB347 60%, #FF6B35 100%); }
+.zone-4 .zone-visual { background: linear-gradient(135deg, #1A1A2E 0%, #FF6B35 50%, #FF1493 100%); color: white; }
+.zone-5 .zone-visual { background: linear-gradient(135deg, #F5E8D4 0%, #CC4A2C 30%, #8B6F47 100%); }
+.zone-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.3) 0%, transparent 30%),
+    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.2) 0%, transparent 30%);
+}
+.zone-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 5rem;
+  z-index: 2;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+}
+.zone-content { padding: 1.5rem 1.8rem 2rem; }
+.zone-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+  margin-bottom: 0.4rem;
+}
+.zone-name {
+  font-family: 'Fraunces', serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--secondary);
+  margin-bottom: 0.2rem;
+  letter-spacing: -0.01em;
+}
+.zone-name-jp {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.95rem;
+  color: var(--text-soft);
+  font-weight: 300;
+  margin-bottom: 0.3rem;
+}
+.zone-name-en {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.zone-feature {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+.zone-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.zone-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.7rem;
+  background: rgba(74, 63, 92, 0.05);
+  color: var(--text-soft);
+  border-radius: 100px;
+}
+.zone-tag.time { background: rgba(255, 179, 71, 0.15); color: #B8702A; }
+.zone-tag.mood { background: rgba(232, 180, 188, 0.2); color: #C77B8A; }
+
+/* ====== PRINCIPLES ====== */
+.principles {
+  background: linear-gradient(180deg, var(--neutral) 0%, #FAF6EE 100%);
+}
+.principles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 3rem;
+}
+.principle {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+.principle-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+  margin-bottom: 0.5rem;
+}
+.principle-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.15rem;
+  color: var(--secondary);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+.principle-desc { font-size: 0.9rem; color: var(--text-soft); }
+
+/* ====== ANTI-REFERENCES ====== */
+.anti {
+  background: linear-gradient(180deg, #FAF6EE 0%, #F0E5D0 100%);
+}
+.anti-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 3rem;
+}
+.anti-card {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(204, 74, 44, 0.2);
+  border-radius: 16px;
+  padding: 1.2rem;
+  position: relative;
+}
+.anti-card::before {
+  content: '✕';
+  position: absolute;
+  top: 0.8rem;
+  right: 1rem;
+  color: #CC4A2C;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+.anti-title {
+  font-weight: 500;
+  color: #8B3020;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+  padding-right: 1.5rem;
+}
+.anti-desc { font-size: 0.85rem; color: var(--text-soft); }
+
+/* ====== PHASES ====== */
+.phases {
+  background: linear-gradient(180deg, #F0E5D0 0%, var(--neutral) 100%);
+}
+.phases-timeline {
+  margin-top: 3rem;
+  position: relative;
+}
+.phase {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  gap: 2rem;
+  padding: 1.5rem 0;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+.phase:last-child { border-bottom: none; }
+.phase-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-soft);
+  letter-spacing: 0.1em;
+}
+.phase-content {}
+.phase-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem;
+  color: var(--secondary);
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+.phase-desc { font-size: 0.9rem; color: var(--text-soft); }
+.phase-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 100px;
+  letter-spacing: 0.1em;
+}
+.phase-status.done { background: rgba(107, 142, 90, 0.2); color: #4A6B3A; }
+.phase-status.next { background: rgba(255, 179, 71, 0.2); color: #B8702A; }
+.phase-status.pending { background: rgba(74, 63, 92, 0.08); color: var(--text-soft); }
+
+@media (max-width: 768px) {
+  .phase { grid-template-columns: 50px 1fr; gap: 1rem; }
+  .phase-status { grid-column: 2; justify-self: start; }
+}
+
+/* ====== META / FOOTER ====== */
+.meta {
+  background: var(--secondary);
+  color: white;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+.meta-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.8rem;
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+.meta-jp {
+  font-family: 'Noto Sans JP', sans-serif;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 2rem;
+  font-weight: 300;
+}
+.meta-stats {
+  display: flex;
+  gap: 3rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  margin-bottom: 3rem;
+}
+.meta-stat { color: rgba(255, 255, 255, 0.7); }
+.meta-stat strong { color: var(--accent-soft); font-size: 1.4rem; display: block; font-weight: 500; }
+.meta-link {
+  color: var(--accent-soft);
+  text-decoration: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+}
+.meta-link:hover { color: white; }
+
+/* ====== MAP ====== */
+.map-section {
+  background: var(--neutral);
+  padding: 4rem 2rem;
+}
+.map-wrap {
+  max-width: 700px;
+  margin: 0 auto;
+  position: relative;
+  aspect-ratio: 1;
+  background: 
+    radial-gradient(circle at center, #F5E8D4 0%, #E8D5BC 100%);
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  padding: 2rem;
+}
+.map-zone {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.8rem 1.2rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--secondary);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  z-index: 2;
+}
+.map-zone-icon { font-size: 1.8rem; }
+.map-zone-num {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+.z1 { top: 5%; left: 50%; transform: translateX(-50%); }
+.z2 { top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--secondary); color: white; }
+.z3 { bottom: 18%; left: 50%; transform: translateX(-50%); }
+.z4 { top: 50%; right: 5%; transform: translateY(-50%); }
+.z5 { top: 50%; left: 5%; transform: translateY(-50%); }
+.map-line {
+  position: absolute;
+  background: var(--secondary-soft);
+  z-index: 1;
+  opacity: 0.4;
+}
+.map-line-v { width: 2px; height: 60%; top: 20%; left: 50%; transform: translateX(-50%); }
+.map-line-h { height: 2px; width: 60%; top: 50%; left: 20%; transform: translateY(-50%); }
+
+@media (max-width: 600px) {
+  .map-wrap { padding: 1rem; }
+  .map-zone { font-size: 0.7rem; padding: 0.5rem 0.8rem; }
+  .map-zone-icon { font-size: 1.3rem; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ====== HERO ====== -->
+<header class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">CONCEPT v1.0 — 2026-07-12</div>
+    <h1 class="hero-title">
+      Tokyo<br><span class="accent">Student Life</span>
+    </h1>
+    <div class="hero-jp">東京学生生活</div>
+    <p class="hero-subtitle">เกมชีวิตนักเรียนญี่ปุ่น — A cozy slice-of-life walking sim</p>
+    <p class="hero-tagline en">5 zones · 1 day · 1000 small joys</p>
+    <div class="hero-meta">
+      <span><span class="hero-dot"></span> 3D · Three.js</span>
+      <span><span class="hero-dot"></span> TH + EN + JA</span>
+      <span><span class="hero-dot"></span> Game Art Package</span>
+    </div>
+    <a href="#zones" class="hero-cta">
+      <span>Explore the concept</span>
+      <span class="arrow">→</span>
+    </a>
+  </div>
+</header>
+
+<!-- ====== CONCEPT ====== -->
+<section class="concept">
+  <div class="section-header">
+    <div class="section-num">01 — THE CONCEPT</div>
+    <h2 class="section-title">A Day in Setagaya</h2>
+    <div class="section-title-jp">世田谷での一日</div>
+    <p class="section-desc">
+      Modern Tokyo, late spring. A second-year high school student cycles through 5 zones in one ordinary day — and finds that ordinary is beautiful.
+    </p>
+  </div>
+  <div class="concept-grid">
+    <div class="concept-side">
+      <h3>What it is</h3>
+      <p>เกม <em class="en">walking sim</em> ที่ไม่มี <em class="en">win condition</em> ไม่มี mission ไม่มี combat — แค่ผู้เล่นเดินสำรวจ 5 โซน คุยกับ NPC ซื้อของกิน นั่งอ่านหนังสือ และฟังเสียงชีวิตจริง</p>
+      <p>Visual style: <strong>Ghibli-pastel modern</strong> — soft edges, warm lighting, สีพาสเทล ไม่ glossy ไม่ cyberpunk ไม่ photorealistic</p>
+      <p>ผู้เล่นเลือกได้ 2 เพศ เปลี่ยนชุดได้ ใช้จักรยานได้ ถ่ายรูปในใจได้ แต่ไม่มี HP ไม่มี EXP ไม่มี fail state</p>
+    </div>
+    <div class="concept-bilingual">
+      <div class="bilingual-row">
+        <div class="bilingual-lang">TH</div>
+        <div class="bilingual-text">
+          อธิบาย — narrative
+          <span class="role">ใช้ใน dialog, hint, story</span>
+        </div>
+      </div>
+      <div class="bilingual-row">
+        <div class="bilingual-lang en">EN</div>
+        <div class="bilingual-text en">
+          Label — action
+          <span class="role en">HUD, menu, buttons</span>
+        </div>
+      </div>
+      <div class="bilingual-row">
+        <div class="bilingual-lang ja">JA</div>
+        <div class="bilingual-text ja">
+          Authentic — signage
+          <span class="role ja">ป้ายร้าน, ชื่อเฉพาะ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== ZONES ====== -->
+<section class="zones" id="zones">
+  <div class="section-header">
+    <div class="section-num">02 — THE 5 ZONES</div>
+    <h2 class="section-title">Five worlds, one afternoon</h2>
+    <div class="section-title-jp">五つのゾーン</div>
+    <p class="section-desc">
+      โซนต่างกัน อารมณ์ต่างกัน เวลาต่างกัน แต่ทุกโซนใช้ material และ lighting เดียวกัน — เป็นโลกเดียวกัน
+    </p>
+  </div>
+  
+  <div class="zones-grid">
+    <div class="zone-card zone-1">
+      <div class="zone-visual"><div class="zone-icon">🏠</div></div>
+      <div class="zone-content">
+        <div class="zone-num">ZONE 01</div>
+        <h3 class="zone-name">บ้าน</h3>
+        <div class="zone-name-jp">ホーム · Home</div>
+        <div class="zone-name-en">Apartment 1DK</div>
+        <p class="zone-feature">อพาร์ตเมนต์เล็ก 1 ห้อง + ครัว + ระเบียง แสงเช้าผ่านม่าน ฟูกพับเก็บ ชุดนักเรียนแขวน</p>
+        <div class="zone-meta">
+          <span class="zone-tag time">07:00</span>
+          <span class="zone-tag mood">อบอุ่น</span>
+          <span class="zone-tag en">0-1 NPC</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="zone-card zone-2">
+      <div class="zone-visual"><div class="zone-icon">🏫</div></div>
+      <div class="zone-content">
+        <div class="zone-num">ZONE 02</div>
+        <h3 class="zone-name">โรงเรียน</h3>
+        <div class="zone-name-jp">学校 · School</div>
+        <div class="zone-name-en">No. 2 Middle School</div>
+        <p class="zone-feature">อาคาร 3 ชั้น + สนาม + ต้นซากุระ ห้องเรียน 1-A ห้องชมรม ดาดฟ้า ระฆังเช้า</p>
+        <div class="zone-meta">
+          <span class="zone-tag time">12:00</span>
+          <span class="zone-tag mood">สดใส</span>
+          <span class="zone-tag en">5-10 NPC</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="zone-card zone-3">
+      <div class="zone-visual"><div class="zone-icon">🚉</div></div>
+      <div class="zone-content">
+        <div class="zone-num">ZONE 03</div>
+        <h3 class="zone-name">สถานีรถไฟ</h3>
+        <div class="zone-name-jp">駅 · Station</div>
+        <div class="zone-name-en">JR Sakuradai</div>
+        <p class="zone-feature">สถานี JR เล็ก + ทางม้าลาย + ร้านสะดวกซื้อ + ตู้ขายของ 3-4 ตู้ คนเร่งรีบกลับบ้าน</p>
+        <div class="zone-meta">
+          <span class="zone-tag time">17:30</span>
+          <span class="zone-tag mood">เปลี่ยนผ่าน</span>
+          <span class="zone-tag en">5-10 NPC</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="zone-card zone-4">
+      <div class="zone-visual"><div class="zone-icon">🛍️</div></div>
+      <div class="zone-content">
+        <div class="zone-num">ZONE 04</div>
+        <h3 class="zone-name">ย่านช้อปปิ้ง</h3>
+        <div class="zone-name-jp">商店街 · Shopping</div>
+        <div class="zone-name-en">Local Arcade</div>
+        <p class="zone-feature">ตึกช้อป 3-4 ชั้น + ตรอกอาหาร + ร้านราเมง + อาร์เคด ป้ายนีออน subtle คนเยอะสุดในเกม</p>
+        <div class="zone-meta">
+          <span class="zone-tag time">19:00</span>
+          <span class="zone-tag mood">คึกคัก</span>
+          <span class="zone-tag en">15-20 NPC</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="zone-card zone-5">
+      <div class="zone-visual"><div class="zone-icon">⛩️</div></div>
+      <div class="zone-content">
+        <div class="zone-num">ZONE 05</div>
+        <h3 class="zone-name">ศาลเจ้า + สวน</h3>
+        <div class="zone-name-jp">神社 · Shrine</div>
+        <div class="zone-name-en">Sakurayama Shrine</div>
+        <p class="zone-feature">โทริอิแดง + ศาลเจ้า + บ่อ koi + สะพานไม้ + ต้นกิงโกะ เงียบสงบ กลีบซากุระปลิว</p>
+        <div class="zone-meta">
+          <span class="zone-tag time">16:00</span>
+          <span class="zone-tag mood">สงบ</span>
+          <span class="zone-tag en">0-2 NPC</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== MAP ====== -->
+<section class="map-section">
+  <div class="section-header">
+    <div class="section-num">03 — WORLD MAP</div>
+    <h2 class="section-title">Connected by streets</h2>
+    <div class="section-title-jp">町の地図</div>
+  </div>
+  <div class="map-wrap">
+    <div class="map-line map-line-v"></div>
+    <div class="map-line map-line-h"></div>
+    <div class="map-zone z1">
+      <span class="map-zone-num">01</span>
+      <span class="map-zone-icon">🏠</span>
+      <span>Home</span>
+    </div>
+    <div class="map-zone z2">
+      <span class="map-zone-num">02</span>
+      <span class="map-zone-icon">🏫</span>
+      <span>School</span>
+    </div>
+    <div class="map-zone z3">
+      <span class="map-zone-num">03</span>
+      <span class="map-zone-icon">🚉</span>
+      <span>Station</span>
+    </div>
+    <div class="map-zone z4">
+      <span class="map-zone-num">04</span>
+      <span class="map-zone-icon">🛍️</span>
+      <span>Shopping</span>
+    </div>
+    <div class="map-zone z5">
+      <span class="map-zone-num">05</span>
+      <span class="map-zone-icon">⛩️</span>
+      <span>Shrine</span>
+    </div>
+  </div>
+</section>
+
+<!-- ====== PRINCIPLES ====== -->
+<section class="principles">
+  <div class="section-header">
+    <div class="section-num">04 — DESIGN PRINCIPLES</div>
+    <h2 class="section-title">10 rules of the world</h2>
+    <div class="section-title-jp">設計原則</div>
+    <p class="section-desc">ทุก asset / scene / code ต้องเช็คกับ 10 ข้อนี้ก่อน ship</p>
+  </div>
+  <div class="principles-grid">
+    <div class="principle">
+      <div class="principle-num">01</div>
+      <h3 class="principle-title">🌡️ Mood > Detail</h3>
+      <p class="principle-desc">เลือก "ฉากเรียบง่าย แต่อบอุ่น" เหนือ "ฉากละเอียด แต่ดูแข็ง"</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">02</div>
+      <h3 class="principle-title">🌅 Time Tells Story</h3>
+      <p class="principle-desc">07:00 = แสงเช้า · 12:00 = แสงแข็ง · 17:30 = ทอง · 19:00 = ค่ำ · 22:00 = ดาว</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">03</div>
+      <h3 class="principle-title">🤫 Silence is OK</h3>
+      <p class="principle-desc">เกม "เงียบ" ได้ — เงียบแล้วรู้สึก "อยู่คนเดียว" ตามสไตล์ญี่ปุ่น</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">04</div>
+      <h3 class="principle-title">🌐 Bilingual = Respect</h3>
+      <p class="principle-desc">TH = อธิบาย · EN = label · JA = authentic ไม่แปลตรงตัว</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">05</div>
+      <h3 class="principle-title">👤 Character > Object</h3>
+      <p class="principle-desc">ทุก object มีเจ้าของ — รองเท้าเรียง แปรงสีฟันใช้แล้ว หนังสือเปิดค้าง</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">06</div>
+      <h3 class="principle-title">🚶 Walk, Don't Run</h3>
+      <p class="principle-desc">เกมนี้คือการ "ใส่ใจ" ไม่ใช่ "เร่งรีบ" — walking pace เป็น default</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">07</div>
+      <h3 class="principle-title">🔄 Loop is OK</h3>
+      <p class="principle-desc">ทำกิจวัตรซ้ำได้ แต่ละ loop มีรายละเอียดเปลี่ยน (คน แสง เพลง)</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">08</div>
+      <h3 class="principle-title">🎵 Sound = Half The Game</h3>
+      <p class="principle-desc">BGM เป็น background ที่รู้สึกได้ แต่ไม่ตั้งใจฟัง — ambient สำคัญกว่า BGM</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">09</div>
+      <h3 class="principle-title">🚫 No Hand-Holding</h3>
+      <p class="principle-desc">ไม่มี tutorial pop-up ไม่มี marker ให้ผู้เล่นเดินเอง หาเอง</p>
+    </div>
+    <div class="principle">
+      <div class="principle-num">10</div>
+      <h3 class="principle-title">🏠 Honest Mundane</h3>
+      <p class="principle-desc">"ความสวยงามของวันธรรมดา" — Wabi-sabi ไม่ใช่แฟนตาซี</p>
+    </div>
+  </div>
+</section>
+
+<!-- ====== ANTI-REFERENCES ====== -->
+<section class="anti">
+  <div class="section-header">
+    <div class="section-num">05 — ANTI-REFERENCES</div>
+    <h2 class="section-title">"ดูเหมือนใช่ แต่ผิด"</h2>
+    <div class="section-title-jp">避けたいもの</div>
+    <p class="section-desc">สิ่งที่ห้ามทำ แม้จะดูเหมือน Tokyo — 15 ข้อ</p>
+  </div>
+  <div class="anti-grid">
+    <div class="anti-card">
+      <div class="anti-title">Cyberpunk Neon Tokyo</div>
+      <div class="anti-desc">Akihabara ยามค่ำ ไฟ neon ทุกหน้าต่าง</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Anime 2D Look</div>
+      <div class="anti-desc">Cel-shaded 3D ดูเหมือน 2D anime</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Tourist Spot</div>
+      <div class="anti-desc">Sensōji, Shibuya crossing, Tokyo Tower</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Over-Saturated</div>
+      <div class="anti-desc">"ญี่ปุ่น = สีจัด" ไม่จริง ใช้ pastel</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Kawaii Mascot</div>
+      <div class="anti-desc">Hello Kitty style ไม่ใช่ตัวละคร high school</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Cold/Blue Tone</div>
+      <div class="anti-desc">เกมเรา warm 70% + cool 30% ไม่ใช่ blue</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Cosplay Uniform</div>
+      <div class="anti-desc">ชุดนักเรียนอนิเมะ โชว์ สั้น</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Rain Always</div>
+      <div class="anti-desc">Tokyo ไม่ได้ฝนตกตลอด เน้น spring clear</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Dense Crowd</div>
+      <div class="anti-desc">Shibuya crossing 300+ คน ไม่ใช่ residential</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Pet Mascot</div>
+      <div class="anti-desc">หมา/แมวคู่ใจ เดินตาม player ไม่มี</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Magic/Supernatural</div>
+      <div class="anti-desc">ผี เทพ คาถา ไม่มี เกม realistic</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Combat/Quest</div>
+      <div class="anti-desc">mission, boss, weapon, HP ไม่มี</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Hyper-Active NPC</div>
+      <div class="anti-desc">ญี่ปุ่น = polite ไม่ hurrying ไม่ตะโกน</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Cliche SFX</div>
+      <div class="anti-desc">coin sound, level up sound ไม่มี</div>
+    </div>
+    <div class="anti-card">
+      <div class="anti-title">Generic UI</div>
+      <div class="anti-desc">RPG bar หนาๆ เกมเรา minimal soft</div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== PHASES ====== -->
+<section class="phases">
+  <div class="section-header">
+    <div class="section-num">06 — ROADMAP</div>
+    <h2 class="section-title">From concept to playable</h2>
+    <div class="section-title-jp">開発ロードマップ</div>
+    <p class="section-desc">12 phases · ~23 hours · 5-6 sessions · Game Art Package methodology</p>
+  </div>
+  <div class="phases-timeline">
+    <div class="phase">
+      <div class="phase-num">00</div>
+      <div class="phase-content">
+        <div class="phase-title">Concept Lock</div>
+        <div class="phase-desc">concept.md · design_principles · anti-references · 5 zones · bilingual guide</div>
+      </div>
+      <div class="phase-status done">DONE</div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">1A</div>
+      <div class="phase-content">
+        <div class="phase-title">Art Bible</div>
+        <div class="phase-desc">visual style · color palette · typography · shape language · lighting mood</div>
+      </div>
+      <div class="phase-status next">NEXT</div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">1B</div>
+      <div class="phase-content">
+        <div class="phase-title">Materials & Textures ⭐</div>
+        <div class="phase-desc">20+ PBR materials · wood · tatami · shoji · concrete · fabric · glass</div>
+      </div>
+      <div class="phase-status pending">PENDING</div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">1C</div>
+      <div class="phase-content">
+        <div class="phase-title">Lighting</div>
+        <div class="phase-desc">5 time-of-day presets · morning · noon · sunset · evening · night</div>
+      </div>
+      <div class="phase-status pending">PENDING</div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">2A</div>
+      <div class="phase-content">
+        <div class="phase-title">Environment</div>
+        <div class="phase-desc">ground · water · vegetation · props · street furniture per zone</div>
+      </div>
+      <div class="phase-status pending">PENDING</div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">2B</div>
+      <div class="phase-content">
+        <div class="phase-title">Buildings</div>
+        <div class="phase-desc">~20 buildings across 5 zones · apartment · school · station · shops · shrine</div>
+      </div>
+      <div class="phase-status pending">PENDING</div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">2C</div>
+      <div class="phase-content">
+        <div class="phase-title">Characters</div>
+        <div class="phase-desc">10 characters · player (boy/girl) · mother · classmates · teacher · NPCs</div>
+      </div>
+      <div class="phase-status pending">PENDING</div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">3A-3F</div>
+      <div class="phase-content">
+        <div class="phase-title">Polish (Camera, Effects, Audio, Physics, UI, Optimization)</div>
+        <div class="phase-desc">6 categories of polish · bilingual i18n · zone-based loading</div>
+      </div>
+      <div class="phase-status pending">PENDING</div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">3G</div>
+      <div class="phase-content">
+        <div class="phase-title">Story / Voice Bible</div>
+        <div class="phase-desc">world lore · naming · voice tone · 15 dialog samples · quest log</div>
+      </div>
+      <div class="phase-status pending">PENDING</div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">4A</div>
+      <div class="phase-content">
+        <div class="phase-title">Three.js Demo</div>
+        <div class="phase-desc">5 zones assembly · streaming · 60 FPS · deploy to codehub.sj88ai.com</div>
+      </div>
+      <div class="phase-status pending">PENDING</div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">4B</div>
+      <div class="phase-content">
+        <div class="phase-title">Verification</div>
+        <div class="phase-desc">40+ checklist items · consistency test · screenshots · deploy log</div>
+      </div>
+      <div class="phase-status pending">PENDING</div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== FOOTER ====== -->
+<footer class="meta">
+  <h2 class="meta-title">Built with Game Art Package</h2>
+  <div class="meta-jp">ゲームアートパッケージ方式で構築</div>
+  <p style="max-width: 600px; margin: 0 auto 2rem; color: rgba(255,255,255,0.7); font-size: 0.95rem;">
+    เมื่อ AI ทำงานภายใต้ "กฎของโลก" — DNA ของเกม — ทุก asset จะออกมาเป็นโลกเดียวกัน โดยแทบไม่ต้องแก้งานซ้ำ
+  </p>
+  <div class="meta-stats">
+    <div class="meta-stat"><strong>5</strong>Zones</div>
+    <div class="meta-stat"><strong>~20</strong>Buildings</div>
+    <div class="meta-stat"><strong>10</strong>Characters</div>
+    <div class="meta-stat"><strong>20+</strong>Materials</div>
+    <div class="meta-stat"><strong>3</strong>Languages</div>
+  </div>
+  <a href="https://codehub.sj88ai.com/" class="meta-link">codehub.sj88ai.com →</a>
+  <div style="margin-top: 3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.4);">
+    Concept v1.0 · 2026-07-12 · Phase 0 of 12 complete
+  </div>
+</footer>
+
+<script>
+// ====== Sakura petals animation ======
+function createPetals(count) {
+  const hero = document.querySelector('.hero');
+  for (let i = 0; i < count; i++) {
+    const petal = document.createElement('div');
+    petal.className = 'petal';
+    const size = 8 + Math.random() * 12;
+    petal.style.width = size + 'px';
+    petal.style.height = size + 'px';
+    petal.style.left = Math.random() * 100 + '%';
+    petal.style.animationDuration = (10 + Math.random() * 15) + 's';
+    petal.style.animationDelay = Math.random() * 10 + 's';
+    petal.style.opacity = 0.3 + Math.random() * 0.4;
+    hero.appendChild(petal);
+  }
+}
+createPetals(20);
+
+// ====== Smooth scroll for anchor links ======
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// ====== Reveal animations on scroll ======
+const observerOptions = {
+  threshold: 0.1,
+  rootMargin: '0px 0px -50px 0px'
+};
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, observerOptions);
+
+document.querySelectorAll('.zone-card, .principle, .anti-card, .phase').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+  observer.observe(el);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,315 @@
+{
+  "name": "Tokyo Student Life — Ghibli Pastel",
+  "version": "1.0",
+  "description": "Color palette หลักของเกม — ใช้ร่วมกันทั้ง 5 zones เพื่อให้เป็นโลกเดียวกัน",
+
+  "primary": {
+    "sakura_pink": {
+      "hex": "#E8B4BC",
+      "rgb": [232, 180, 188],
+      "hsl": [350, 50, 81],
+      "usage": "sakura, accent, romantic, soft focus",
+      "weight": 0.10,
+      "category": "accent"
+    },
+    "school_navy": {
+      "hex": "#2D4A6B",
+      "rgb": [45, 74, 107],
+      "hsl": [212, 41, 30],
+      "usage": "uniform, school, secondary, anchor color",
+      "weight": 0.15,
+      "category": "primary"
+    },
+    "ramen_orange": {
+      "hex": "#FFB347",
+      "rgb": [255, 179, 71],
+      "hsl": [33, 100, 64],
+      "usage": "lighting, accent, food, warm highlight",
+      "weight": 0.08,
+      "category": "accent"
+    },
+    "warm_cream": {
+      "hex": "#F5F0E6",
+      "rgb": [245, 240, 230],
+      "hsl": [37, 44, 93],
+      "usage": "neutral, building, paper, base color",
+      "weight": 0.25,
+      "category": "neutral"
+    },
+    "dusk_purple": {
+      "hex": "#4A3F5C",
+      "rgb": [74, 63, 92],
+      "hsl": [263, 19, 30],
+      "usage": "shadow, night, accent, depth",
+      "weight": 0.07,
+      "category": "shadow"
+    },
+    "sky_cyan": {
+      "hex": "#B8DCE6",
+      "rgb": [184, 220, 230],
+      "hsl": [196, 47, 81],
+      "usage": "sky, water, cool accent, atmosphere",
+      "weight": 0.15,
+      "category": "neutral"
+    },
+    "leaf_green": {
+      "hex": "#6B8E5A",
+      "rgb": [107, 142, 90],
+      "hsl": [104, 22, 45],
+      "usage": "vegetation, shrine, nature, ground",
+      "weight": 0.10,
+      "category": "primary"
+    },
+    "wood_brown": {
+      "hex": "#8B6F47",
+      "rgb": [139, 111, 71],
+      "hsl": [31, 32, 41],
+      "usage": "wood, structure, warmth, neutral earth",
+      "weight": 0.10,
+      "category": "primary"
+    }
+  },
+
+  "secondary": {
+    "sakura_soft": {"hex": "#F5DCE0", "usage": "soft highlight, dawn light"},
+    "sakura_deep": {"hex": "#C77B8A", "usage": "deeper accent, mature flower"},
+    "navy_soft": {"hex": "#5A7794", "usage": "lighter navy, fabric"},
+    "navy_deep": {"hex": "#1A2F4A", "usage": "darker navy, shadow"},
+    "cream_pure": {"hex": "#FAF6EE", "usage": "highlight, paper"},
+    "cream_warm": {"hex": "#EAE0CE", "usage": "warm shadow, paper aged"},
+    "orange_warm": {"hex": "#FF8C42", "usage": "sunset, neon subtle"},
+    "orange_soft": {"hex": "#FFD194", "usage": "soft light, golden hour"},
+    "purple_soft": {"hex": "#7A6B92", "usage": "twilight, evening ambient"},
+    "purple_dark": {"hex": "#2D2840", "usage": "night sky, deep shadow"},
+    "sky_bright": {"hex": "#D6EEF5", "usage": "clear sky, morning light"},
+    "sky_dark": {"hex": "#7FB5C7", "usage": "evening sky, distant"},
+    "green_bright": {"hex": "#A8C490", "usage": "new leaf, fresh grass"},
+    "green_dark": {"hex": "#4A6B3A", "usage": "deep leaf, forest shadow"},
+    "wood_light": {"hex": "#C8A26A", "usage": "light wood, oak"},
+    "wood_dark": {"hex": "#5C4530", "usage": "dark wood, walnut"},
+    "concrete_warm": {"hex": "#B8AFA0", "usage": "warm concrete, building"},
+    "concrete_cool": {"hex": "#7A7B7A", "usage": "cool concrete, sidewalk"}
+  },
+
+  "material_colors": {
+    "wood_japanese_oak": {
+      "base": "#C8A26A",
+      "variation": ["#B8946A", "#D4B280"],
+      "roughness_range": [0.70, 0.85],
+      "metallic": 0.0
+    },
+    "wood_dark_walnut": {
+      "base": "#5C4530",
+      "variation": ["#4A3520", "#6B553F"],
+      "roughness_range": [0.65, 0.80],
+      "metallic": 0.0
+    },
+    "wood_bamboo": {
+      "base": "#A8B07A",
+      "variation": ["#98A06A", "#B8C08A"],
+      "roughness_range": [0.60, 0.75],
+      "metallic": 0.0
+    },
+    "tatami": {
+      "base": "#B8A872",
+      "variation": ["#A89862", "#C8B882"],
+      "roughness_range": [0.85, 0.95],
+      "metallic": 0.0
+    },
+    "shoji_paper": {
+      "base": "#F8F2E0",
+      "variation": ["#F0E8D0", "#FAF4E8"],
+      "roughness_range": [0.90, 0.98],
+      "metallic": 0.0
+    },
+    "concrete_modern": {
+      "base": "#B8AFA0",
+      "variation": ["#A89F90", "#C8BFB0"],
+      "roughness_range": [0.80, 0.95],
+      "metallic": 0.0
+    },
+    "asphalt_road": {
+      "base": "#5A5650",
+      "variation": ["#4A4640", "#6A6660"],
+      "roughness_range": [0.85, 0.95],
+      "metallic": 0.0
+    },
+    "school_uniform_navy": {
+      "base": "#2D4A6B",
+      "variation": ["#1A3A5B", "#3D5A7B"],
+      "roughness_range": [0.80, 0.90],
+      "metallic": 0.0
+    },
+    "school_uniform_white": {
+      "base": "#F0EDE5",
+      "variation": ["#E8E5DD", "#F8F5ED"],
+      "roughness_range": [0.75, 0.90],
+      "metallic": 0.0
+    },
+    "sakura_petal": {
+      "base": "#F5CCD5",
+      "variation": ["#E8B4BC", "#FFCCD5"],
+      "roughness_range": [0.50, 0.70],
+      "metallic": 0.0
+    },
+    "ginkgo_leaf": {
+      "base": "#E8D058",
+      "variation": ["#D4B848", "#F0E070"],
+      "roughness_range": [0.60, 0.75],
+      "metallic": 0.0
+    },
+    "bamboo_leaf": {
+      "base": "#6B8E5A",
+      "variation": ["#5A7A4A", "#7A9A6A"],
+      "roughness_range": [0.55, 0.70],
+      "metallic": 0.0
+    },
+    "torii_red": {
+      "base": "#CC4A2C",
+      "variation": ["#B83A1C", "#DC5A3C"],
+      "roughness_range": [0.65, 0.80],
+      "metallic": 0.0
+    },
+    "koi_red": {
+      "base": "#FF6B35",
+      "variation": ["#E55A25", "#FF7C45"],
+      "roughness_range": [0.40, 0.55],
+      "metallic": 0.0
+    },
+    "koi_white": {
+      "base": "#F5F0E6",
+      "variation": ["#E8E5DD", "#FAF4E8"],
+      "roughness_range": [0.40, 0.55],
+      "metallic": 0.0
+    },
+    "neon_warm": {
+      "base": "#FF6B35",
+      "variation": ["#E55A25", "#FF7C45"],
+      "roughness_range": [0.30, 0.50],
+      "metallic": 0.0,
+      "emissive": "#FF6B35",
+      "emissive_intensity": 0.8
+    },
+    "metal_brushed_aluminum": {
+      "base": "#B8B8B0",
+      "variation": ["#A8A8A0", "#C8C8C0"],
+      "roughness_range": [0.40, 0.60],
+      "metallic": 0.85
+    },
+    "glass_window": {
+      "base": "#D6EEF5",
+      "variation": ["#B8DCE6", "#F0F8FA"],
+      "roughness_range": [0.05, 0.15],
+      "metallic": 0.0
+    },
+    "paper_signage": {
+      "base": "#FAF6EE",
+      "variation": ["#F0E8D8", "#FFFFFF"],
+      "roughness_range": [0.85, 0.95],
+      "metallic": 0.0
+    }
+  },
+
+  "lighting_colors": {
+    "morning_home": {
+      "sun": "#FFD194",
+      "sun_intensity": 1.0,
+      "sky": "#D6EEF5",
+      "ambient": "#B8DCE6",
+      "ambient_intensity": 0.35,
+      "fog": "#F5F0E6",
+      "fog_density": 0.005,
+      "description": "Warm golden through sheer curtains"
+    },
+    "noon_school": {
+      "sun": "#FFFAF0",
+      "sun_intensity": 1.3,
+      "sky": "#B8DCE6",
+      "ambient": "#D6EEF5",
+      "ambient_intensity": 0.4,
+      "fog": "#FFFFFF",
+      "fog_density": 0.002,
+      "description": "Bright, alive, fresh"
+    },
+    "evening_station": {
+      "sun": "#FF8C42",
+      "sun_intensity": 1.2,
+      "sky": "#F5C088",
+      "ambient": "#E8A878",
+      "ambient_intensity": 0.3,
+      "fog": "#FFD194",
+      "fog_density": 0.008,
+      "description": "Golden hour, long shadow"
+    },
+    "night_shopping": {
+      "sun": "#FF6B35",
+      "sun_intensity": 0.8,
+      "sky": "#2D2840",
+      "ambient": "#5A4F7A",
+      "ambient_intensity": 0.25,
+      "fog": "#1A1A2E",
+      "fog_density": 0.012,
+      "description": "Warm neon, cozy crowd"
+    },
+    "sunset_shrine": {
+      "sun": "#FFB347",
+      "sun_intensity": 1.1,
+      "sky": "#F5C088",
+      "ambient": "#E8A878",
+      "ambient_intensity": 0.32,
+      "fog": "#FFD194",
+      "fog_density": 0.006,
+      "description": "Peaceful, wabi-sabi, time-stopped"
+    }
+  },
+
+  "ui_colors": {
+    "primary": "#2D4A6B",
+    "primary_hover": "#3D5A7B",
+    "secondary": "#E8B4BC",
+    "accent": "#FFB347",
+    "background": "#F5F0E6",
+    "background_alt": "#FAF6EE",
+    "text": "#2A2A2A",
+    "text_soft": "#5C5C5C",
+    "text_inverse": "#F5F0E6",
+    "border": "rgba(74, 63, 92, 0.12)",
+    "border_strong": "rgba(74, 63, 92, 0.25)",
+    "success": "#6B8E5A",
+    "warning": "#FF8C42",
+    "danger": "#CC4A2C",
+    "info": "#5A7794"
+  },
+
+  "rules": {
+    "max_saturation_percent": 60,
+    "min_lighting_variation": 0.1,
+    "no_pure_white": true,
+    "no_pure_black": true,
+    "warm_dominant": 0.7,
+    "cool_accent": 0.3,
+    "pastel_threshold": 0.6,
+    "min_contrast_ratio_wcag": 4.5
+  },
+
+  "use_guidelines": {
+    "scene_composition": [
+      "60% of visible surface = pastel/neutral",
+      "30% = warm accent (wood, fabric, light)",
+      "10% = cool shadow + sky",
+      "0% = pure primary color (saturated)"
+    ],
+    "material_creation": [
+      "Always use variation array",
+      "Always specify roughness range",
+      "Never set metallic > 1.0",
+      "Always add subtle wear pattern"
+    ],
+    "lighting_setup": [
+      "Match time-of-day preset to zone",
+      "Override only for narrative purpose",
+      "Never use pure white sun",
+      "Shadow must have color tint"
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "concrete.modern",
+  "name": "Modern Concrete",
+  "name_jp": "現代コンクリート",
+  "name_th": "คอนกรีตสมัยใหม่",
+  "category": "concrete",
+  "description": "คอนกรีตสมัยใหม่ — ใช้ในตึก ผนังอาคาร ผิวเรียบกว่า sidewalk แต่ยังมีรายละเอียด",
+
+  "specs": {
+    "base_color": "#B8AFA0",
+    "variation": ["#A89F90", "#C8BFB0", "#B0A798"],
+    "roughness": 0.88,
+    "roughness_variation": 0.08,
+    "metallic": 0.0,
+    "normal_scale": 0.3
+  },
+
+  "texture": {
+    "type": "concrete_smooth",
+    "size": 1024,
+    "tiling": [3, 3],
+    "color_space": "sRGB",
+    "format": "PNG"
+  },
+
+  "use_cases": [
+    "ผนังอาคารโรงเรียน",
+    "ผนังตึกย่านช้อปปิ้ง",
+    "รั้วคอนกรีต",
+    "ฐานอาคาร",
+    "เสา"
+  ],
+
+  "zones": [2, 4],
+
+  "modern_japan_reference": {
+    "description": "อาคารสมัยใหม่ในญี่ปุ่นใช้คอนกรีตเปลือย (exposed concrete) บ่อย",
+    "examples": [
+      "Ando Tadao buildings",
+      "Tokyo Metropolitan Gymnasium",
+      "สถานีรถไฟหลายแห่ง"
+    ]
+  },
+
+  "examples": {
+    "good": [
+      "ผนังโรงเรียนสีขาว-เทาอ่อน",
+      "ตึกช้อปปิ้งคอนกรีตเปลือย",
+      "รั้วคอนกรีตสี warm gray"
+    ],
+    "bad": [
+      "คอนกรีตสีเทาเข้มเกินไป",
+      "คอนกรีตเรียบเกินไป (เหมือน plastic)",
+      "คอนกรีตที่มีรอยร้าวใหญ่เกินไป"
+    ]
+  },
+
+  "wear": {
+    "default_amount": 0.15,
+    "description": "รอยน้ำ คราบ รอยแตกเล็กน้อย ไม่ pristine"
+  }
+}

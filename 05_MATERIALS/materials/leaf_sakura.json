@@ -1,0 +1,67 @@
+{
+  "id": "leaf.sakura",
+  "name": "Sakura Petal",
+  "name_jp": "桜の花びら",
+  "name_th": "กลีบซากุระ",
+  "category": "leaf",
+  "description": "กลีบซากุระ — สีชมพูอ่อน ใช้สำหรับต้นซากุระ กลีบร่วง effect สีที่อ่อนและบาง",
+
+  "specs": {
+    "base_color": "#F5CCD5",
+    "variation": ["#E8B4BC", "#FFCCD5", "#F0BFC8"],
+    "roughness": 0.55,
+    "roughness_variation": 0.10,
+    "metallic": 0.0,
+    "normal_scale": 0.4
+  },
+
+  "texture": {
+    "type": "leaf_vein",
+    "size": 256,
+    "tiling": [1, 1],
+    "color_space": "sRGB",
+    "format": "PNG"
+  },
+
+  "use_cases": [
+    "ต้นซากุระ (sakura tree)",
+    "กลีบซากุระร่วง (particle)",
+    "ลายบนผ้า",
+    "ของตกแต่ง"
+  ],
+
+  "zones": [1, 2, 3, 4, 5],
+
+  "sakura_color_phases": {
+    "bud": "#E8B4BC (deeper pink)",
+    "full_bloom": "#F5CCD5 (light pink)",
+    "falling": "#FFCCD5 (paler)",
+    "wilted": "#E8D5BC (cream-brown)"
+  },
+
+  "examples": {
+    "good": [
+      "ต้นซากุระที่กำลังบาน",
+      "กลีบซากุระปลิวในอากาศ (สีชมพูอ่อน)",
+      "กลีบซากุระบนพื้น"
+    ],
+    "bad": [
+      "สีชมพูสด (over-saturated)",
+      "สีแดง (ผิด — ต้องเป็น pink)",
+      "กลีบที่ดูเหมือนกระดาษ",
+      "ขนาดใหญ่เกินไป (กลีบจริง ~1-2cm)"
+    ]
+  },
+
+  "wear": {
+    "default_amount": 0.0,
+    "description": "กลีบซากุระไม่มี wear — บางและสด"
+  },
+
+  "real_world_reference": {
+    "species": "Somei-Yoshino (ソメイヨシノ)",
+    "petal_size": "1-2 cm",
+    "color": "Pale pink, almost white",
+    "season": "Late March - Early April"
+  }
+}

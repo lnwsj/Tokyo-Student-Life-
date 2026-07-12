@@ -1,0 +1,454 @@
+{
+  "name": "Tokyo Student Life — PBR Materials Palette",
+  "version": "1.0",
+  "description": "25 materials ครอบคลุม 5 zones — ใช้เป็น source of truth สำหรับทุก material ในเกม",
+
+  "rules": {
+    "max_saturation": 0.6,
+    "roughness_range": {
+      "wood": [0.65, 0.85],
+      "concrete": [0.80, 0.95],
+      "fabric": [0.85, 0.95],
+      "metal": [0.30, 0.55],
+      "glass": [0.05, 0.15],
+      "plastic": [0.50, 0.70],
+      "paper": [0.90, 0.98],
+      "stone": [0.75, 0.90],
+      "leaf": [0.50, 0.75],
+      "water": [0.05, 0.15],
+      "ceramic": [0.40, 0.60],
+      "neon": [0.30, 0.50]
+    },
+    "metallic_range": {
+      "default": 0.0,
+      "metal": [0.85, 1.0]
+    },
+    "normal_scale_range": [0.3, 0.6]
+  },
+
+  "materials": {
+
+    "wood.japanese_oak": {
+      "category": "wood",
+      "base_color": "#C8A26A",
+      "variation": ["#B8946A", "#D4B280", "#BC9866"],
+      "roughness": 0.75,
+      "roughness_variation": 0.10,
+      "metallic": 0.0,
+      "normal_scale": 0.4,
+      "texture_type": "wood_grain",
+      "texture_size": 512,
+      "tiling": [2, 2],
+      "wear_amount": 0.1,
+      "use_cases": ["furniture", "interior trim", "door frame"],
+      "zones": [1, 2, 3, 4, 5]
+    },
+
+    "wood.dark_walnut": {
+      "category": "wood",
+      "base_color": "#5C4530",
+      "variation": ["#4A3520", "#6B553F", "#503A28"],
+      "roughness": 0.70,
+      "roughness_variation": 0.10,
+      "metallic": 0.0,
+      "normal_scale": 0.4,
+      "texture_type": "wood_grain_dark",
+      "texture_size": 512,
+      "tiling": [2, 2],
+      "wear_amount": 0.15,
+      "use_cases": ["school desk", "chair", "shelf", "table"],
+      "zones": [1, 2]
+    },
+
+    "wood.bamboo": {
+      "category": "wood",
+      "base_color": "#A8B07A",
+      "variation": ["#98A06A", "#B8C08A", "#A0A870"],
+      "roughness": 0.65,
+      "roughness_variation": 0.10,
+      "metallic": 0.0,
+      "normal_scale": 0.35,
+      "texture_type": "bamboo_stripes",
+      "texture_size": 512,
+      "tiling": [4, 1],
+      "wear_amount": 0.08,
+      "use_cases": ["pole", "fence", "wind chime", "decoration"],
+      "zones": [5]
+    },
+
+    "wood.light_pine": {
+      "category": "wood",
+      "base_color": "#D4B280",
+      "variation": ["#C8A26A", "#E0BC92", "#B8946A"],
+      "roughness": 0.80,
+      "roughness_variation": 0.10,
+      "metallic": 0.0,
+      "normal_scale": 0.4,
+      "texture_type": "wood_grain_light",
+      "texture_size": 512,
+      "tiling": [2, 2],
+      "wear_amount": 0.05,
+      "use_cases": ["closet", "shelf", "light furniture"],
+      "zones": [1]
+    },
+
+    "wood.shrine": {
+      "category": "wood",
+      "base_color": "#8B6F47",
+      "variation": ["#7A5C3A", "#9C8055", "#6B553F"],
+      "roughness": 0.85,
+      "roughness_variation": 0.08,
+      "metallic": 0.0,
+      "normal_scale": 0.5,
+      "texture_type": "wood_grain_aged",
+      "texture_size": 512,
+      "tiling": [3, 1],
+      "wear_amount": 0.25,
+      "use_cases": ["shrine building", "bridge", "torii base"],
+      "zones": [5]
+    },
+
+    "fabric.school_uniform_navy": {
+      "category": "fabric",
+      "base_color": "#2D4A6B",
+      "variation": ["#1A3A5B", "#3D5A7B", "#2A4560"],
+      "roughness": 0.88,
+      "roughness_variation": 0.05,
+      "metallic": 0.0,
+      "normal_scale": 0.3,
+      "texture_type": "weave_tight",
+      "texture_size": 256,
+      "tiling": [3, 3],
+      "wear_amount": 0.05,
+      "use_cases": ["school uniform (navy)", "blazer", "skirt"],
+      "zones": [1, 2, 3, 4]
+    },
+
+    "fabric.school_uniform_white": {
+      "category": "fabric",
+      "base_color": "#F0EDE5",
+      "variation": ["#E8E5DD", "#F8F5ED", "#DCD8D0"],
+      "roughness": 0.85,
+      "roughness_variation": 0.08,
+      "metallic": 0.0,
+      "normal_scale": 0.3,
+      "texture_type": "weave_tight",
+      "texture_size": 256,
+      "tiling": [3, 3],
+      "wear_amount": 0.08,
+      "use_cases": ["school uniform (shirt)", "blouse"],
+      "zones": [1, 2, 3, 4]
+    },
+
+    "fabric.cotton_casual": {
+      "category": "fabric",
+      "base_color": "#E8D5BC",
+      "variation": ["#DCC8AE", "#F0E0C8", "#D8C0A4"],
+      "roughness": 0.90,
+      "roughness_variation": 0.05,
+      "metallic": 0.0,
+      "normal_scale": 0.35,
+      "texture_type": "weave_soft",
+      "texture_size": 256,
+      "tiling": [2, 2],
+      "wear_amount": 0.10,
+      "use_cases": ["casual clothes", "curtain", "towel", "tablecloth"],
+      "zones": [1, 4]
+    },
+
+    "concrete.modern": {
+      "category": "concrete",
+      "base_color": "#B8AFA0",
+      "variation": ["#A89F90", "#C8BFB0", "#B0A798"],
+      "roughness": 0.88,
+      "roughness_variation": 0.08,
+      "metallic": 0.0,
+      "normal_scale": 0.3,
+      "texture_type": "concrete_smooth",
+      "texture_size": 1024,
+      "tiling": [3, 3],
+      "wear_amount": 0.15,
+      "use_cases": ["building wall", "modern structure", "foundation"],
+      "zones": [2, 4]
+    },
+
+    "concrete.sidewalk": {
+      "category": "concrete",
+      "base_color": "#A89F90",
+      "variation": ["#988F80", "#B8AFA0", "#908778"],
+      "roughness": 0.92,
+      "roughness_variation": 0.05,
+      "metallic": 0.0,
+      "normal_scale": 0.35,
+      "texture_type": "concrete_rough",
+      "texture_size": 1024,
+      "tiling": [4, 4],
+      "wear_amount": 0.20,
+      "use_cases": ["sidewalk", "plaza", "ground"],
+      "zones": [3, 4]
+    },
+
+    "asphalt.road": {
+      "category": "asphalt",
+      "base_color": "#5A5650",
+      "variation": ["#4A4640", "#6A6660", "#52504A"],
+      "roughness": 0.95,
+      "roughness_variation": 0.03,
+      "metallic": 0.0,
+      "normal_scale": 0.4,
+      "texture_type": "asphalt_grain",
+      "texture_size": 1024,
+      "tiling": [4, 4],
+      "wear_amount": 0.25,
+      "use_cases": ["road", "parking", "driveway"],
+      "zones": [3, 4]
+    },
+
+    "stone.torii_red": {
+      "category": "stone",
+      "base_color": "#CC4A2C",
+      "variation": ["#B83A1C", "#DC5A3C", "#C04020"],
+      "roughness": 0.80,
+      "roughness_variation": 0.10,
+      "metallic": 0.0,
+      "normal_scale": 0.45,
+      "texture_type": "stone_rough",
+      "texture_size": 512,
+      "tiling": [2, 2],
+      "wear_amount": 0.30,
+      "use_cases": ["torii gate", "shrine pole", "red stone"],
+      "zones": [5]
+    },
+
+    "metal.brushed_aluminum": {
+      "category": "metal",
+      "base_color": "#B8B8B0",
+      "variation": ["#A8A8A0", "#C8C8C0", "#B0B0A8"],
+      "roughness": 0.45,
+      "roughness_variation": 0.15,
+      "metallic": 0.90,
+      "normal_scale": 0.3,
+      "texture_type": "brushed_metal",
+      "texture_size": 512,
+      "tiling": [3, 1],
+      "wear_amount": 0.20,
+      "use_cases": ["window frame", "handrail", "sign frame", "trim"],
+      "zones": [2, 3, 4]
+    },
+
+    "metal.rusted_train": {
+      "category": "metal",
+      "base_color": "#7A6B5A",
+      "variation": ["#6B5C4A", "#8A7A6A", "#5A4D3D"],
+      "roughness": 0.50,
+      "roughness_variation": 0.20,
+      "metallic": 0.85,
+      "normal_scale": 0.5,
+      "texture_type": "metal_rust",
+      "texture_size": 512,
+      "tiling": [2, 2],
+      "wear_amount": 0.40,
+      "use_cases": ["train body", "old machine", "vintage metal"],
+      "zones": [3]
+    },
+
+    "paper.shoji": {
+      "category": "paper",
+      "base_color": "#F8F2E0",
+      "variation": ["#F0E8D0", "#FAF4E8", "#E8DDC0"],
+      "roughness": 0.95,
+      "roughness_variation": 0.03,
+      "metallic": 0.0,
+      "normal_scale": 0.15,
+      "texture_type": "paper_fiber",
+      "texture_size": 256,
+      "tiling": [1, 1],
+      "wear_amount": 0.10,
+      "use_cases": ["shoji door", "screen", "lamp"],
+      "zones": [1]
+    },
+
+    "paper.signage": {
+      "category": "paper",
+      "base_color": "#FAF6EE",
+      "variation": ["#F0E8D8", "#FFFAF0", "#E8DCC0"],
+      "roughness": 0.92,
+      "roughness_variation": 0.05,
+      "metallic": 0.0,
+      "normal_scale": 0.20,
+      "texture_type": "paper_smooth",
+      "texture_size": 512,
+      "tiling": [1, 1],
+      "wear_amount": 0.15,
+      "use_cases": ["shop sign", "menu", "poster", "label"],
+      "zones": [3, 4]
+    },
+
+    "leaf.sakura": {
+      "category": "leaf",
+      "base_color": "#F5CCD5",
+      "variation": ["#E8B4BC", "#FFCCD5", "#F0BFC8"],
+      "roughness": 0.55,
+      "roughness_variation": 0.10,
+      "metallic": 0.0,
+      "normal_scale": 0.4,
+      "texture_type": "leaf_vein",
+      "texture_size": 256,
+      "tiling": [1, 1],
+      "wear_amount": 0.0,
+      "use_cases": ["sakura petals (falling)", "sakura tree"],
+      "zones": [1, 2, 3, 4, 5]
+    },
+
+    "leaf.ginkgo": {
+      "category": "leaf",
+      "base_color": "#E8D058",
+      "variation": ["#D4B848", "#F0E070", "#C8A838"],
+      "roughness": 0.60,
+      "roughness_variation": 0.10,
+      "metallic": 0.0,
+      "normal_scale": 0.4,
+      "texture_type": "leaf_vein",
+      "texture_size": 256,
+      "tiling": [1, 1],
+      "wear_amount": 0.0,
+      "use_cases": ["ginkgo leaves", "ginkgo tree"],
+      "zones": [5]
+    },
+
+    "leaf.bamboo": {
+      "category": "leaf",
+      "base_color": "#6B8E5A",
+      "variation": ["#5A7A4A", "#7A9A6A", "#557050"],
+      "roughness": 0.65,
+      "roughness_variation": 0.10,
+      "metallic": 0.0,
+      "normal_scale": 0.4,
+      "texture_type": "leaf_vein_long",
+      "texture_size": 256,
+      "tiling": [2, 1],
+      "wear_amount": 0.0,
+      "use_cases": ["bamboo leaves", "bamboo grove"],
+      "zones": [5]
+    },
+
+    "tatami": {
+      "category": "natural",
+      "base_color": "#B8A872",
+      "variation": ["#A89862", "#C8B882", "#AC9C68"],
+      "roughness": 0.92,
+      "roughness_variation": 0.05,
+      "metallic": 0.0,
+      "normal_scale": 0.3,
+      "texture_type": "tatami_weave",
+      "texture_size": 512,
+      "tiling": [2, 2],
+      "wear_amount": 0.20,
+      "use_cases": ["floor mat (Japanese)", "traditional room floor"],
+      "zones": [1]
+    },
+
+    "water.pond": {
+      "category": "water",
+      "base_color": "#B8DCE6",
+      "variation": ["#A0CCD8", "#D0E8F0", "#7FB5C7"],
+      "roughness": 0.10,
+      "roughness_variation": 0.05,
+      "metallic": 0.0,
+      "normal_scale": 0.0,
+      "texture_type": "water_normal",
+      "texture_size": 512,
+      "tiling": [4, 4],
+      "wear_amount": 0.0,
+      "transmission": 0.7,
+      "ior": 1.33,
+      "transparent": true,
+      "use_cases": ["pond", "small water", "fountain"],
+      "zones": [5]
+    },
+
+    "glass.window": {
+      "category": "glass",
+      "base_color": "#D6EEF5",
+      "variation": ["#B8DCE6", "#F0F8FA", "#C8E0E8"],
+      "roughness": 0.10,
+      "roughness_variation": 0.05,
+      "metallic": 0.0,
+      "normal_scale": 0.0,
+      "texture_type": "glass_clean",
+      "texture_size": 256,
+      "tiling": [1, 1],
+      "transmission": 0.95,
+      "ior": 1.50,
+      "transparent": true,
+      "use_cases": ["window", "door glass", "display case"],
+      "zones": [1, 2, 3, 4]
+    },
+
+    "ceramic.tiles": {
+      "category": "ceramic",
+      "base_color": "#EAE0CE",
+      "variation": ["#DCCEB8", "#F5EBD8", "#C8B8A0"],
+      "roughness": 0.50,
+      "roughness_variation": 0.15,
+      "metallic": 0.0,
+      "normal_scale": 0.2,
+      "texture_type": "tile_grid",
+      "texture_size": 512,
+      "tiling": [4, 4],
+      "wear_amount": 0.10,
+      "use_cases": ["bathroom", "kitchen", "restaurant floor"],
+      "zones": [1, 2, 4]
+    },
+
+    "plastic.vending_machine": {
+      "category": "plastic",
+      "base_color": "#C8BFB0",
+      "variation": ["#B8AFA0", "#D8CFC0", "#A89F90"],
+      "roughness": 0.60,
+      "roughness_variation": 0.10,
+      "metallic": 0.0,
+      "normal_scale": 0.2,
+      "texture_type": "plastic_smooth",
+      "texture_size": 512,
+      "tiling": [1, 1],
+      "wear_amount": 0.15,
+      "use_cases": ["vending machine body", "plastic case"],
+      "zones": [3]
+    },
+
+    "neon.warm": {
+      "category": "neon",
+      "base_color": "#FF6B35",
+      "variation": ["#E55A25", "#FF7C45", "#FF8555"],
+      "roughness": 0.40,
+      "roughness_variation": 0.10,
+      "metallic": 0.0,
+      "normal_scale": 0.0,
+      "emissive": "#FF6B35",
+      "emissive_intensity": 0.8,
+      "emissive_variation": 0.2,
+      "use_cases": ["shop sign (neon)", "vending machine display", "accent"],
+      "zones": [4]
+    }
+  },
+
+  "global_settings": {
+    "default_color_space": "sRGB",
+    "default_normal_space": "Linear",
+    "use_HDR_environment": true,
+    "use_pmremGenerator": true,
+    "max_texture_size": 2048,
+    "min_texture_size": 128,
+    "default_anisotropy": 4,
+    "preferred_format": "PNG"
+  },
+
+  "validation_rules": [
+    "color.saturation <= 0.6",
+    "roughness.metal >= 0.85",
+    "roughness.glass <= 0.15",
+    "no_pure_colors",
+    "no_forbidden_hex (see forbidden_elements.md)"
+  ]
+}

@@ -1,0 +1,245 @@
+{
+  "name": "Tokyo Student Life — Environment Scatter Rules",
+  "version": "1.0",
+  "description": "Per-zone rules for environment object placement — density, position range, scale variation",
+
+  "zones": {
+
+    "1": {
+      "name": "Home",
+      "name_th": "บ้าน",
+      "bounds": { "width": 100, "depth": 100 },
+      "center": { "x": 0, "z": 0 },
+      "ground": {
+        "type": "tatami_wood",
+        "material": "wood.japanese_oak"
+      },
+      "vegetation": {
+        "sakura": 0,
+        "ginkgo": 0,
+        "bamboo": 0,
+        "deciduous": 1,
+        "hedge": 0,
+        "grass_density": 0
+      },
+      "rocks": {
+        "count": 0,
+        "min_size": 0,
+        "max_size": 0
+      },
+      "props": {
+        "bicycles_parked": 1,
+        "planters": 3,
+        "wind_chime": 1,
+        "trash_cans": 1,
+        "mailbox": 1,
+        "benches": 0,
+        "vending_machines": 0,
+        "lamp_posts": 0,
+        "signs": 0
+      },
+      "water": null,
+      "scatter_pattern": "hand_placed"
+    },
+
+    "2": {
+      "name": "School",
+      "name_th": "โรงเรียน",
+      "bounds": { "width": 100, "depth": 100 },
+      "center": { "x": 0, "z": 0 },
+      "ground": {
+        "type": "concrete_grass",
+        "primary_material": "concrete.modern",
+        "secondary_material": "concrete.sidewalk"
+      },
+      "vegetation": {
+        "sakura": 3,
+        "ginkgo": 0,
+        "bamboo": 0,
+        "deciduous": 2,
+        "hedge": 2,
+        "grass_density": 800
+      },
+      "rocks": {
+        "count": 3,
+        "min_size": 0.2,
+        "max_size": 0.5
+      },
+      "props": {
+        "bicycles_parked": 12,
+        "planters": 3,
+        "wind_chime": 0,
+        "trash_cans": 3,
+        "mailbox": 0,
+        "benches": 5,
+        "vending_machines": 0,
+        "lamp_posts": 2,
+        "signs": 2,
+        "bollards": 5
+      },
+      "water": {
+        "type": "fountain",
+        "position": { "x": 0, "z": 0 }
+      },
+      "scatter_pattern": "hand_placed_school"
+    },
+
+    "3": {
+      "name": "Station",
+      "name_th": "สถานี",
+      "bounds": { "width": 100, "depth": 100 },
+      "center": { "x": 0, "z": 0 },
+      "ground": {
+        "type": "asphalt_sidewalk",
+        "primary_material": "asphalt.road",
+        "secondary_material": "concrete.sidewalk"
+      },
+      "vegetation": {
+        "sakura": 1,
+        "ginkgo": 0,
+        "bamboo": 0,
+        "deciduous": 2,
+        "hedge": 1,
+        "grass_density": 0
+      },
+      "rocks": {
+        "count": 0,
+        "min_size": 0,
+        "max_size": 0
+      },
+      "props": {
+        "bicycles_parked": 3,
+        "planters": 2,
+        "wind_chime": 0,
+        "trash_cans": 3,
+        "mailbox": 1,
+        "benches": 3,
+        "vending_machines": 4,
+        "lamp_posts": 4,
+        "signs": 3,
+        "bollards": 2
+      },
+      "water": null,
+      "scatter_pattern": "scattered_random"
+    },
+
+    "4": {
+      "name": "Shopping",
+      "name_th": "ช้อปปิ้ง",
+      "bounds": { "width": 100, "depth": 100 },
+      "center": { "x": 0, "z": 0 },
+      "ground": {
+        "type": "concrete_tiles",
+        "primary_material": "concrete.modern",
+        "secondary_material": "ceramic.tiles"
+      },
+      "vegetation": {
+        "sakura": 0,
+        "ginkgo": 0,
+        "bamboo": 0,
+        "deciduous": 2,
+        "hedge": 0,
+        "grass_density": 0
+      },
+      "rocks": {
+        "count": 0,
+        "min_size": 0,
+        "max_size": 0
+      },
+      "props": {
+        "bicycles_parked": 5,
+        "planters": 2,
+        "wind_chime": 0,
+        "trash_cans": 3,
+        "mailbox": 0,
+        "benches": 2,
+        "vending_machines": 2,
+        "lamp_posts": 4,
+        "signs": 8,
+        "awnings": 6
+      },
+      "water": null,
+      "scatter_pattern": "scattered_along_street"
+    },
+
+    "5": {
+      "name": "Shrine",
+      "name_th": "ศาลเจ้า",
+      "bounds": { "width": 100, "depth": 100 },
+      "center": { "x": 0, "z": 0 },
+      "ground": {
+        "type": "sand_grass",
+        "primary_material": "concrete.sidewalk",
+        "secondary_material": "leaf.bamboo"
+      },
+      "vegetation": {
+        "sakura": 4,
+        "ginkgo": 2,
+        "bamboo": 6,
+        "deciduous": 1,
+        "hedge": 0,
+        "grass_density": 200
+      },
+      "rocks": {
+        "count": 12,
+        "min_size": 0.2,
+        "max_size": 0.8
+      },
+      "props": {
+        "bicycles_parked": 0,
+        "planters": 0,
+        "wind_chime": 2,
+        "trash_cans": 1,
+        "mailbox": 0,
+        "benches": 2,
+        "vending_machines": 0,
+        "lamp_posts": 0,
+        "signs": 0,
+        "stone_lanterns": 6,
+        "wooden_bridge": 1,
+        "offering_box": 1,
+        "ema_boards": 1
+      },
+      "water": {
+        "type": "pond",
+        "position": { "x": 0, "z": 15 },
+        "size": { "width": 12, "depth": 6 }
+      },
+      "scatter_pattern": "zen_garden"
+    }
+  },
+
+  "scatter_patterns": {
+    "hand_placed": {
+      "description": "วางเอง (ไม่กระจาย) — ใช้สำหรับ object สำคัญ",
+      "positions": []
+    },
+    "scattered_random": {
+      "description": "สุ่มกระจายทั่ว zone",
+      "min_distance_objects": 2.0,
+      "min_distance_buildings": 1.5,
+      "min_distance_paths": 0.5
+    },
+    "scattered_along_street": {
+      "description": "กระจายตามแนวถนน",
+      "path_offset": 1.5,
+      "spacing_min": 3.0,
+      "spacing_max": 8.0
+    },
+    "zen_garden": {
+      "description": "จัดวางแบบ zen — สมดุล ไม่สมมาตร",
+      "groups": 3,
+      "elements_per_group": 3
+    }
+  },
+
+  "global_rules": {
+    "min_distance_objects": 1.0,
+    "min_distance_buildings": 1.5,
+    "min_distance_paths": 0.5,
+    "rotation_y_random": true,
+    "scale_variation": 0.1,
+    "cast_shadow_for_large": true,
+    "frustum_cull_distance": 100
+  }
+}

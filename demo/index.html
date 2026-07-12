@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tokyo Student Life — Demo v0.3 (GLB)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@300;400;600&family=Inter:wght@400;500;600&family=Sarabun:wght@400;500&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root { --primary: #2D4A6B; --accent: #FFB347; --bg: #F5F0E6; --text: #2A2A2A; --text-soft: #5C5C5C; --border: rgba(74, 63, 92, 0.15); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { overflow: hidden; background: #000; font-family: 'Sarabun', sans-serif; user-select: none; background-size: cover; background-position: center; }
+  body.zone1 { background-image: url('./backgrounds/zone1_home.jpg'); }
+  body.zone2 { background-image: url('./backgrounds/zone2_school.jpg'); }
+  body.zone3 { background-image: url('./backgrounds/zone3_station.jpg'); }
+  body.zone4 { background-image: url('./backgrounds/zone4_shopping.jpg'); }
+  body.zone5 { background-image: url('./backgrounds/zone5_shrine.jpg'); }
+  canvas { display: block; background: transparent; }
+  
+  .hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  .hud > * { pointer-events: auto; }
+  .top-hud { position: absolute; top: 1.5rem; left: 1.5rem; display: flex; gap: 0.8rem; }
+  .hud-card { background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 12px; padding: 0.6rem 0.9rem; backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  .hud-card .icon { font-size: 1.1rem; }
+  .hud-card .value { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 500; color: var(--primary); }
+  .hud-card .label { font-size: 0.7rem; color: var(--text-soft); display: block; }
+  .hud-card .label-en { font-family: 'Inter', sans-serif; font-size: 0.65rem; color: var(--text-soft); letter-spacing: 0.05em; text-transform: uppercase; }
+  .zone-indicator { position: absolute; top: 1.5rem; right: 1.5rem; text-align: right; }
+  .zone-num { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent); letter-spacing: 0.2em; }
+  .zone-name { font-family: 'Fraunces', serif; font-size: 1.8rem; font-weight: 400; color: var(--primary); margin-top: 0.2rem; }
+  .zone-jp { font-family: 'Noto Sans JP', sans-serif; font-size: 0.85rem; color: var(--text-soft); }
+  .zone-en { font-family: 'Inter', sans-serif; font-size: 0.75rem; color: var(--text-soft); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 0.2rem; }
+  .time-indicator { position: absolute; top: 1.5rem; left: 50%; transform: translateX(-50%); text-align: center; }
+  .time-value { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; color: var(--primary); font-weight: 500; }
+  .time-label { font-size: 0.7rem; color: var(--text-soft); margin-top: 0.2rem; }
+  .bottom-hud { position: absolute; bottom: 1.5rem; left: 1.5rem; right: 1.5rem; display: flex; justify-content: space-between; align-items: flex-end; }
+  .controls-help { background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; backdrop-filter: blur(10px); font-size: 0.75rem; color: var(--text-soft); }
+  .controls-help .key { display: inline-block; background: rgba(45, 74, 107, 0.1); color: var(--primary); padding: 0.1rem 0.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 500; }
+  .controls-help .row { margin: 0.2rem 0; }
+  .zone-selector { display: flex; gap: 0.4rem; }
+  .zone-btn { background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 10px; padding: 0.5rem 0.8rem; backdrop-filter: blur(10px); cursor: pointer; font-family: 'Sarabun', sans-serif; font-size: 0.75rem; color: var(--text); display: flex; align-items: center; gap: 0.4rem; }
+  .zone-btn:hover { background: rgba(255, 255, 255, 0.95); transform: translateY(-2px); }
+  .zone-btn.active { background: var(--primary); color: var(--bg); }
+  .zone-btn .icon { font-size: 1rem; }
+  
+  #loading { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.5s; }
+  #loading.fade { opacity: 0; pointer-events: none; }
+  .loading-content { text-align: center; }
+  .loading-title { font-family: 'Fraunces', serif; font-size: 2.5rem; color: var(--primary); font-weight: 300; margin-bottom: 0.5rem; }
+  .loading-jp { font-family: 'Noto Sans JP', sans-serif; color: var(--text-soft); margin-bottom: 2rem; }
+  .loading-bar { width: 200px; height: 4px; background: rgba(45, 74, 107, 0.1); border-radius: 2px; overflow: hidden; margin: 0 auto; }
+  .loading-bar-inner { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+  .loading-status { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.5rem; font-family: 'JetBrains Mono', monospace; }
+  .badge-3d { display: inline-block; background: var(--accent); color: white; font-size: 0.6rem; padding: 0.1rem 0.4rem; border-radius: 6px; margin-left: 0.4rem; font-weight: 600; }
+  
+  .interact-prompt { position: fixed; bottom: 14rem; left: 50%; transform: translateX(-50%); background: rgba(45, 74, 107, 0.92); color: white; padding: 0.6rem 1.2rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: none; backdrop-filter: blur(8px); }
+  .interact-prompt .key { background: rgba(255,255,255,0.25); padding: 0.1rem 0.5rem; border-radius: 4px; margin-right: 0.3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+  
+  .dialogue { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px); width: min(640px, 90vw); background: rgba(20, 30, 45, 0.95); color: white; border-radius: 16px; padding: 1.4rem 1.6rem 1rem; z-index: 30; opacity: 0; pointer-events: none; transition: all 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
+  .dialogue.active { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+  .dialogue .dlg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+  .dialogue .dlg-name { font-family: 'Fraunces', serif; font-size: 1rem; color: var(--accent); font-weight: 500; }
+  .dialogue .dlg-progress { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+  .dialogue .dlg-th { font-family: 'Sarabun', sans-serif; font-size: 1.1rem; line-height: 1.5; margin-bottom: 0.4rem; }
+  .dialogue .dlg-en { font-family: 'Inter', sans-serif; font-size: 0.8rem; color: rgba(255,255,255,0.6); line-height: 1.4; margin-bottom: 0.8rem; }
+  .dialogue .dlg-hint { font-size: 0.7rem; color: rgba(255,255,255,0.4); text-align: right; }
+  .dialogue .dlg-hint .key { display: inline-block; background: rgba(255,255,255,0.15); padding: 0.1rem 0.5rem; border-radius: 4px; margin-left: 0.3rem; font-family: 'JetBrains Mono', monospace; }
+  
+  .schedule-card { position: fixed; top: 1.5rem; right: 14rem; background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 12px; padding: 0.6rem 0.9rem; backdrop-filter: blur(10px); z-index: 10; font-size: 0.75rem; min-width: 180px; }
+  .schedule-card .sched-title { font-family: 'Fraunces', serif; font-size: 0.85rem; color: var(--primary); margin-bottom: 0.3rem; }
+  .schedule-card .sched-item { display: flex; gap: 0.4rem; align-items: center; padding: 0.1rem 0; color: var(--text); }
+  .schedule-card .sched-item.done { color: var(--text-soft); text-decoration: line-through; }
+  .schedule-card .sched-item .sched-icon { font-size: 0.9rem; }
+  .schedule-card .sched-item .sched-check { color: #4CAF50; font-weight: bold; margin-left: auto; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="loading-content">
+    <div class="loading-title">Tokyo Student Life</div>
+    <div class="loading-jp">東京学生生活</div>
+    <div class="loading-bar"><div class="loading-bar-inner" id="loadBar"></div></div>
+    <div class="loading-status" id="loadStatus">Initializing...</div>
+  </div>
+</div>
+
+<div class="hud">
+  <div class="top-hud">
+    <div class="hud-card"><span class="icon">❤️</span> <span class="value" id="hpValue">100</span><span class="label">พลังชีวิต</span><span class="label-en">HP</span></div>
+    <div class="hud-card"><span class="icon">🍱</span> <span class="value" id="staminaValue">100</span><span class="label">ความอิ่ม</span><span class="label-en">Stamina</span></div>
+    <div class="hud-card"><span class="icon">💴</span> <span class="value" id="moneyValue">1,200</span><span class="label">เงิน</span><span class="label-en">Yen</span></div>
+  </div>
+  <div class="time-indicator"><div class="time-value" id="timeValue">07:00</div><div class="time-label" id="timeLabel">เช้า · Morning</div></div>
+  <div class="zone-indicator">
+    <div class="zone-num" id="zoneNum">ZONE 01</div>
+    <div class="zone-name" id="zoneName">บ้าน</div>
+    <div class="zone-jp" id="zoneJp">ホーム · Home</div>
+    <div class="zone-en" id="zoneEn">Apartment 1DK</div>
+  </div>
+  <div class="bottom-hud">
+    <div class="controls-help">
+      <div class="row"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> เดิน / Walk</div>
+      <div class="row"><span class="key">Shift</span> วิ่ง / Run</div>
+      <div class="row"><span class="key">Space</span> กระโดด / Jump</div>
+      <div class="row"><span class="key">1-5</span> เปลี่ยนโซน / Switch Zone</div>
+    </div>
+    <div class="zone-selector">
+      <button class="zone-btn" data-zone="1"><span class="icon">🏠</span> Home</button>
+      <button class="zone-btn" data-zone="2"><span class="icon">🏫</span> School</button>
+      <button class="zone-btn" data-zone="3"><span class="icon">🚉</span> Station</button>
+      <button class="zone-btn" data-zone="4"><span class="icon">🛍️</span> Shop <span class="badge-3d">3D</span></button>
+      <button class="zone-btn" data-zone="5"><span class="icon">⛩️</span> Shrine</button>
+    </div>
+  </div>
+</div>
+
+<div class="schedule-card">
+  <div class="sched-title">📅 วันนี้ / Today</div>
+  <div class="sched-item" id="sched-1"><span class="sched-icon">🏠</span> ตื่นนอน / Wake up<span class="sched-check"></span></div>
+  <div class="sched-item" id="sched-2"><span class="sched-icon">🏫</span> เรียน / School<span class="sched-check"></span></div>
+  <div class="sched-item" id="sched-3"><span class="sched-icon">🚉</span> รถไฟ / Train<span class="sched-check"></span></div>
+  <div class="sched-item" id="sched-4"><span class="sched-icon">🛍️</span> ซื้อของ / Shop<span class="sched-check"></span></div>
+  <div class="sched-item" id="sched-5"><span class="sched-icon">⛩️</span> ศาลเจ้า / Shrine<span class="sched-check"></span></div>
+</div>
+
+<div class="interact-prompt" id="interact-prompt">[E] คุย</div>
+
+<div class="dialogue" id="dialogue">
+  <div class="dlg-header">
+    <div class="dlg-name" id="dlg-name">NPC Name</div>
+    <div class="dlg-progress" id="dlg-progress">1 / 3</div>
+  </div>
+  <div class="dlg-th" id="dlg-th">สวัสดี</div>
+  <div class="dlg-en" id="dlg-en">Hello</div>
+  <div class="dlg-hint">กด <span class="key">E</span> หรือ <span class="key">Space</span> เพื่อไปต่อ / Press to continue</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from './GLTFLoader.js';
+import { DRACOLoader } from './DRACOLoader.js';
+
+const state = {
+  currentZone: 1,
+  keys: {},
+  player: { x: 0, y: 0, z: 0, vy: 0, onGround: true, rot: 0 }
+};
+
+const ZONES = {
+  1: { name: 'บ้าน', jp: 'ホーム · Home', en: 'Apartment 1DK', icon: '🏠', time: '07:00', timeName: 'เช้า · Morning', bg: './backgrounds/zone1_home.jpg', lightColor: 0xFFD194, lightInt: 1.0, glb: null },
+  2: { name: 'โรงเรียน', jp: '学校 · School', en: 'No. 2 Middle School', icon: '🏫', time: '12:00', timeName: 'เที่ยง · Noon', bg: './backgrounds/zone2_school.jpg', lightColor: 0xFFFAF0, lightInt: 1.3, glb: null },
+  3: { name: 'สถานีรถไฟ', jp: '駅 · Station', en: 'JR Sakuradai', icon: '🚉', time: '17:30', timeName: 'เย็น · Evening', bg: './backgrounds/zone3_station.jpg', lightColor: 0xFF8C42, lightInt: 1.2, glb: null },
+  4: { name: 'ย่านช้อปปิ้ง', jp: '商店街 · Shopping', en: 'Local Arcade', icon: '🛍️', time: '17:00', timeName: 'เย็น · Evening', bg: './backgrounds/zone4_shopping.jpg', lightColor: 0xFFC080, lightInt: 1.1, glb: 'LittlestTokyo.glb' },
+  5: { name: 'ศาลเจ้า + สวน', jp: '神社 · Shrine', en: 'Sakurayama Shrine', icon: '⛩️', time: '16:00', timeName: 'เย็น · Sunset', bg: './backgrounds/zone5_shrine.jpg', lightColor: 0xFFB347, lightInt: 1.1, glb: null }
+};
+
+// ========== SCENE ==========
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(0, 3, 8);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setClearColor(0x000000, 0);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+document.body.appendChild(renderer.domElement);
+
+// ========== LOADERS ==========
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('./'); // decoder files are in same directory
+const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+const modelCache = {};
+function loadGLB(path) {
+  return new Promise((resolve, reject) => {
+    if (modelCache[path]) return resolve(modelCache[path]);
+    gltfLoader.load(path, (gltf) => {
+      modelCache[path] = gltf;
+      resolve(gltf);
+    }, undefined, reject);
+  });
+}
+
+// ========== TEXTURE GENERATORS (simple) ==========
+function makeNoiseTex(color, size = 128, amount = 20) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const r = (color >> 16) & 0xff, g = (color >> 8) & 0xff, b = color & 0xff;
+  ctx.fillStyle = `rgb(${r},${g},${b})`;
+  ctx.fillRect(0, 0, size, size);
+  const img = ctx.getImageData(0, 0, size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (Math.random() - 0.5) * amount;
+    img.data[i] = Math.max(0, Math.min(255, img.data[i] + n));
+    img.data[i+1] = Math.max(0, Math.min(255, img.data[i+1] + n));
+    img.data[i+2] = Math.max(0, Math.min(255, img.data[i+2] + n));
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+function getMat(type, color) {
+  const map = makeNoiseTex(color, 128, type === 'concrete' ? 15 : 20);
+  return new THREE.MeshStandardMaterial({ map, roughness: 0.8, metalness: 0, color: 0xffffff });
+}
+
+// ========== PLAYER (Procedural Schoolgirl) ==========
+let playerModel = null;
+let playerParts = null; // references for animation
+let walkPhase = 0;
+
+function buildSchoolgirl() {
+  const root = new THREE.Group();
+
+  // Materials
+  const skin = new THREE.MeshStandardMaterial({ color: 0xFFE0BD, roughness: 0.7 });
+  const hair = new THREE.MeshStandardMaterial({ color: 0x1A1A1A, roughness: 0.85 });
+  const white = new THREE.MeshStandardMaterial({ color: 0xF8F8F2, roughness: 0.7 });
+  const navy = new THREE.MeshStandardMaterial({ color: 0x1A2B4A, roughness: 0.7 });
+  const ribbon = new THREE.MeshStandardMaterial({ color: 0xC8102E, roughness: 0.4 });
+  const shoe = new THREE.MeshStandardMaterial({ color: 0x2C1810, roughness: 0.5 });
+  const bagMat = new THREE.MeshStandardMaterial({ color: 0x8B0000, roughness: 0.5, metalness: 0.1 });
+
+  // === BODY (torso) ===
+  const body = new THREE.Group();
+  // Sailor top (white box with navy collar)
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.45, 0.24), white);
+  torso.position.y = 1.08; torso.castShadow = true;
+  body.add(torso);
+  // Navy collar (V-shape approximation: 2 angled boxes)
+  const collarL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.06, 0.26), navy);
+  collarL.position.set(-0.05, 1.32, 0); collarL.rotation.z = 0.2; body.add(collarL);
+  const collarR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.06, 0.26), navy);
+  collarR.position.set(0.05, 1.32, 0); collarR.rotation.z = -0.2; body.add(collarR);
+  // Red ribbon (cross shape at chest)
+  const ribbonH = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.04, 0.04), ribbon);
+  ribbonH.position.set(0, 1.26, 0.14); body.add(ribbonH);
+  const ribbonV = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, 0.04), ribbon);
+  ribbonV.position.set(0, 1.21, 0.14); body.add(ribbonV);
+
+  // === SKIRT (pleated navy) ===
+  const skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.32, 8), navy);
+  skirt.position.y = 0.78; skirt.castShadow = true;
+  body.add(skirt);
+  // Pleats (vertical lines on skirt)
+  for (let i = 0; i < 8; i++) {
+    const pleat = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.3, 0.02), new THREE.MeshStandardMaterial({ color: 0x0F1B30, roughness: 0.7 }));
+    const a = (i / 8) * Math.PI * 2;
+    pleat.position.set(Math.cos(a) * 0.3, 0.78, Math.sin(a) * 0.3);
+    pleat.rotation.y = a;
+    body.add(pleat);
+  }
+  // Belt
+  const belt = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.27), new THREE.MeshStandardMaterial({ color: 0x4A3020, roughness: 0.6 }));
+  belt.position.y = 0.95; body.add(belt);
+
+  // === HEAD + HAIR ===
+  const headGroup = new THREE.Group();
+  headGroup.position.y = 1.5;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), skin);
+  head.castShadow = true; headGroup.add(head);
+  // Hair: back (long)
+  const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.55, 0.18), hair);
+  hairBack.position.set(0, -0.12, -0.1); hairBack.castShadow = true; headGroup.add(hairBack);
+  // Hair: top
+  const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 10), hair);
+  hairTop.position.set(0, 0.06, 0); headGroup.add(hairTop);
+  // Hair: bangs (front)
+  const bangs = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.08, 0.14), hair);
+  bangs.position.set(0, 0.1, 0.08); headGroup.add(bangs);
+  // Hair: side strands
+  for (let s of [-1, 1]) {
+    const side = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 0.16), hair);
+    side.position.set(s * 0.18, -0.08, 0); headGroup.add(side);
+  }
+  // Hair ribbons (red bows on sides)
+  for (let s of [-1, 1]) {
+    const bow = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), ribbon);
+    bow.position.set(s * 0.18, 0.05, 0.05); headGroup.add(bow);
+  }
+  // Eyes (tiny black dots)
+  for (let s of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), new THREE.MeshStandardMaterial({ color: 0x000000 }));
+    eye.position.set(s * 0.06, 0.02, 0.14); headGroup.add(eye);
+  }
+  // Mouth (small line)
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.008, 0.01), new THREE.MeshStandardMaterial({ color: 0x8B4513 }));
+  mouth.position.set(0, -0.05, 0.15); headGroup.add(mouth);
+  body.add(headGroup);
+
+  // === ARMS ===
+  function makeArm() {
+    const armGroup = new THREE.Group();
+    const sleeve = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.32, 0.12), white);
+    sleeve.position.y = -0.16; sleeve.castShadow = true; armGroup.add(sleeve);
+    // Navy cuff
+    const cuff = new THREE.Mesh(new THREE.BoxGeometry(0.125, 0.05, 0.125), navy);
+    cuff.position.y = -0.31; armGroup.add(cuff);
+    // Hand
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), skin);
+    hand.position.y = -0.36; armGroup.add(hand);
+    return armGroup;
+  }
+  const armL = makeArm();
+  armL.position.set(-0.26, 1.25, 0); body.add(armL);
+  const armR = makeArm();
+  armR.position.set(0.26, 1.25, 0); body.add(armR);
+
+  // === LEGS (long navy socks) ===
+  function makeLeg() {
+    const legGroup = new THREE.Group();
+    // Sock (navy, knee-high)
+    const sock = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.4, 0.12), navy);
+    sock.position.y = -0.2; sock.castShadow = true; legGroup.add(sock);
+    // Sock top white stripe
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.125, 0.03, 0.125), white);
+    stripe.position.y = -0.04; legGroup.add(stripe);
+    // Shoe (brown loafer)
+    const shoeMesh = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.08, 0.22), shoe);
+    shoeMesh.position.set(0, -0.4, 0.04); legGroup.add(shoeMesh);
+    return legGroup;
+  }
+  const legL = makeLeg();
+  legL.position.set(-0.1, 0.6, 0); body.add(legL);
+  const legR = makeLeg();
+  legR.position.set(0.1, 0.6, 0); body.add(legR);
+
+  // === RANDOSERU (school bag) on back ===
+  const bagGroup = new THREE.Group();
+  const bagBody = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.42, 0.16), bagMat);
+  bagBody.castShadow = true; bagGroup.add(bagBody);
+  // Flap (top)
+  const flap = new THREE.Mesh(new THREE.BoxGeometry(0.33, 0.13, 0.17), bagMat);
+  flap.position.y = 0.26; bagGroup.add(flap);
+  // Metal buckle
+  const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.02), new THREE.MeshStandardMaterial({ color: 0xD0D0D0, metalness: 0.9, roughness: 0.2 }));
+  buckle.position.set(0, 0.18, 0.09); bagGroup.add(buckle);
+  // Strap hint (thin strip on top of body)
+  const strap = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.02), bagMat);
+  strap.position.set(0, 0.1, 0.08); bagGroup.add(strap);
+  bagGroup.position.set(0, 1.05, -0.18);
+  body.add(bagGroup);
+
+  root.add(body);
+  root.userData = { armL, armR, legL, legR, headGroup };
+  return root;
+}
+
+function setupPlayer() {
+  try {
+    playerModel = buildSchoolgirl();
+    playerModel.position.set(0, 0, 0);
+    scene.add(playerModel);
+    playerParts = playerModel.userData;
+    return true;
+  } catch (e) {
+    console.error('Player load error:', e);
+    return false;
+  }
+}
+
+// ========== ZONE GLB (LittlestTokyo) ==========
+let zoneGLB = null;
+
+async function loadZoneGLB(path) {
+  if (zoneGLB) {
+    scene.remove(zoneGLB);
+    zoneGLB.traverse(o => { if (o.isMesh) o.geometry.dispose(); });
+    zoneGLB = null;
+  }
+  if (!path) return null;
+  
+  try {
+    const gltf = await loadGLB('./' + path);
+    zoneGLB = gltf.scene;
+    // LittlestTokyo is a self-contained ~80x80 unit scene. Put player in front of it.
+    zoneGLB.position.set(0, -0.5, -8);
+    zoneGLB.scale.set(0.25, 0.25, 0.25);
+    zoneGLB.rotation.y = Math.PI;
+    scene.add(zoneGLB);
+    console.log('LittlestTokyo loaded:', zoneGLB.children.length, 'children');
+    // Reset player to spawn point in front of the scene
+    if (playerModel) {
+      playerModel.position.set(0, 0, 3);
+      state.player.x = 0; state.player.z = 3; state.player.rot = Math.PI;
+    }
+    
+    zoneGLB.traverse(o => {
+      if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+    });
+    
+    return zoneGLB;
+  } catch (e) {
+    console.error('Zone GLB error:', e);
+    return null;
+  }
+}
+
+// ========== LIGHTING ==========
+let lights = {};
+function setupLighting(timeData) {
+  Object.values(lights).forEach(l => scene.remove(l));
+  lights = {};
+  
+  const ang = 25 * Math.PI / 180;
+  lights.sun = new THREE.DirectionalLight(timeData.lightColor, timeData.lightInt);
+  lights.sun.position.set(Math.cos(ang) * 30, Math.sin(ang) * 30 + 15, 20);
+  lights.sun.castShadow = true;
+  lights.sun.shadow.mapSize.set(2048, 2048);
+  lights.sun.shadow.bias = -0.0005;
+  lights.sun.shadow.camera.left = -30;
+  lights.sun.shadow.camera.right = 30;
+  lights.sun.shadow.camera.top = 30;
+  lights.sun.shadow.camera.bottom = -30;
+  scene.add(lights.sun);
+  
+  lights.fill = new THREE.DirectionalLight(0xB8DCE6, 0.3);
+  lights.fill.position.set(-20, 10, -20);
+  scene.add(lights.fill);
+  
+  lights.rim = new THREE.DirectionalLight(timeData.lightColor, 0.4);
+  lights.rim.position.set(-15, 8, -25);
+  scene.add(lights.rim);
+  
+  lights.ambient = new THREE.HemisphereLight(timeData.lightColor, 0x8B6F47, 0.4);
+  scene.add(lights.ambient);
+  
+  scene.fog = new THREE.Fog(0xF5F0E6, 15, 50);
+  renderer.toneMappingExposure = timeData.lightInt * 0.9;
+}
+
+// ========== SIMPLE PROPS (for non-GLB zones) ==========
+const zoneGroups = {};
+let groundPlane = null;
+
+function clearZoneProps() {
+  if (zoneGroups.current) {
+    scene.remove(zoneGroups.current);
+    zoneGroups.current.traverse(o => {
+      if (o.geometry && o.geometry.type !== 'PlaneGeometry') o.geometry.dispose();
+    });
+  }
+  if (groundPlane) {
+    scene.remove(groundPlane);
+    groundPlane.geometry.dispose();
+  }
+}
+
+// ========== PROP BUILDERS (Phase 4) ==========
+// Each returns a THREE.Group positioned at origin, ready to be added to scene
+
+function makeTrunk(h = 2, r = 0.2, color = 0x6B4F2A) {
+  return new THREE.Mesh(
+    new THREE.CylinderGeometry(r * 0.7, r, h, 8),
+    new THREE.MeshStandardMaterial({ color, roughness: 0.95, metalness: 0 })
+  );
+}
+
+function buildSakuraTree(x, z, scale = 1) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  // Trunk
+  const trunk = makeTrunk(2 * scale, 0.25 * scale, 0x6B4F2A);
+  trunk.position.y = 1 * scale;
+  trunk.castShadow = true; trunk.receiveShadow = true;
+  g.add(trunk);
+  // Foliage cluster (multiple pink spheres for sakura canopy)
+  const pinkMat = new THREE.MeshStandardMaterial({ color: 0xFFB6C1, roughness: 0.85, metalness: 0 });
+  const positions = [
+    [0, 2.4, 0, 1.1], [0.7, 2.6, 0.3, 0.9], [-0.6, 2.7, -0.4, 0.85],
+    [0.3, 3.1, -0.5, 0.7], [-0.4, 3.0, 0.6, 0.75]
+  ];
+  positions.forEach(([px, py, pz, pr]) => {
+    const foliage = new THREE.Mesh(
+      new THREE.SphereGeometry(pr * scale, 12, 10),
+      pinkMat
+    );
+    foliage.position.set(px * scale, py * scale, pz * scale);
+    foliage.castShadow = true;
+    g.add(foliage);
+  });
+  return g;
+}
+
+function buildGreenTree(x, z, scale = 1) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  const trunk = makeTrunk(2.5 * scale, 0.2 * scale, 0x5C3D1F);
+  trunk.position.y = 1.25 * scale;
+  trunk.castShadow = true; trunk.receiveShadow = true;
+  g.add(trunk);
+  // Conical foliage (like a pine)
+  const greenMat = new THREE.MeshStandardMaterial({ color: 0x4A7C4E, roughness: 0.9, metalness: 0 });
+  for (let i = 0; i < 3; i++) {
+    const r = (1.0 - i * 0.2) * scale;
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry(r, 1.2, 8),
+      greenMat
+    );
+    cone.position.y = (2.5 + i * 0.7) * scale;
+    cone.castShadow = true;
+    g.add(cone);
+  }
+  return g;
+}
+
+function buildLantern(x, z, rotY = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotY;
+  // Base
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x8B7355, roughness: 0.9, metalness: 0 });
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.5), baseMat);
+  base.position.y = 0.15; base.castShadow = true; g.add(base);
+  // Pole
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.8, 6), baseMat);
+  pole.position.y = 1.2; pole.castShadow = true; g.add(pole);
+  // Light box (orange)
+  const lightMat = new THREE.MeshStandardMaterial({ color: 0xFFA500, emissive: 0xFF6B00, emissiveIntensity: 0.6, roughness: 0.4, metalness: 0 });
+  const light = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), lightMat);
+  light.position.y = 2.2; light.castShadow = true; g.add(light);
+  // Roof
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.3, 4), baseMat);
+  roof.position.y = 2.6; roof.rotation.y = Math.PI / 4; roof.castShadow = true; g.add(roof);
+  return g;
+}
+
+function buildVendingMachine(x, z, rotY = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotY;
+  // Body
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xD43F3F, roughness: 0.6, metalness: 0.2 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.7), bodyMat);
+  body.position.y = 1; body.castShadow = true; body.receiveShadow = true; g.add(body);
+  // Glass front (lit)
+  const glassMat = new THREE.MeshStandardMaterial({ color: 0x2C3E50, emissive: 0xFF8C42, emissiveIntensity: 0.4, roughness: 0.2, metalness: 0.5 });
+  const glass = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.4, 0.05), glassMat);
+  glass.position.set(0, 1.2, 0.36); g.add(glass);
+  // Drink bottles (colored boxes inside)
+  const colors = [0xFF6B6B, 0x4ECDC4, 0xFFE66D, 0x95E1D3];
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      const bottle = new THREE.Mesh(
+        new THREE.BoxGeometry(0.15, 0.25, 0.1),
+        new THREE.MeshStandardMaterial({ color: colors[(row + col) % 4], roughness: 0.3, metalness: 0.1 })
+      );
+      bottle.position.set(-0.25 + col * 0.25, 0.7 + row * 0.35, 0.36);
+      g.add(bottle);
+    }
+  }
+  return g;
+}
+
+function buildTorii(x, z, rotY = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotY;
+  const redMat = new THREE.MeshStandardMaterial({ color: 0xC8102E, roughness: 0.7, metalness: 0 });
+  // Two pillars
+  for (let i = 0; i < 2; i++) {
+    const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 4, 8), redMat);
+    pillar.position.set(i * 3 - 1.5, 2, 0);
+    pillar.castShadow = true; pillar.receiveShadow = true;
+    g.add(pillar);
+  }
+  // Top beam (kasagi)
+  const topBeam = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.3, 0.4), redMat);
+  topBeam.position.set(0, 4.3, 0);
+  topBeam.castShadow = true; g.add(topBeam);
+  // Curved top decoration
+  const topCurve = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 4.8, 6), redMat);
+  topCurve.rotation.z = Math.PI / 2;
+  topCurve.position.set(0, 4.55, 0);
+  g.add(topCurve);
+  // Second beam (nuki)
+  const nuki = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.2, 0.3), redMat);
+  nuki.position.set(0, 3.5, 0);
+  nuki.castShadow = true; g.add(nuki);
+  return g;
+}
+
+function buildBench(x, z, rotY = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotY;
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x8B6F47, roughness: 0.8, metalness: 0 });
+  // Seat
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.5), woodMat);
+  seat.position.y = 0.5; seat.castShadow = true; seat.receiveShadow = true; g.add(seat);
+  // Back
+  const back = new THREE.Mesh(new THREE.BoxGeometry(2, 0.6, 0.08), woodMat);
+  back.position.set(0, 0.85, -0.22); back.castShadow = true; g.add(back);
+  // Legs
+  for (let i = 0; i < 2; i++) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.4), woodMat);
+    leg.position.set(i * 1.7 - 0.85, 0.25, 0); g.add(leg);
+  }
+  return g;
+}
+
+function buildBicycle(x, z, rotY = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotY;
+  const mat = new THREE.MeshStandardMaterial({ color: 0x2C3E50, roughness: 0.4, metalness: 0.6 });
+  // Wheels
+  for (let i = 0; i < 2; i++) {
+    const wheel = new THREE.Mesh(
+      new THREE.TorusGeometry(0.3, 0.04, 8, 16),
+      new THREE.MeshStandardMaterial({ color: 0x1A1A1A, roughness: 0.7, metalness: 0.2 })
+    );
+    wheel.position.set(i * 0.8 - 0.4, 0.3, 0);
+    wheel.rotation.y = Math.PI / 2;
+    wheel.castShadow = true;
+    g.add(wheel);
+  }
+  // Frame
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.05), mat);
+  frame.position.set(0, 0.55, 0); g.add(frame);
+  // Handlebar
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.4), mat);
+  handle.position.set(0.4, 0.7, 0); g.add(handle);
+  // Seat
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.15), new THREE.MeshStandardMaterial({ color: 0x2C2C2C, roughness: 0.8 }));
+  seat.position.set(-0.3, 0.7, 0); g.add(seat);
+  return g;
+}
+
+function buildSmallHouse(x, z, rotY = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotY;
+  // Walls (tatami beige)
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xF5DEB3, roughness: 0.85, metalness: 0 });
+  const walls = new THREE.Mesh(new THREE.BoxGeometry(4, 2.5, 3.5), wallMat);
+  walls.position.y = 1.25; walls.castShadow = true; walls.receiveShadow = true; g.add(walls);
+  // Roof (dark wood)
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x4A2F1A, roughness: 0.9, metalness: 0 });
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.2, 3.9), roofMat);
+  roof.position.y = 2.6; roof.castShadow = true; g.add(roof);
+  // Triangular roof top
+  const roofTop = new THREE.Mesh(
+    new THREE.ConeGeometry(2.7, 1.0, 4),
+    roofMat
+  );
+  roofTop.position.y = 3.0; roofTop.rotation.y = Math.PI / 4; roofTop.castShadow = true; g.add(roofTop);
+  // Door
+  const doorMat = new THREE.MeshStandardMaterial({ color: 0x6B3F1A, roughness: 0.8 });
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.6, 0.05), doorMat);
+  door.position.set(0, 0.8, 1.76); g.add(door);
+  // Window
+  const window_ = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.5, 0.05),
+    new THREE.MeshStandardMaterial({ color: 0x87CEEB, roughness: 0.3, metalness: 0.2, emissive: 0x87CEEB, emissiveIntensity: 0.2 })
+  );
+  window_.position.set(1.3, 1.5, 1.76); g.add(window_);
+  return g;
+}
+
+function buildSchoolBuilding(x, z, rotY = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotY;
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xFAF0E6, roughness: 0.85 });
+  const walls = new THREE.Mesh(new THREE.BoxGeometry(8, 3.5, 4), wallMat);
+  walls.position.y = 1.75; walls.castShadow = true; walls.receiveShadow = true; g.add(walls);
+  // Blue roof (Ghibli style)
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x3A5F7D, roughness: 0.8 });
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.2, 4.4), roofMat);
+  roof.position.y = 3.6; roof.castShadow = true; g.add(roof);
+  // Triangular gable
+  const gable = new THREE.Mesh(new THREE.ConeGeometry(2.5, 1.0, 3), roofMat);
+  gable.position.set(0, 4.0, 0); gable.rotation.y = Math.PI / 6; gable.castShadow = true; g.add(gable);
+  // Door
+  const door = new THREE.Mesh(
+    new THREE.BoxGeometry(1.2, 2, 0.05),
+    new THREE.MeshStandardMaterial({ color: 0x5C3D1F, roughness: 0.8 })
+  );
+  door.position.set(0, 1, 2.01); g.add(door);
+  // Windows (2x3 grid)
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 3; col++) {
+      const win = new THREE.Mesh(
+        new THREE.BoxGeometry(0.7, 0.8, 0.05),
+        new THREE.MeshStandardMaterial({ color: 0xB0D8E8, roughness: 0.3, metalness: 0.2, emissive: 0xB0D8E8, emissiveIntensity: 0.15 })
+      );
+      win.position.set(-2.5 + col * 2.5, 2.3 + row * 0.4, 2.01);
+      g.add(win);
+    }
+  }
+  // Sign
+  const sign = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 0.5, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0x4A4A4A, roughness: 0.6 })
+  );
+  sign.position.set(0, 3.2, 2.05); g.add(sign);
+  return g;
+}
+
+function buildStationGate(x, z, rotY = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotY;
+  // Frame
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x2C3E50, roughness: 0.5, metalness: 0.4 });
+  const left = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3.5, 0.4), frameMat);
+  left.position.set(-1.8, 1.75, 0); left.castShadow = true; g.add(left);
+  const right = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3.5, 0.4), frameMat);
+  right.position.set(1.8, 1.75, 0); right.castShadow = true; g.add(right);
+  // Top sign
+  const sign = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.8, 0.3), frameMat);
+  sign.position.set(0, 3.7, 0); sign.castShadow = true; g.add(sign);
+  // Green JR-style sign face
+  const signFace = new THREE.Mesh(
+    new THREE.BoxGeometry(4.0, 0.6, 0.05),
+    new THREE.MeshStandardMaterial({ color: 0x00A86B, emissive: 0x00A86B, emissiveIntensity: 0.3 })
+  );
+  signFace.position.set(0, 3.7, 0.18); g.add(signFace);
+  return g;
+}
+
+// ========== NPC SYSTEM (Phase 6) ==========
+// Each NPC has: model, position, name, dialogue[] (bilingual), firstVisit flag
+let currentZoneNPCs = [];
+
+function buildNPC(type, x, z, rotY = 0) {
+  const root = new THREE.Group();
+  root.position.set(x, 0, z);
+  root.rotation.y = rotY;
+  root.userData = { type, body: null, head: null, animPhase: Math.random() * Math.PI * 2 };
+
+  const skin = new THREE.MeshStandardMaterial({ color: 0xFFE0BD, roughness: 0.7 });
+  const hair = new THREE.MeshStandardMaterial({ color: 0x1A1A1A, roughness: 0.85 });
+  const white = new THREE.MeshStandardMaterial({ color: 0xF8F8F2, roughness: 0.7 });
+  const navy = new THREE.MeshStandardMaterial({ color: 0x1A2B4A, roughness: 0.7 });
+  const red = new THREE.MeshStandardMaterial({ color: 0xC8102E, roughness: 0.5 });
+
+  function makeBody(parts) {
+    const body = new THREE.Group();
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.45, 0.24), parts.torso);
+    torso.position.y = 1.08; torso.castShadow = true; body.add(torso);
+    const collar = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.08, 0.26), parts.collar);
+    collar.position.y = 1.32; body.add(collar);
+    const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.32, 8), parts.lower);
+    lower.position.y = 0.78; lower.castShadow = true; body.add(lower);
+    const belt = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.27), parts.belt);
+    belt.position.y = 0.95; body.add(belt);
+    const headGroup = new THREE.Group();
+    headGroup.position.y = 1.5;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), skin);
+    head.castShadow = true; headGroup.add(head);
+    const hairBase = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 10), parts.hair);
+    hairBase.position.set(0, 0.06, 0); headGroup.add(hairBase);
+    if (parts.longHair) {
+      const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.55, 0.18), parts.hair);
+      hairBack.position.set(0, -0.12, -0.1); headGroup.add(hairBack);
+    }
+    for (let s of [-1, 1]) {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), new THREE.MeshStandardMaterial({ color: 0x000000 }));
+      eye.position.set(s * 0.06, 0.02, 0.14); headGroup.add(eye);
+    }
+    const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.008, 0.01), new THREE.MeshStandardMaterial({ color: 0x8B4513 }));
+    mouth.position.set(0, -0.05, 0.15); headGroup.add(mouth);
+    body.add(headGroup);
+    function makeLeg() {
+      const legGroup = new THREE.Group();
+      const sock = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.4, 0.12), parts.leg);
+      sock.position.y = -0.2; legGroup.add(sock);
+      const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.08, 0.22), new THREE.MeshStandardMaterial({ color: 0x2C1810, roughness: 0.5 }));
+      shoe.position.set(0, -0.4, 0.04); legGroup.add(shoe);
+      return legGroup;
+    }
+    const legL = makeLeg(); legL.position.set(-0.1, 0.6, 0); body.add(legL);
+    const legR = makeLeg(); legR.position.set(0.1, 0.6, 0); body.add(legR);
+    root.userData.body = body;
+    root.userData.head = headGroup;
+    root.add(body);
+    return root;
+  }
+
+  switch(type) {
+    case 'classmate': {
+      const g = makeBody({ torso: white, collar: navy, lower: navy, belt: new THREE.MeshStandardMaterial({ color: 0x4A3020 }), hair, leg: navy });
+      const pony = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), hair);
+      pony.position.set(0.18, 1.5, -0.05); g.userData.head.add(pony);
+      const bow = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), red);
+      bow.position.set(0.18, 1.6, 0.05); g.userData.head.add(bow);
+      return g;
+    }
+    case 'miko': {
+      const g = makeBody({ torso: white, collar: red, lower: red, belt: new THREE.MeshStandardMaterial({ color: 0x8B0000 }), hair, leg: white });
+      const longHair = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.6, 0.18), hair);
+      longHair.position.set(0, -0.15, -0.1); g.userData.head.add(longHair);
+      const bow = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.05, 0.03), red);
+      bow.position.set(0, 1.55, 0.08); g.userData.head.add(bow);
+      return g;
+    }
+    case 'attendant': {
+      const darkBlue = new THREE.MeshStandardMaterial({ color: 0x0F1B30, roughness: 0.6 });
+      const g = makeBody({ torso: darkBlue, collar: darkBlue, lower: darkBlue, belt: new THREE.MeshStandardMaterial({ color: 0x2C1810 }), hair, leg: darkBlue });
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.08, 0.34), darkBlue);
+      cap.position.y = 0.12; g.userData.head.add(cap);
+      const visor = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.02, 0.18), darkBlue);
+      visor.position.set(0, 0.04, 0.12); g.userData.head.add(visor);
+      const shortHair = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.2, 0.32), hair);
+      shortHair.position.set(0, -0.02, 0); g.userData.head.add(shortHair);
+      return g;
+    }
+    case 'shopkeeper': {
+      const apron = new THREE.MeshStandardMaterial({ color: 0xF4A460, roughness: 0.7 });
+      const pants = new THREE.MeshStandardMaterial({ color: 0x2F4F4F, roughness: 0.8 });
+      const g = makeBody({ torso: white, collar: white, lower: pants, belt: apron, hair, leg: pants });
+      const apronFront = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.5, 0.02), apron);
+      apronFront.position.set(0, 0.95, 0.14); g.add(apronFront);
+      return g;
+    }
+    case 'senpai': {
+      const g = makeBody({ torso: white, collar: navy, lower: navy, belt: new THREE.MeshStandardMaterial({ color: 0x4A3020 }), hair, leg: navy });
+      g.scale.set(1.1, 1.1, 1.1);
+      const bun = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), hair);
+      bun.position.set(0, 0.22, 0); g.userData.head.add(bun);
+      return g;
+    }
+  }
+  return root;
+}
+
+const NPC_DEFS = {
+  1: [
+    { type: 'senpai', x: 0, z: -3, rotY: 0, name: 'รุ่นพีซัง', nameEn: 'Senpai-san',
+      dialogue: [
+        { th: 'อรุณสวัสดิ์! วันนี้เป็นไงบ้าง?', en: 'Good morning! How are you today?' },
+        { th: 'อย่าลืมเอากระเป๋าไปโรงเรียนนะ', en: "Don't forget your bag for school" },
+        { th: 'กลับมาเร็วๆ นะ!', en: 'Come back soon!' }
+      ]
+    }
+  ],
+  2: [
+    { type: 'classmate', x: 4, z: 0, rotY: -Math.PI/2, name: 'ยูอิ', nameEn: 'Yui',
+      dialogue: [
+        { th: 'สวัสดี! เรียนสนุกมั้ย?', en: 'Hi! Is class fun?' },
+        { th: 'พักเที่ยงกินเบนโตะด้วยกันมั้ย?', en: 'Eat bento together at lunch?' },
+        { th: 'ซากุระบานแล้วนะ!', en: 'Cherry blossoms are blooming!' }
+      ]
+    },
+    { type: 'classmate', x: -4, z: 2, rotY: Math.PI/2, name: 'อาโออิ', nameEn: 'Aoi',
+      dialogue: [
+        { th: 'อ่านหนังสืออะไรอยู่?', en: 'What are you reading?' },
+        { th: 'พรุ่งนี้มีสอบนะ!', en: 'Exam tomorrow, study hard!' }
+      ]
+    }
+  ],
+  3: [
+    { type: 'attendant', x: 0, z: 2, rotY: 0, name: 'เจ้าหน้าที่', nameEn: 'Conductor',
+      dialogue: [
+        { th: 'รถไฟมาอีก 5 นาทีครับ', en: 'Train arrives in 5 minutes' },
+        { th: 'ตั๋วใบละ 200 เยนครับ', en: 'Ticket is 200 yen' },
+        { th: 'ระวังของหายด้วยนะครับ', en: 'Watch your belongings' }
+      ]
+    }
+  ],
+  4: [
+    { type: 'shopkeeper', x: -3, z: 4, rotY: Math.PI/4, name: 'เจ้าของร้าน', nameEn: 'Shopkeeper',
+      dialogue: [
+        { th: 'ยินดีต้อนรับครับ!', en: 'Welcome!' },
+        { th: 'วันนี้ของสดมาใหม่', en: 'Fresh items today' },
+        { th: 'ซื้อครบ 1,000 ลด 10%', en: 'Buy 1,000 get 10% off' }
+      ]
+    }
+  ],
+  5: [
+    { type: 'miko', x: 0, z: 2, rotY: 0, name: 'มิโกะ', nameEn: 'Miko',
+      dialogue: [
+        { th: 'ยินดีต้อนรับสู่ศาลเจ้าค่ะ', en: 'Welcome to the shrine' },
+        { th: 'ขอพรให้ปลอดภัยนะคะ', en: 'May your wishes come true' },
+        { th: 'ซากุระกำลังจะบานเต็มทีค่ะ', en: 'Cherry blossoms will bloom soon' }
+      ]
+    }
+  ]
+};
+
+function placeNPCs(zoneNum) {
+  currentZoneNPCs.forEach(n => {
+    if (n.model && n.model.parent) n.model.parent.remove(n.model);
+  });
+  currentZoneNPCs = [];
+  const defs = NPC_DEFS[zoneNum] || [];
+  defs.forEach((def) => {
+    const model = buildNPC(def.type, def.x, def.z, def.rotY);
+    scene.add(model);
+    currentZoneNPCs.push({ model, def, firstVisit: true });
+  });
+}
+
+function updateNPCs() {
+  currentZoneNPCs.forEach(npc => {
+    if (npc.model && npc.model.userData.body) {
+      const u = npc.model.userData;
+      u.animPhase += 0.016;
+      u.body.position.y = Math.sin(u.animPhase * 1.5) * 0.01;
+      u.body.rotation.z = Math.sin(u.animPhase * 1.2) * 0.02;
+      if (u.head) u.head.rotation.y = Math.sin(u.animPhase * 0.8) * 0.1;
+    }
+  });
+}
+
+// ========== DIALOGUE SYSTEM (Phase 6) ==========
+const dialogue = { active: false, npc: null, lines: [], currentLine: 0 };
+
+function startDialogue(npc) {
+  if (dialogue.active) return;
+  dialogue.active = true;
+  dialogue.npc = npc;
+  if (npc.firstVisit) {
+    dialogue.lines = [
+      { th: `สวัสดีค่ะ! ฉันชื่อ ${npc.def.name}`, en: `Hello! I'm ${npc.def.nameEn}` },
+      ...npc.def.dialogue
+    ];
+    npc.firstVisit = false;
+  } else {
+    dialogue.lines = npc.def.dialogue;
+  }
+  dialogue.currentLine = 0;
+  showDialogue();
+}
+
+function advanceDialogue() {
+  dialogue.currentLine++;
+  if (dialogue.currentLine >= dialogue.lines.length) {
+    endDialogue();
+  } else {
+    showDialogue();
+  }
+}
+
+function endDialogue() {
+  dialogue.active = false;
+  document.getElementById('dialogue').classList.remove('active');
+  document.getElementById('interact-prompt').style.display = 'none';
+}
+
+function showDialogue() {
+  const line = dialogue.lines[dialogue.currentLine];
+  document.getElementById('dlg-name').textContent = `${dialogue.npc.def.name} · ${dialogue.npc.def.nameEn}`;
+  document.getElementById('dlg-th').textContent = line.th;
+  document.getElementById('dlg-en').textContent = line.en;
+  document.getElementById('dlg-progress').textContent = `${dialogue.currentLine + 1} / ${dialogue.lines.length}`;
+  document.getElementById('dialogue').classList.add('active');
+}
+
+function checkNPCInteraction() {
+  if (dialogue.active) return;
+  if (!playerModel) return;
+  const px = playerModel.position.x, pz = playerModel.position.z;
+  for (const npc of currentZoneNPCs) {
+    const dx = npc.model.position.x - px, dz = npc.model.position.z - pz;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    if (dist < 2.5) {
+      const prompt = document.getElementById('interact-prompt');
+      prompt.style.display = 'block';
+      prompt.textContent = `[E] คุยกับ ${npc.def.name}`;
+      window._nearestNPC = npc;
+      return;
+    }
+  }
+  document.getElementById('interact-prompt').style.display = 'none';
+  window._nearestNPC = null;
+}
+
+function buildZoneProps(zoneNum) {
+  // Returns array of prop Groups for the given zone
+  const props = [];
+  switch(zoneNum) {
+    case 1: // Home
+      props.push(buildSmallHouse(-4, -3, 0.1));
+      props.push(buildSmallHouse(5, -4, -0.2));
+      props.push(buildBicycle(3, 2, Math.PI));
+      props.push(buildBench(0, 4, Math.PI));
+      props.push(buildGreenTree(-7, 4, 0.9));
+      props.push(buildGreenTree(7, 5, 1.0));
+      break;
+    case 2: // School
+      props.push(buildSchoolBuilding(-5, -6, 0));
+      props.push(buildSakuraTree(4, -5, 1.2));
+      props.push(buildSakuraTree(6, -3, 1.0));
+      props.push(buildSakuraTree(-7, -4, 1.1));
+      props.push(buildSakuraTree(3, 3, 0.9));
+      props.push(buildSakuraTree(-2, 6, 1.0));
+      props.push(buildBench(2, -2, Math.PI / 2));
+      props.push(buildBicycle(7, 4, -Math.PI / 4));
+      break;
+    case 3: // Station
+      props.push(buildStationGate(0, -5, 0));
+      props.push(buildVendingMachine(-3, 2, Math.PI / 6));
+      props.push(buildVendingMachine(3, 2, -Math.PI / 6));
+      props.push(buildBench(0, 3, Math.PI));
+      props.push(buildLantern(-5, 5, 0));
+      props.push(buildLantern(5, 5, 0));
+      props.push(buildGreenTree(-7, 7, 0.8));
+      props.push(buildGreenTree(7, 7, 0.8));
+      break;
+    case 4: // Shopping (LittlestTokyo) - skip props, GLB is the scene
+      break;
+    case 5: // Shrine
+      props.push(buildTorii(0, -4, 0));
+      props.push(buildSakuraTree(-4, -2, 1.3));
+      props.push(buildSakuraTree(4, -2, 1.3));
+      props.push(buildSakuraTree(-6, 3, 1.1));
+      props.push(buildSakuraTree(6, 3, 1.1));
+      props.push(buildSakuraTree(-3, 5, 1.0));
+      props.push(buildSakuraTree(3, 5, 1.0));
+      props.push(buildLantern(-2, 1, 0));
+      props.push(buildLantern(2, 1, 0));
+      props.push(buildBench(0, 4, Math.PI));
+      break;
+  }
+  return props;
+}
+
+function buildSimpleZone(zoneNum) {
+  clearZoneProps();
+  const group = new THREE.Group();
+  
+  const groundType = ['wood','concrete','asphalt','concrete','concrete'][zoneNum-1];
+  const groundColor = [0xC8A26A, 0xC8BFB0, 0x5A5650, 0xB8AFA0, 0xB8A872][zoneNum-1];
+  groundPlane = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), getMat(groundType, groundColor));
+  groundPlane.rotation.x = -Math.PI / 2;
+  groundPlane.receiveShadow = true;
+  group.add(groundPlane);
+  
+  // Add zone-specific props
+  const props = buildZoneProps(zoneNum);
+  props.forEach(p => group.add(p));
+  
+  zoneGroups.current = group;
+  scene.add(group);
+}
+
+// ========== ZONE SWITCH ==========
+async function switchZone(zone) {
+  if (state.currentZone === zone && document.body.className.includes('zone')) return;
+  state.currentZone = zone;
+  const z = ZONES[zone];
+  
+  document.body.className = '';
+  // For LittlestTokyo zone, skip the Ghibli background (the 3D scene is the backdrop)
+  if (!z.glb) document.body.classList.add('zone' + zone);
+  
+  document.getElementById('zoneNum').textContent = `ZONE 0${zone}`;
+  document.getElementById('zoneName').textContent = z.name;
+  document.getElementById('zoneJp').textContent = z.jp;
+  document.getElementById('zoneEn').textContent = z.en;
+  document.getElementById('timeValue').textContent = z.time;
+  document.getElementById('timeLabel').textContent = z.timeName;
+  
+  document.querySelectorAll('.zone-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-zone="${zone}"]`).classList.add('active');
+  
+  setupLighting(z);
+  
+  if (z.glb) {
+    await loadZoneGLB(z.glb);
+    placeNPCs(zone); // NPCs can be inside the GLB scene area too
+  } else {
+    clearZoneProps();
+    buildSimpleZone(zone);
+    placeNPCs(zone);
+  }
+  
+  // Mark schedule as visited
+  const schedEl = document.getElementById('sched-' + zone);
+  if (schedEl) {
+    schedEl.classList.add('done');
+    const check = schedEl.querySelector('.sched-check');
+    if (check) check.textContent = '✓';
+  }
+  
+  if (playerModel) {
+    if (zone === 4) {
+      // Spawn in front of LittlestTokyo
+      playerModel.position.set(0, 0, 3);
+      state.player.x = 0; state.player.z = 3; state.player.rot = Math.PI;
+    } else {
+      playerModel.position.set(0, 0, 0);
+      state.player.x = 0; state.player.z = 0; state.player.rot = 0;
+    }
+  }
+}
+
+document.querySelectorAll('.zone-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchZone(parseInt(btn.dataset.zone)));
+});
+
+// ========== CAMERA ==========
+const camTarget = new THREE.Vector3(0, 1, 0);
+function updateCamera() {
+  if (!playerModel) return;
+  const target = new THREE.Vector3(playerModel.position.x, playerModel.position.y + 1.2, playerModel.position.z);
+  const camPos = target.clone().add(new THREE.Vector3(
+    Math.sin(state.player.rot) * 7,
+    3.5,
+    Math.cos(state.player.rot) * 7
+  ));
+  camera.position.lerp(camPos, 0.1);
+  camTarget.lerp(target, 0.1);
+  camera.lookAt(camTarget);
+}
+
+// ========== INPUT ==========
+window.addEventListener('keydown', e => {
+  state.keys[e.code] = true;
+  if (e.code === 'Digit1') switchZone(1);
+  if (e.code === 'Digit2') switchZone(2);
+  if (e.code === 'Digit3') switchZone(3);
+  if (e.code === 'Digit4') switchZone(4);
+  if (e.code === 'Digit5') switchZone(5);
+  // Dialogue: E or Space to advance
+  if ((e.code === 'KeyE' || e.code === 'Space') && dialogue.active) {
+    advanceDialogue();
+    e.preventDefault();
+    return;
+  }
+  // Start dialogue
+  if (e.code === 'KeyE' && !dialogue.active && window._nearestNPC) {
+    startDialogue(window._nearestNPC);
+    e.preventDefault();
+  }
+});
+window.addEventListener('keyup', e => { state.keys[e.code] = false; });
+
+let dragging = false, lastX = 0;
+window.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; });
+window.addEventListener('mouseup', () => { dragging = false; });
+window.addEventListener('mousemove', e => {
+  if (dragging) { state.player.rot -= (e.clientX - lastX) * 0.005; lastX = e.clientX; }
+});
+
+let touchX = 0;
+window.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+window.addEventListener('touchmove', e => {
+  state.player.rot -= (e.touches[0].clientX - touchX) * 0.005;
+  touchX = e.touches[0].clientX;
+});
+
+// ========== UPDATE LOOP ==========
+let lastT = performance.now();
+
+function update() {
+  const now = performance.now();
+  const dt = Math.min((now - lastT) / 1000, 0.1);
+  lastT = now;
+  
+  if (playerModel) {
+    const spd = (state.keys.ShiftLeft || state.keys.ShiftRight) ? 8 : 4;
+    let mx = 0, mz = 0;
+    if (state.keys.KeyW || state.keys.ArrowUp) mz -= 1;
+    if (state.keys.KeyS || state.keys.ArrowDown) mz += 1;
+    if (state.keys.KeyA || state.keys.ArrowLeft) mx -= 1;
+    if (state.keys.KeyD || state.keys.ArrowRight) mx += 1;
+    
+    let anim = 'idle';
+    if (mx || mz) {
+      anim = (spd === 8) ? 'run' : 'walk';
+      const len = Math.sqrt(mx*mx + mz*mz);
+      mx /= len; mz /= len;
+      const c = Math.cos(state.player.rot), s = Math.sin(state.player.rot);
+      const wx = mx * c - mz * s, wz = mx * s + mz * c;
+      state.player.x += wx * spd * dt;
+      state.player.z += wz * spd * dt;
+      state.player.x = Math.max(-25, Math.min(25, state.player.x));
+      state.player.z = Math.max(-25, Math.min(25, state.player.z));
+      playerModel.rotation.y = Math.atan2(wx, wz);
+    }
+    
+    if ((state.keys.Space) && state.player.onGround) {
+      state.player.vy = 4; state.player.onGround = false;
+    }
+    state.player.vy -= 9.8 * dt;
+    state.player.y += state.player.vy * dt;
+    if (state.player.y <= 0) { state.player.y = 0; state.player.vy = 0; state.player.onGround = true; }
+    
+    playerModel.position.set(state.player.x, state.player.y, state.player.z);
+    
+    // Procedural walk/run animation
+    if (playerParts) {
+      if (anim === 'idle') {
+        // Reset to neutral pose smoothly
+        playerParts.legL.rotation.x *= 0.85;
+        playerParts.legR.rotation.x *= 0.85;
+        playerParts.armL.rotation.x = (-playerParts.armL.rotation.x) * 0.15 + (-0.05);
+        playerParts.armR.rotation.x *= 0.85;
+        // Gentle body bob (no movement)
+        playerParts.headGroup.rotation.z = Math.sin(now * 0.001) * 0.02;
+      } else {
+        const speed = anim === 'run' ? 14 : 7;
+        walkPhase += dt * speed;
+        const swing = Math.sin(walkPhase) * 0.5;
+        playerParts.legL.rotation.x = swing;
+        playerParts.legR.rotation.x = -swing;
+        playerParts.armL.rotation.x = -swing * 0.6;
+        playerParts.armR.rotation.x = swing * 0.6;
+        // Slight body tilt + head bob
+        playerParts.headGroup.rotation.z = Math.sin(walkPhase + Math.PI) * 0.04;
+      }
+    }
+  }
+  
+  updateCamera();
+  updateNPCs();
+  checkNPCInteraction();
+  renderer.render(scene, camera);
+  requestAnimationFrame(update);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ========== BOOT ==========
+async function boot() {
+  const loadBar = document.getElementById('loadBar');
+  const loadStatus = document.getElementById('loadStatus');
+  
+  const steps = [
+    { status: 'Loading Three.js...', progress: 10 },
+    { status: 'Loading player model...', progress: 30 },
+    { status: 'Loading LittlestTokyo...', progress: 60 },
+    { status: 'Building initial zone...', progress: 80 },
+    { status: 'Ready to play!', progress: 100 }
+  ];
+  
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    loadStatus.textContent = step.status;
+    loadBar.style.width = step.progress + '%';
+    if (i === 1) await setupPlayer();
+    if (i === 2) await loadGLB('./LittlestTokyo.glb').catch(() => null);
+    await new Promise(r => setTimeout(r, 200));
+  }
+  
+  await switchZone(1);
+  
+  document.querySelector(`[data-zone="1"]`).classList.add('active');
+  document.getElementById('loading').classList.add('fade');
+  setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 500);
+  
+  update();
+}
+
+boot();
+</script>
+
+</body>
+</html>

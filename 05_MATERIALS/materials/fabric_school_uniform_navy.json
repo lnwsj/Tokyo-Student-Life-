@@ -1,0 +1,67 @@
+{
+  "id": "fabric.school_uniform_navy",
+  "name": "School Uniform Navy Fabric",
+  "name_jp": "制服の紺色生地",
+  "name_th": "ผ้าชุดนักเรียนสีกรมท่า",
+  "category": "fabric",
+  "description": "ผ้าชุดนักเรียนสีกรมท่า (navy) — ใช้สำหรับเสื้อสูท กระโปรง กางเกง ผ้าแน่นทอ",
+
+  "specs": {
+    "base_color": "#2D4A6B",
+    "variation": ["#1A3A5B", "#3D5A7B", "#2A4560"],
+    "roughness": 0.88,
+    "roughness_variation": 0.05,
+    "metallic": 0.0,
+    "normal_scale": 0.3
+  },
+
+  "texture": {
+    "type": "weave_tight",
+    "size": 256,
+    "tiling": [3, 3],
+    "color_space": "sRGB",
+    "format": "PNG"
+  },
+
+  "use_cases": [
+    "เสื้อสูทนักเรียน (blazer)",
+    "กระโปรงนักเรียน",
+    "กางเกงนักเรียน",
+    "เนคไท",
+    "ผ้าพันคอ"
+  ],
+
+  "zones": [1, 2, 3, 4],
+
+  "uniform_color_rules": {
+    "blazer": "#2D4A6B (navy)",
+    "skirt_boys": "#2D4A6B (navy)",
+    "skirt_girls": "plaid variant (น้ำเงิน + ขาว)",
+    "tie": "striped (navy + white)",
+    "socks": "#2D4A6B or white"
+  },
+
+  "examples": {
+    "good": [
+      "เสื้อสูทนักเรียนญี่ปุ่นสีกรมท่า",
+      "กระโปรงพลีดน้ำเงิน-ขาว",
+      "กางเกงสแล็คสีน้ำเงินเข้ม"
+    ],
+    "bad": [
+      "ชุดนักเรียนอนิเมะ (สั้นเกินไป)",
+      "ชุดมีลายเยอะเกินไป",
+      "สีน้ำเงินสดเกินไป (ต้อง muted navy)",
+      "ผ้าที่ดูเหมือน polyester shiny"
+    ]
+  },
+
+  "wear": {
+    "default_amount": 0.05,
+    "description": "ผ้าใหม่เกือบ brand new มีรอยยับเล็กน้อย"
+  },
+
+  "real_world_reference": [
+    "ชุดนักเรียนญี่ปุ่นแบบ blazer (私立高校)",
+    "ชุดกรมท่าแบบดั้งเดิม"
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "neon.warm",
+  "name": "Warm Neon (Emissive)",
+  "name_jp": "温かいネオン",
+  "name_th": "นีออนอุ่น",
+  "category": "neon",
+  "description": "นีออนอุ่น — ใช้เฉพาะ Zone 4 (Shopping) สีส้ม-ชมพู มี emissive glow ใช้สำหรับป้ายร้าน ตู้ vending",
+
+  "specs": {
+    "base_color": "#FF6B35",
+    "variation": ["#E55A25", "#FF7C45", "#FF8555"],
+    "roughness": 0.40,
+    "roughness_variation": 0.10,
+    "metallic": 0.0,
+    "emissive": "#FF6B35",
+    "emissive_intensity": 0.8,
+    "emissive_variation": 0.2
+  },
+
+  "use_cases": [
+    "ป้ายร้าน (neon sign)",
+    "ตู้ vending display",
+    "ไฟตกแต่ง",
+    "ป้ายร้านอาหาร"
+  ],
+
+  "zones": [4],
+
+  "rules": {
+    "use_only_in": "Zone 4 (Shopping) — เท่านั้น",
+    "color_palette": "orange / pink / yellow เท่านั้น",
+    "do_not_use": "blue / green / cyan / pure red",
+    "max_count_per_scene": 8,
+    "must_have_bloom": true
+  },
+
+  "examples": {
+    "good": [
+      "ป้าย 'Ramen' สีส้ม neon",
+      "ตู้ vending แสงสีอุ่น",
+      "ป้ายร้านอาหารสีชมพูอ่อน"
+    ],
+    "bad": [
+      "Neon สีน้ำเงิน (ผิด palette)",
+      "Neon สีเขียว (cyberpunk)",
+      "Neon ทั้ง scene (over-busy)",
+      "Neon ใน Home/School zone (ผิด mood)"
+    ]
+  },
+
+  "performance_notes": {
+    "emissive_with_bloom": "ต้องใช้ bloom post-processing",
+    "instance_limit": "ไม่เกิน 5-8 ป้ายต่อ scene",
+    "disable_for_low_end": "ปิดได้ใน settings (ประหยัด GPU)"
+  }
+}

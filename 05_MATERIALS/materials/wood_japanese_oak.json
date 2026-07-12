@@ -1,0 +1,70 @@
+{
+  "id": "wood.japanese_oak",
+  "name": "Japanese Oak Wood",
+  "name_jp": "日本のオーク材",
+  "name_th": "ไม้โอ๊คญี่ปุ่น",
+  "category": "wood",
+  "description": "ไม้โอ๊คญี่ปุ่น — สีอบอุ่น ใช้ในเฟอร์นิเจอร์ ของใช้ในบ้าน โทนน้ำตาลทอง",
+
+  "specs": {
+    "base_color": "#C8A26A",
+    "variation": ["#B8946A", "#D4B280", "#BC9866"],
+    "roughness": 0.75,
+    "roughness_variation": 0.10,
+    "metallic": 0.0,
+    "normal_scale": 0.4
+  },
+
+  "texture": {
+    "type": "wood_grain",
+    "size": 512,
+    "tiling": [2, 2],
+    "color_space": "sRGB",
+    "format": "PNG"
+  },
+
+  "use_cases": [
+    "เฟอร์นิเจอร์",
+    "โครงสร้างภายใน",
+    "ขอบหน้าต่าง",
+    "ราวบันได",
+    "โต๊ะ",
+    "เก้าอี้"
+  ],
+
+  "zones": [1, 2, 3, 4, 5],
+
+  "examples": {
+    "good": [
+      "โต๊ะไม้ญี่ปุ่น minimal",
+      "เก้าอี้ไม้ warm tone",
+      "ตู้เสื้อผ้าไม้โอ๊ค",
+      "ขอบหน้าต่างไม้"
+    ],
+    "bad": [
+      "ไม้ที่ดูเหมือน plastic",
+      "ไม้ที่มี grain เป็นเส้นตรงเรียบเกินไป",
+      "ไม้สีสว่างเกินไป (whitish)",
+      "ไม้ที่ดู brand new ไม่มี wear"
+    ]
+  },
+
+  "wear": {
+    "default_amount": 0.1,
+    "description": "มีรอยขีดเล็กน้อย คราบฝุ่นบางๆ ไม่ brand new",
+    "areas": ["รอยขีดจาง", "ฝุ่นสะสม", "รอยนิ้วมือ (subtle)"]
+  },
+
+  "real_world_reference": [
+    "Japanese oak (Quercus mongolica)",
+    "ใช้ในเฟอร์นิเจอร์ Muji",
+    "ใช้ในบ้านญี่ปุ่นดั้งเดิม"
+  ],
+
+  "code_example": {
+    "import": "import { getMaterial } from '../material_factory.js';",
+    "basic": "const mat = getMaterial('wood.japanese_oak');",
+    "with_variation": "const mat = getMaterial('wood.japanese_oak', { variation: 0.3, wear: 0.15 });",
+    "in_mesh": "mesh.material = getMaterial('wood.japanese_oak');"
+  }
+}
