@@ -41,6 +41,31 @@
   /* Phase 8: Mute button */
   .mute-btn { position: fixed; top: 1.5rem; right: 0.5rem; background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.6rem; font-size: 1.1rem; cursor: pointer; z-index: 15; backdrop-filter: blur(8px); min-width: 40px; }
   
+  /* Phase 11: Mobile touch controls */
+  .touch-controls { position: fixed; bottom: 0; left: 0; right: 0; height: 35vh; pointer-events: none; z-index: 20; display: none; }
+  .touch-dpad { position: absolute; bottom: 2rem; left: 2rem; width: 150px; height: 150px; pointer-events: auto; }
+  .touch-btn { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: rgba(245, 240, 230, 0.6); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .touch-btn:active { background: rgba(45, 74, 107, 0.4); color: white; }
+  .touch-btn.up { top: 0; left: 50%; transform: translateX(-50%); }
+  .touch-btn.down { bottom: 0; left: 50%; transform: translateX(-50%); }
+  .touch-btn.left { left: 0; top: 50%; transform: translateY(-50%); }
+  .touch-btn.right { right: 0; top: 50%; transform: translateY(-50%); }
+  .touch-actions { position: absolute; bottom: 2rem; right: 2rem; display: flex; flex-direction: column; gap: 1rem; pointer-events: auto; }
+  .touch-action-btn { width: 60px; height: 60px; border-radius: 50%; background: rgba(245, 240, 230, 0.7); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .touch-action-btn:active { background: var(--primary); color: white; }
+  /* Show on touch devices only */
+  @media (hover: none) and (pointer: coarse) {
+    .touch-controls { display: block; }
+  }
+  @media (max-width: 768px) {
+    .touch-controls { display: block; }
+  }
+
+  /* Phase 11: New Game button */
+  .new-game-btn { position: fixed; top: 7.5rem; right: 0.5rem; background: rgba(220, 80, 80, 0.85); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 0.3rem 0.5rem; font-size: 0.9rem; cursor: pointer; z-index: 15; backdrop-filter: blur(8px); }
+  .new-game-btn:hover { background: rgba(200, 60, 60, 0.95); }
+  .new-game-btn.confirm { background: #4CAF50; }
+
   /* Phase 10: Day complete toast */
   .day-toast { position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: linear-gradient(135deg, #FFB347, #FF8C42); color: white; padding: 1.5rem 2.5rem; border-radius: 16px; font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 500; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 50; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); text-align: center; min-width: 280px; }
   .day-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
@@ -146,6 +171,21 @@
   <div class="save-load-btns">
     <button class="save-btn" id="saveBtn" title="Save (S)">💾</button>
     <button class="load-btn" id="loadBtn" title="Load (L)">📂</button>
+    <button class="new-game-btn" id="newGameBtn" title="New Game">🔄</button>
+  </div>
+
+  <!-- Phase 11: Mobile touch controls -->
+  <div class="touch-controls">
+    <div class="touch-dpad">
+      <div class="touch-btn up" data-key="KeyW">↑</div>
+      <div class="touch-btn down" data-key="KeyS">↓</div>
+      <div class="touch-btn left" data-key="KeyA">←</div>
+      <div class="touch-btn right" data-key="KeyD">→</div>
+    </div>
+    <div class="touch-actions">
+      <div class="touch-action-btn" data-key="KeyE">E</div>
+      <div class="touch-action-btn" data-key="Space">⤴</div>
+    </div>
   </div>
   </div>
   <div class="zone-indicator">
@@ -1905,6 +1945,54 @@ document.getElementById('timePause').addEventListener('click', () => { if(typeof
 document.getElementById('muteBtn').addEventListener('click', () => { if(typeof initAudio === 'function') initAudio(); toggleMute(); });
 document.getElementById('saveBtn').addEventListener('click', manualSave);
 document.getElementById('loadBtn').addEventListener('click', manualLoad);
+
+// Phase 11: New Game button
+function newGame() {
+  if (!confirm('เริ่มเกมใหม่? / Start new game? (Save will be cleared)')) return;
+  if (typeof deleteSave === 'function') deleteSave();
+  // Reset state
+  state.currentZone = 1;
+  state.gameTime = { hour: 7, minute: 0 };
+  state.timePaused = false;
+  state.timeScale = 1;
+  state.player = { x: 0, y: 0, z: 0, vy: 0, onGround: true, rot: 0 };
+  state.visitedZones = [];
+  state.day = 1;
+  state.dayComplete = false;
+  // Clear schedule UI
+  for (let z = 1; z <= 5; z++) {
+    const el = document.getElementById('sched-' + z);
+    if (el) { el.classList.remove('done'); const c = el.querySelector('.sched-check'); if (c) c.textContent = ''; }
+  }
+  if (typeof switchZone === 'function') switchZone(1);
+  if (typeof updateTimeUI === 'function') updateTimeUI();
+  // Visual feedback
+  const btn = document.getElementById('newGameBtn');
+  if (btn) {
+    btn.classList.add('confirm');
+    btn.textContent = '✓';
+    setTimeout(() => { btn.classList.remove('confirm'); btn.textContent = '🔄'; }, 1500);
+  }
+}
+document.getElementById('newGameBtn').addEventListener('click', newGame);
+
+// Phase 11: Mobile touch controls
+function setupTouchControls() {
+  const buttons = document.querySelectorAll('.touch-btn, .touch-action-btn');
+  buttons.forEach(btn => {
+    const key = btn.dataset.key;
+    if (!key) return;
+    const press = (e) => { e.preventDefault(); state.keys[key] = true; };
+    const release = (e) => { e.preventDefault(); state.keys[key] = false; };
+    btn.addEventListener('touchstart', press, { passive: false });
+    btn.addEventListener('touchend', release, { passive: false });
+    btn.addEventListener('touchcancel', release, { passive: false });
+    btn.addEventListener('mousedown', press);
+    btn.addEventListener('mouseup', release);
+    btn.addEventListener('mouseleave', release);
+  });
+}
+setupTouchControls();
 document.querySelectorAll('.time-speed').forEach(b => {
   b.addEventListener('click', () => setTimeScale(Number(b.dataset.speed)));
 });
