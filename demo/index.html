@@ -16,6 +16,12 @@
   body.zone3 { background-image: url('./backgrounds/zone3_station.jpg'); }
   body.zone4 { background-image: url('./backgrounds/zone4_shopping.jpg'); }
   body.zone5 { background-image: url('./backgrounds/zone5_shrine.jpg'); }
+  /* Procedural gradient fallbacks (for codehub/no-images version) */
+  body.zone1.no-bg { background-image: linear-gradient(180deg, #FFD194 0%, #F5F0E6 50%, #E8D8B8 100%); }
+  body.zone2.no-bg { background-image: linear-gradient(180deg, #FFB7C5 0%, #FFFAF0 50%, #FFC9D9 100%); }
+  body.zone3.no-bg { background-image: linear-gradient(180deg, #FF8C42 0%, #F5E0C0 50%, #B89B7A 100%); }
+  body.zone4.no-bg { background-image: linear-gradient(180deg, #FFC080 0%, #FFDDB0 50%, #E0A878 100%); }
+  body.zone5.no-bg { background-image: linear-gradient(180deg, #FFB347 0%, #FFD494 50%, #C19A6B 100%); }
   canvas { display: block; background: transparent; }
   
   .hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
@@ -232,18 +238,32 @@
   <div class="dlg-hint">กด <span class="key">E</span> หรือ <span class="key">Space</span> เพื่อไปต่อ / Press to continue</div>
 </div>
 
+<script>
+// Auto-fallback: if background image fails, use CSS gradient
+document.addEventListener('DOMContentLoaded', () => {
+  for (let z = 1; z <= 5; z++) {
+    const img = new Image();
+    img.onerror = () => {
+      document.body.classList.add(`zone${z}`);
+      document.body.classList.add('no-bg');
+    };
+    img.src = `./backgrounds/zone${z}_${['home','school','station','shopping','shrine'][z-1]}.jpg`;
+  }
+});
+</script>
 <script type="importmap">
 {
   "imports": {
-    "three": "./three.module.js"
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   }
 }
 </script>
 
 <script type="module">
 import * as THREE from 'three';
-import { GLTFLoader } from './GLTFLoader.js';
-import { DRACOLoader } from './DRACOLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const state = {
   currentZone: 1,
@@ -261,7 +281,7 @@ const ZONES = {
   1: { name: 'บ้าน', jp: 'ホーム · Home', en: 'Apartment 1DK', icon: '🏠', time: '07:00', timeName: 'เช้า · Morning', bg: './backgrounds/zone1_home.jpg', lightColor: 0xFFD194, lightInt: 1.0, glb: null },
   2: { name: 'โรงเรียน', jp: '学校 · School', en: 'No. 2 Middle School', icon: '🏫', time: '12:00', timeName: 'เที่ยง · Noon', bg: './backgrounds/zone2_school.jpg', lightColor: 0xFFFAF0, lightInt: 1.3, glb: null },
   3: { name: 'สถานีรถไฟ', jp: '駅 · Station', en: 'JR Sakuradai', icon: '🚉', time: '17:30', timeName: 'เย็น · Evening', bg: './backgrounds/zone3_station.jpg', lightColor: 0xFF8C42, lightInt: 1.2, glb: null },
-  4: { name: 'ย่านช้อปปิ้ง', jp: '商店街 · Shopping', en: 'Local Arcade', icon: '🛍️', time: '17:00', timeName: 'เย็น · Evening', bg: './backgrounds/zone4_shopping.jpg', lightColor: 0xFFC080, lightInt: 1.1, glb: 'LittlestTokyo.glb' },
+  4: { name: 'ย่านช้อปปิ้ง', jp: '商店街 · Shopping', en: 'Local Arcade', icon: '🛍️', time: '17:00', timeName: 'เย็น · Evening', bg: './backgrounds/zone4_shopping.jpg', lightColor: 0xFFC080, lightInt: 1.1, glb: 'https://threejs.org/examples/models/gltf/LittlestTokyo.glb' },
   5: { name: 'ศาลเจ้า + สวน', jp: '神社 · Shrine', en: 'Sakurayama Shrine', icon: '⛩️', time: '16:00', timeName: 'เย็น · Sunset', bg: './backgrounds/zone5_shrine.jpg', lightColor: 0xFFB347, lightInt: 1.1, glb: null }
 };
 
@@ -281,7 +301,7 @@ document.body.appendChild(renderer.domElement);
 
 // ========== LOADERS ==========
 const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('./'); // decoder files are in same directory
+dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/'); // decoder files on CDN
 const gltfLoader = new GLTFLoader();
 gltfLoader.setDRACOLoader(dracoLoader);
 const modelCache = {};
@@ -1925,7 +1945,7 @@ async function boot() {
     loadStatus.textContent = step.status;
     loadBar.style.width = step.progress + '%';
     if (i === 1) await setupPlayer();
-    if (i === 2) await loadGLB('./LittlestTokyo.glb').catch(() => null);
+    if (i === 2) await loadGLB('https://threejs.org/examples/models/gltf/LittlestTokyo.glb').catch(() => null);
     await new Promise(r => setTimeout(r, 200));
   }
   
