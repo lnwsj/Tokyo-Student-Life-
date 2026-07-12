@@ -41,6 +41,12 @@
   /* Phase 8: Mute button */
   .mute-btn { position: fixed; top: 1.5rem; right: 0.5rem; background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.6rem; font-size: 1.1rem; cursor: pointer; z-index: 15; backdrop-filter: blur(8px); min-width: 40px; }
   
+  /* Phase 10: Day complete toast */
+  .day-toast { position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: linear-gradient(135deg, #FFB347, #FF8C42); color: white; padding: 1.5rem 2.5rem; border-radius: 16px; font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 500; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 50; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); text-align: center; min-width: 280px; }
+  .day-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .day-toast.complete { background: linear-gradient(135deg, #66BB6A, #4CAF50); }
+  .day-toast .day-toast-sub { font-size: 0.7rem; opacity: 0.85; margin-top: 0.3rem; font-family: 'Noto Sans JP', sans-serif; }
+
   /* Phase 9: Save/Load buttons */
   .save-load-btns { position: fixed; top: 4.2rem; right: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; z-index: 15; }
   .save-btn, .load-btn { background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 8px; padding: 0.3rem 0.5rem; font-size: 0.9rem; cursor: pointer; backdrop-filter: blur(8px); }
@@ -131,6 +137,12 @@
     </div>
   </div>
   <button class="mute-btn" id="muteBtn" title="Mute (M)">🔊</button>
+
+  <!-- Phase 10: Day toast -->
+  <div class="day-toast" id="dayToast">
+    <div class="day-toast-main"></div>
+    <div class="day-toast-sub"></div>
+  </div>
   <div class="save-load-btns">
     <button class="save-btn" id="saveBtn" title="Save (S)">💾</button>
     <button class="load-btn" id="loadBtn" title="Load (L)">📂</button>
@@ -160,7 +172,7 @@
 </div>
 
 <div class="schedule-card">
-  <div class="sched-title">📅 วันนี้ / Today</div>
+  <div class="sched-title" id="schedTitle">📅 วันที่ 1 / Day 1</div>
   <div class="sched-item" id="sched-1"><span class="sched-icon">🏠</span> ตื่นนอน / Wake up<span class="sched-check"></span></div>
   <div class="sched-item" id="sched-2"><span class="sched-icon">🏫</span> เรียน / School<span class="sched-check"></span></div>
   <div class="sched-item" id="sched-3"><span class="sched-icon">🚉</span> รถไฟ / Train<span class="sched-check"></span></div>
@@ -200,7 +212,9 @@ const state = {
   timeScale: 1,
   keys: {},
   player: { x: 0, y: 0, z: 0, vy: 0, onGround: true, rot: 0 },
-  visitedZones: []
+  visitedZones: [],
+  day: 1,
+  dayComplete: false
 };
 
 const ZONES = {
@@ -685,6 +699,8 @@ function saveGame() {
       timeScale: state.timeScale,
       player: { ...state.player },
       visitedZones: [...state.visitedZones],
+      day: state.day,
+      dayComplete: state.dayComplete,
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -714,6 +730,8 @@ function applySave(data) {
   if (data.timeScale !== undefined) state.timeScale = data.timeScale;
   if (data.player) state.player = { ...data.player };
   if (data.visitedZones) state.visitedZones = [...data.visitedZones];
+  if (data.day !== undefined) state.day = data.day;
+  if (data.dayComplete !== undefined) state.dayComplete = data.dayComplete;
   return true;
 }
 
@@ -783,6 +801,19 @@ function tryAutoLoad() {
       console.log('Auto-loaded save from', new Date(data.savedAt).toLocaleTimeString());
     }
   }
+}
+
+// ========== PHASE 10: DAY TOAST ==========
+function showDayToast(message, color) {
+  const toast = document.getElementById('dayToast');
+  if (!toast) return;
+  const parts = message.split(' / ');
+  toast.querySelector('.day-toast-main').textContent = parts[0] || message;
+  toast.querySelector('.day-toast-sub').textContent = parts[1] || '';
+  toast.classList.add('show');
+  if (color && color.includes('4CAF50')) toast.classList.add('complete');
+  else toast.classList.remove('complete');
+  setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
 // ========== PHASE 9: SAKURA PETALS ==========
@@ -898,11 +929,34 @@ function tickTime(dt) {
   // default: 1 real sec = 60 game sec = 1 game min
   const gameSec = dt * 60 * state.timeScale;
   state.gameTime.minute += gameSec / 60;
+  let hourChanged = false;
   while (state.gameTime.minute >= 60) {
     state.gameTime.minute -= 60;
     state.gameTime.hour = (state.gameTime.hour + 1) % 24;
+    hourChanged = true;
+  }
+  // Phase 10: Day cycle — if we wrapped from 23 → 0, advance to next day
+  if (hourChanged && state.gameTime.hour === 0) {
+    nextDay();
   }
   updateTimeUI();
+}
+
+function nextDay() {
+  state.day++;
+  state.gameTime = { hour: 7, minute: 0 };
+  state.dayComplete = false;
+  // Clear schedule checkmarks
+  for (let z = 1; z <= 5; z++) {
+    const el = document.getElementById('sched-' + z);
+    if (el) {
+      el.classList.remove('done');
+      const check = el.querySelector('.sched-check');
+      if (check) check.textContent = '';
+    }
+  }
+  // Show 'New Day' toast
+  showDayToast(`☀️ วันที่ ${state.day} / Day ${state.day}`, '#FFB347');
 }
 
 function updateTimeUI() {
@@ -912,6 +966,9 @@ function updateTimeUI() {
   const mm = String(m).padStart(2, '0');
   document.getElementById('timeValue').textContent = `${hh}:${mm}`;
   document.getElementById('timeLabel').textContent = getTimeLabel(h);
+  // Phase 10: Update schedule title with current day
+  const schedTitle = document.getElementById('schedTitle');
+  if (schedTitle) schedTitle.textContent = `📅 วันที่ ${state.day} / Day ${state.day}`;
   // Update body class for sky tint
   const tod = getTimeOfDay(h);
   document.body.classList.remove('time-morning', 'time-day', 'time-sunset', 'time-night');
@@ -1635,6 +1692,12 @@ async function switchZone(zone) {
     state.visitedZones.push(zone);
   }
   
+  // Phase 10: Check if all 5 zones visited (day complete)
+  if (!state.dayComplete && state.visitedZones && state.visitedZones.length >= 5) {
+    state.dayComplete = true;
+    showDayToast(`🎉 วันที่ ${state.day} สำเร็จ! / Day ${state.day} Complete!`, '#4CAF50');
+  }
+  
   if (playerModel) {
     if (zone === 4) {
       // Spawn in front of LittlestTokyo
@@ -1673,6 +1736,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyM') { if(typeof initAudio === 'function') initAudio(); toggleMute(); e.preventDefault(); return; }
   if (e.code === 'KeyS') { manualSave(); e.preventDefault(); return; }
   if (e.code === 'KeyL') { manualLoad(); e.preventDefault(); return; }
+  if (e.code === 'KeyN') { if(typeof nextDay === 'function') nextDay(); e.preventDefault(); return; }
   state.keys[e.code] = true;
   if (e.code === 'Digit1') switchZone(1);
   if (e.code === 'Digit2') switchZone(2);
@@ -1891,6 +1955,9 @@ window.sakuraPetals = sakuraPetals;
 window.sakuraGroup = sakuraGroup;
 window.smoothCamera = smoothCamera;
 window.SAVE_KEY = SAVE_KEY;
+// Phase 10
+window.nextDay = nextDay;
+window.showDayToast = showDayToast;
 
 </script>
 
