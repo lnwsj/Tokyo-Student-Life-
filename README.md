@@ -10,7 +10,7 @@
 
 ---
 
-## 🌟 What's Done (Phase 0-7) / ทำอะไรไปแล้ว
+## 🌟 What's Done (Phase 0-8) / ทำอะไรไปแล้ว
 
 | Phase | Status | What was shipped | Deliverable |
 |-------|--------|------------------|-------------|
@@ -66,6 +66,40 @@
 | 8 lighting screenshots | saved | saved | ✅ |
 
 **Live demo (Phase 7d):** https://lnq7kuwo7ja1.space.minimax.io
+
+### 🔊 NEW: Sound System (Phase 8)
+
+- ✅ **Web Audio API synth** — 100% synthesized, NO asset files (zero loading time)
+- ✅ **5 zone ambient sounds** — birds (Home), school bell (School), train+horn (Station), crowd+chime (Shopping), bell+chime (Shrine)
+- ✅ **4 time-of-day sounds** — birds morning, cicadas noon, sunset birds, crickets at night
+- ✅ **Footstep sounds** — soft tap every 0.4s walk, 0.25s run
+- ✅ **Event sounds** — zone switch chord, dialogue chime, pause toggle, UI click
+- ✅ **Mute toggle** — 🔊/🔇 button top-right + M key shortcut, gain goes to 0
+- ✅ **Autoplay policy compliant** — AudioContext resumes on first user gesture
+- ✅ **Auto time-of-day check** — `setInterval` every 20s plays appropriate ambient layer
+
+#### Phase 8 Sound Inventory
+| Zone | Sound (synthesized) |
+|------|---------------------|
+| 1 Home | 4× bird chirps (1800-2400 Hz sine) |
+| 2 School | C-E-G major chord (523/659/784 Hz) |
+| 3 Station | 110 Hz sawtooth rumble + 440 Hz horn |
+| 4 Shopping | Filtered noise (800 Hz bandpass) + 880 Hz shop chime |
+| 5 Shrine | G3 fundamental (196 Hz) + D4 + G4 ringing |
+
+#### Phase 8 Test Results
+| Test | Result |
+|------|--------|
+| All 5 zone ambient functions | ✅ 0 errors |
+| All 4 time-of-day sounds | ✅ 0 errors |
+| Footstep 5x (test loop) | ✅ 0 errors |
+| Dialogue chime | ✅ 0 errors |
+| Zone switch chord | ✅ 0 errors |
+| Mute button click (text 🔇↔🔊) | ✅ works |
+| M key shortcut | ✅ works |
+| JS errors total | ✅ 0 |
+
+**Live demo (Phase 8d):** https://v19cwj4oh9os.space.minimax.io
 
 ---
 

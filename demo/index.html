@@ -37,6 +37,11 @@
   
   /* Phase 7: Time controls */
   .time-controls { display: flex; gap: 0.3rem; margin-top: 0.4rem; justify-content: center; }
+  
+  /* Phase 8: Mute button */
+  .mute-btn { position: fixed; top: 1.5rem; right: 0.5rem; background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.6rem; font-size: 1.1rem; cursor: pointer; z-index: 15; backdrop-filter: blur(8px); min-width: 40px; }
+  .mute-btn:hover { background: rgba(255, 255, 255, 0.95); }
+  .mute-btn.muted { background: #D14545; color: white; }
   .time-btn { background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 6px; padding: 0.2rem 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text); cursor: pointer; backdrop-filter: blur(8px); min-width: 28px; }
   .time-btn:hover { background: rgba(255, 255, 255, 0.95); }
   .time-btn.active { background: var(--primary); color: var(--bg); }
@@ -118,6 +123,8 @@
       <button class="time-btn time-speed" data-speed="2" title="2x">2x</button>
       <button class="time-btn time-speed" data-speed="4" title="4x">4x</button>
     </div>
+  </div>
+  <button class="mute-btn" id="muteBtn" title="Mute (M)">🔊</button>
   </div>
   <div class="zone-indicator">
     <div class="zone-num" id="zoneNum">ZONE 01</div>
@@ -475,6 +482,185 @@ function setupLighting(timeData) {
   scene.fog = new THREE.Fog(0xF5F0E6, 15, 50);
   renderer.toneMappingExposure = timeData.lightInt * 0.9;
 }
+
+// ========== PHASE 8: SOUND SYSTEM (Web Audio synth) ==========
+let audioCtx = null;
+let masterGain = null;
+let ambientOsc = null;  // current ambient oscillator
+let ambientGain = null;
+let soundMuted = false;
+
+function initAudio() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Resume on user gesture (autoplay policy)
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(e => console.warn('Audio resume failed', e));
+    }
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = soundMuted ? 0 : 0.3;
+    masterGain.connect(audioCtx.destination);
+    ambientGain = audioCtx.createGain();
+    ambientGain.gain.value = 0.5;
+    ambientGain.connect(masterGain);
+  } catch (e) {
+    console.warn('Web Audio not supported', e);
+  }
+}
+
+// Play a tone (freq Hz, duration sec, type, volume)
+function playTone(freq, dur, type = 'sine', vol = 0.2) {
+  if (!audioCtx || soundMuted) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+  osc.connect(gain);
+  gain.connect(masterGain);
+  osc.start();
+  osc.stop(audioCtx.currentTime + dur);
+}
+
+// Play a chord (multiple freqs at once)
+function playChord(freqs, dur, type = 'sine', vol = 0.1) {
+  freqs.forEach(f => playTone(f, dur, type, vol));
+}
+
+// Play filtered noise (for wind, crowd, etc.)
+function playNoise(dur, freq = 1000, vol = 0.05) {
+  if (!audioCtx || soundMuted) return;
+  const bufferSize = audioCtx.sampleRate * dur;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * 0.5;
+  }
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = freq;
+  filter.Q.value = 1.5;
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGain);
+  source.start();
+}
+
+// === ZONE-SPECIFIC AMBIENT SOUNDS ===
+function playZoneAmbient(zoneNum) {
+  if (!audioCtx || soundMuted) return;
+  switch(zoneNum) {
+    case 1: // Home: morning birds (high pitched chirps)
+      setTimeout(() => playTone(2000, 0.1, 'sine', 0.15), 0);
+      setTimeout(() => playTone(2400, 0.08, 'sine', 0.12), 200);
+      setTimeout(() => playTone(1800, 0.1, 'sine', 0.13), 500);
+      setTimeout(() => playTone(2200, 0.09, 'sine', 0.1), 800);
+      break;
+    case 2: // School: school bell (chime)
+      playChord([523, 659, 784], 1.2, 'sine', 0.15); // C-E-G major
+      break;
+    case 3: // Station: train rumble + horn
+      playTone(110, 1.5, 'sawtooth', 0.05); // low rumble
+      setTimeout(() => playTone(440, 0.5, 'square', 0.1), 800); // horn
+      break;
+    case 4: // Shopping: crowd murmur (filtered noise)
+      playNoise(1.0, 800, 0.04);
+      setTimeout(() => playTone(880, 0.15, 'sine', 0.08), 300); // shop chime
+      setTimeout(() => playNoise(0.8, 600, 0.03), 600);
+      break;
+    case 5: // Shrine: bell chime (deep, ringing)
+      playTone(196, 2.5, 'sine', 0.2); // G3 fundamental
+      setTimeout(() => playTone(294, 2.0, 'sine', 0.12), 100); // D4
+      setTimeout(() => playTone(392, 1.8, 'sine', 0.08), 200); // G4
+      break;
+  }
+}
+
+// === TIME-OF-DAY MODULATION ===
+function playTimeOfDay(tod) {
+  if (!audioCtx || soundMuted) return;
+  switch(tod) {
+    case 'morning':
+      // Birds chirping
+      setTimeout(() => playTone(2400, 0.08, 'sine', 0.1), 100);
+      setTimeout(() => playTone(2200, 0.08, 'sine', 0.08), 400);
+      break;
+    case 'day':
+      // Cicadas (high pitched buzz)
+      playTone(4500, 0.6, 'sawtooth', 0.03);
+      playTone(4800, 0.5, 'sawtooth', 0.025);
+      break;
+    case 'sunset':
+      // Evening birds (lower)
+      setTimeout(() => playTone(1500, 0.1, 'sine', 0.1), 0);
+      setTimeout(() => playTone(1700, 0.1, 'sine', 0.08), 300);
+      break;
+    case 'night':
+      // Crickets (high pitched chirps)
+      setTimeout(() => playTone(4000, 0.04, 'square', 0.04), 0);
+      setTimeout(() => playTone(4200, 0.04, 'square', 0.04), 150);
+      setTimeout(() => playTone(4000, 0.04, 'square', 0.04), 300);
+      break;
+  }
+}
+
+// === EVENT SOUNDS ===
+function playFootstep() {
+  if (!audioCtx || soundMuted) return;
+  playTone(80 + Math.random() * 40, 0.08, 'square', 0.04);
+}
+
+function playUIClick() {
+  if (!audioCtx || soundMuted) return;
+  playTone(800, 0.05, 'sine', 0.1);
+}
+
+function playZoneSwitch() {
+  if (!audioCtx || soundMuted) return;
+  playTone(440, 0.1, 'sine', 0.12);
+  setTimeout(() => playTone(660, 0.15, 'sine', 0.1), 100);
+}
+
+function playDialogueChime() {
+  if (!audioCtx || soundMuted) return;
+  playChord([523, 659, 880], 0.3, 'sine', 0.1);
+}
+
+function playPauseToggle() {
+  if (!audioCtx || soundMuted) return;
+  playTone(600, 0.08, 'triangle', 0.12);
+}
+
+function toggleMute() {
+  soundMuted = !soundMuted;
+  if (masterGain) {
+    masterGain.gain.value = soundMuted ? 0 : 0.3;
+  }
+  const btn = document.getElementById('muteBtn');
+  if (btn) {
+    btn.classList.toggle('muted', soundMuted);
+    btn.textContent = soundMuted ? '🔇' : '🔊';
+  }
+}
+
+// Schedule periodic time-of-day sounds (every 20s)
+let lastTimeOfDay = null;
+function checkTimeOfDay() {
+  if (!state || !state.gameTime) return;
+  const tod = getTimeOfDay(state.gameTime.hour);
+  if (tod !== lastTimeOfDay) {
+    lastTimeOfDay = tod;
+    playTimeOfDay(tod);
+  }
+}
+setInterval(checkTimeOfDay, 20000); // check every 20s
 
 // ========== PHASE 7: DAY/NIGHT CYCLE ==========
 const TIME_PRESETS = {
@@ -1067,6 +1253,8 @@ const dialogue = { active: false, npc: null, lines: [], currentLine: 0 };
 
 function startDialogue(npc) {
   if (dialogue.active) return;
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playDialogueChime === 'function') playDialogueChime();
   dialogue.active = true;
   dialogue.npc = npc;
   if (npc.firstVisit) {
@@ -1216,6 +1404,9 @@ async function switchZone(zone) {
   
   setupLighting(z);
   
+  // Phase 8: Play zone ambient sound
+  if (typeof initAudio === 'function') { initAudio(); playZoneSwitch(); setTimeout(() => playZoneAmbient(zone), 200); }
+  
   if (z.glb) {
     await loadZoneGLB(z.glb);
     placeNPCs(zone); // NPCs can be inside the GLB scene area too
@@ -1266,6 +1457,7 @@ function updateCamera() {
 
 // ========== INPUT ==========
 window.addEventListener('keydown', e => {
+  if (e.code === 'KeyM') { if(typeof initAudio === 'function') initAudio(); toggleMute(); e.preventDefault(); return; }
   state.keys[e.code] = true;
   if (e.code === 'Digit1') switchZone(1);
   if (e.code === 'Digit2') switchZone(2);
@@ -1329,6 +1521,19 @@ function update() {
       state.player.x = Math.max(-25, Math.min(25, state.player.x));
       state.player.z = Math.max(-25, Math.min(25, state.player.z));
       playerModel.rotation.y = Math.atan2(wx, wz);
+    }
+    
+    // Phase 8: Footstep sound (every ~0.4s walking, 0.25s running)
+    if (mx || mz) {
+      if (typeof state.stepTimer === 'undefined') state.stepTimer = 0;
+      const stepInterval = (spd === 8) ? 0.25 : 0.4;
+      state.stepTimer += dt;
+      if (state.stepTimer >= stepInterval) {
+        state.stepTimer = 0;
+        if (typeof playFootstep === 'function') playFootstep();
+      }
+    } else {
+      state.stepTimer = 0;
     }
     
     if ((state.keys.Space) && state.player.onGround) {
@@ -1411,7 +1616,8 @@ async function boot() {
 boot();
 
 // Phase 7: Time control buttons
-document.getElementById('timePause').addEventListener('click', togglePause);
+document.getElementById('timePause').addEventListener('click', () => { if(typeof initAudio === 'function') initAudio(); if(typeof playPauseToggle === 'function') playPauseToggle(); togglePause(); });
+document.getElementById('muteBtn').addEventListener('click', () => { if(typeof initAudio === 'function') initAudio(); toggleMute(); });
 document.querySelectorAll('.time-speed').forEach(b => {
   b.addEventListener('click', () => setTimeScale(Number(b.dataset.speed)));
 });
@@ -1424,6 +1630,23 @@ window.state = state;
 window.updateTimeUI = updateTimeUI;
 window.setTimeScale = setTimeScale;
 window.togglePause = togglePause;
+// Phase 8: Sound system
+window.audioCtx = audioCtx;
+window.soundMuted = soundMuted;
+window.initAudio = initAudio;
+window.playTone = playTone;
+window.playChord = playChord;
+window.playNoise = playNoise;
+window.playZoneAmbient = playZoneAmbient;
+window.playTimeOfDay = playTimeOfDay;
+window.playFootstep = playFootstep;
+window.playUIClick = playUIClick;
+window.playZoneSwitch = playZoneSwitch;
+window.playDialogueChime = playDialogueChime;
+window.playPauseToggle = playPauseToggle;
+window.toggleMute = toggleMute;
+window.masterGain = masterGain;
+window.ambientGain = ambientGain;
 
 </script>
 
