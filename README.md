@@ -10,7 +10,7 @@
 
 ---
 
-## 🌟 What's Done (Phase 0-10) / ทำอะไรไปแล้ว
+## 🌟 What's Done (Phase 0-12) / ทำอะไรไปแล้ว
 
 | Phase | Status | What was shipped | Deliverable |
 |-------|--------|------------------|-------------|
@@ -147,6 +147,27 @@
 | 0 JS errors | ✅ |
 
 **Live demo (Phase 10):** https://97v5fhgg29f5.space.minimax.io
+
+### 📱 NEW: Mobile + New Game (Phase 11) + Codehub-ready (Phase 12)
+
+- ✅ **Mobile touch controls** — D-pad + E + Jump buttons (auto-shown on touch devices, max-width 768px)
+- ✅ **New Game button** — 🔄 resets all state + clears save, with confirm dialog
+- ✅ **Codehub-ready version** — Three.js + loaders from jsDelivr CDN, LittlestTokyo from threejs.org
+- ✅ **CSS gradient fallbacks** — 5 distinct Ghibli-pastel gradients if images fail
+- ✅ **Auto-fallback JS** — detects 404 on bg images, switches to gradient
+
+#### Deploy URLs
+- **space.minimax.io** (current): https://97v5fhgg29f5.space.minimax.io
+- **Codehub-ready** (CDN-only, no local assets): https://tabv1lol2s17.space.minimax.io
+- **GitHub** (canonical): https://github.com/lnwsj/Tokyo-Student-Life-
+
+#### Codehub Ship Status
+- Created `codehub-ready` version with all CDN dependencies
+- Tested: page loads, GLB loads from CDN, gradients render
+- ❌ Codehub admin password not available in this sandbox — manual ship needed via `python3 /mnt/16tb/codehub/builder/ship.py` on VPS
+- To ship: `ssh root@5.231.28.248 'cd /mnt/16tb/codehub && python3 builder/ship.py --file /tmp/tokyo-student-life-codehub.html --slug tokyo-student-life --version v1.0 --category Games --description "..."'`
+
+**Live demo (Phase 12):** https://tabv1lol2s17.space.minimax.io
 
 ---
 
