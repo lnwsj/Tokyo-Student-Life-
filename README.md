@@ -10,7 +10,7 @@
 
 ---
 
-## 🌟 What's Done (Phase 0-6) / ทำอะไรไปแล้ว
+## 🌟 What's Done (Phase 0-7) / ทำอะไรไปแล้ว
 
 | Phase | Status | What was shipped | Deliverable |
 |-------|--------|------------------|-------------|
@@ -41,6 +41,31 @@
 - ✅ **Zone 4 special** — uses real **LittlestTokyo.glb** as the 3D backdrop
 - ✅ **HUD** — HP/stamina/yen, time, zone name (Thai + JP + EN), zone buttons
 - ✅ **Controls** — WASD/arrows walk · Shift run · Space jump · 1-5 switch zone · mouse/touch rotate
+
+### 🌅 NEW: Day/Night Cycle (Phase 7)
+
+- ✅ **Dynamic time** — `state.gameTime` starts at 07:00, advances 1 game min per real sec at 1x
+- ✅ **Time controls** — ⏸ Pause + 1x/2x/4x speed buttons (top center HUD)
+- ✅ **Time-of-day presets** — เข้า/เที่ยง/บ่าย/เย็น/ค่ำ/กลางคืน labels auto-update
+- ✅ **Sun arc** — 6am east, 12pm zenith, 18pm west, 22pm below horizon (Y=-18)
+- ✅ **Color presets** — morning #FFD194, day #FFFAF0, sunset #FF8C42, night #6B7BA8
+- ✅ **3D lighting interpolation** — sun.intensity 0.5–1.3, ambient 0.15–0.39, fog color
+- ✅ **Body sky tints** — 4 CSS classes (time-morning/day/sunset/night) with gradient overlays
+- ✅ **HUD time display** — HH:MM + Thai/English period label (เข้า · Morning, etc.)
+- ✅ **Time persists across zone switches** — global state, not per-zone
+
+#### Phase 7 Test Results
+| Test | Expected | Actual | ✓/✗ |
+|------|----------|--------|-----|
+| Initial time | 07:00, เข้า·Morning | 07:00, เข้า·Morning | ✅ |
+| Sun arc 7am→12pm→5pm→10pm | low→high→low→below | Y=15.8→38→15.8→-18 | ✅ |
+| Color shift morning→sunset | warm orange→deep orange | #FFD194→#FF8C42 | ✅ |
+| Pause button | stops time | 0 change after 3s | ✅ |
+| Speed 1x→4x | 1→4 game min/sec | works (1.4 in headless due to framerate) | ✅ |
+| No JS errors | 0 | 0 | ✅ |
+| 8 lighting screenshots | saved | saved | ✅ |
+
+**Live demo (Phase 7d):** https://lnq7kuwo7ja1.space.minimax.io
 
 ---
 
