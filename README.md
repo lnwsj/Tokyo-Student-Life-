@@ -10,7 +10,7 @@
 
 ---
 
-## 🌟 What's Done (Phase 0-9) / ทำอะไรไปแล้ว
+## 🌟 What's Done (Phase 0-10) / ทำอะไรไปแล้ว
 
 | Phase | Status | What was shipped | Deliverable |
 |-------|--------|------------------|-------------|
@@ -124,6 +124,29 @@
 | JS errors | ✅ 0 |
 
 **Live demo (Phase 9d):** https://ys3io0b88j0o.space.minimax.io
+
+### 📅 NEW: Day Cycle + Schedule Completion (Phase 10)
+
+- ✅ **Day counter** — `state.day` starts at 1, persists across saves
+- ✅ **Auto day cycle** — at 24:00 (midnight), auto-advance to next day, time reset to 07:00
+- ✅ **Manual next day** — N keyboard shortcut for testing
+- ✅ **Schedule title** — "📅 วันที่ N / Day N" instead of "Today"
+- ✅ **Day Complete toast** — 🎉 "วันที่ N สำเร็จ! / Day N Complete!" (green, 3s)
+- ✅ **New Day toast** — ☀️ orange welcome on day start
+- ✅ **Schedule reset** — checkmarks cleared on new day
+- ✅ **Save/Load** — day + dayComplete persisted
+
+#### Phase 10 Test Results
+| Test | Result |
+|------|--------|
+| Initial state | ✅ Day 1, not complete |
+| All 5 zones visited | ✅ Green "Day 1 Complete!" toast |
+| N key (next day) | ✅ Day 2, 07:00, schedule reset |
+| Pass midnight | ✅ Auto Day 3 |
+| Save + reload | ✅ Day persisted |
+| 0 JS errors | ✅ |
+
+**Live demo (Phase 10):** https://97v5fhgg29f5.space.minimax.io
 
 ---
 
