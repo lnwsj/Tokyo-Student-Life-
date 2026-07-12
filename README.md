@@ -10,7 +10,7 @@
 
 ---
 
-## 🌟 What's Done (Phase 0-8) / ทำอะไรไปแล้ว
+## 🌟 What's Done (Phase 0-9) / ทำอะไรไปแล้ว
 
 | Phase | Status | What was shipped | Deliverable |
 |-------|--------|------------------|-------------|
@@ -100,6 +100,30 @@
 | JS errors total | ✅ 0 |
 
 **Live demo (Phase 8d):** https://v19cwj4oh9os.space.minimax.io
+
+### 💾 NEW: Save/Load + Atmosphere (Phase 9)
+
+- ✅ **Save/Load system** — localStorage 'tsl-save-v1' with auto-save every 30s + on page unload
+- ✅ **Manual save/load buttons** — 💾/📂 in HUD top-right + S/L keyboard shortcuts
+- ✅ **Auto-load on boot** — state preserved across page refreshes (zone, time, player pos, visited)
+- ✅ **Tracked state** — currentZone, gameTime, timePaused, timeScale, player.{x,y,z,rot}, visitedZones[]
+- ✅ **Sakura petals** — 50 procedural pink particles drifting with sin-wave wobble
+- ✅ **Time-based petals** — visible only during day + sunset (hidden at night/morning)
+- ✅ **Smooth camera** — lerp factor 0.15 for position + lookAt, no rigid jumps
+- ✅ **Tested reload** — save then refresh, state auto-restores
+
+#### Phase 9 Test Results
+| Test | Result |
+|------|--------|
+| Save state, change zone, load | ✅ all fields match |
+| Auto-load on page reload | ✅ currentZone, gameTime, visitedZones preserved |
+| Sakura at sunset 17:00 | ✅ visible |
+| Sakura at night 22:00 | ✅ hidden |
+| Sakura at morning 8:00 | ✅ hidden |
+| Petal count | ✅ 50 particles |
+| JS errors | ✅ 0 |
+
+**Live demo (Phase 9d):** https://ys3io0b88j0o.space.minimax.io
 
 ---
 
