@@ -40,6 +40,12 @@
   
   /* Phase 8: Mute button */
   .mute-btn { position: fixed; top: 1.5rem; right: 0.5rem; background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.6rem; font-size: 1.1rem; cursor: pointer; z-index: 15; backdrop-filter: blur(8px); min-width: 40px; }
+  
+  /* Phase 9: Save/Load buttons */
+  .save-load-btns { position: fixed; top: 4.2rem; right: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; z-index: 15; }
+  .save-btn, .load-btn { background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 8px; padding: 0.3rem 0.5rem; font-size: 0.9rem; cursor: pointer; backdrop-filter: blur(8px); }
+  .save-btn:hover, .load-btn:hover { background: rgba(255, 255, 255, 0.95); }
+  .save-btn.saved { background: #4CAF50; color: white; }
   .mute-btn:hover { background: rgba(255, 255, 255, 0.95); }
   .mute-btn.muted { background: #D14545; color: white; }
   .time-btn { background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 6px; padding: 0.2rem 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text); cursor: pointer; backdrop-filter: blur(8px); min-width: 28px; }
@@ -125,6 +131,10 @@
     </div>
   </div>
   <button class="mute-btn" id="muteBtn" title="Mute (M)">🔊</button>
+  <div class="save-load-btns">
+    <button class="save-btn" id="saveBtn" title="Save (S)">💾</button>
+    <button class="load-btn" id="loadBtn" title="Load (L)">📂</button>
+  </div>
   </div>
   <div class="zone-indicator">
     <div class="zone-num" id="zoneNum">ZONE 01</div>
@@ -189,7 +199,8 @@ const state = {
   timePaused: false,
   timeScale: 1,
   keys: {},
-  player: { x: 0, y: 0, z: 0, vy: 0, onGround: true, rot: 0 }
+  player: { x: 0, y: 0, z: 0, vy: 0, onGround: true, rot: 0 },
+  visitedZones: []
 };
 
 const ZONES = {
@@ -661,6 +672,201 @@ function checkTimeOfDay() {
   }
 }
 setInterval(checkTimeOfDay, 20000); // check every 20s
+
+// ========== PHASE 9: SAVE/LOAD SYSTEM ==========
+const SAVE_KEY = 'tsl-save-v1';
+
+function saveGame() {
+  try {
+    const data = {
+      currentZone: state.currentZone,
+      gameTime: { ...state.gameTime },
+      timePaused: state.timePaused,
+      timeScale: state.timeScale,
+      player: { ...state.player },
+      visitedZones: [...state.visitedZones],
+      savedAt: Date.now()
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    return true;
+  } catch (e) {
+    console.warn('Save failed', e);
+    return false;
+  }
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn('Load failed', e);
+    return null;
+  }
+}
+
+function applySave(data) {
+  if (!data) return false;
+  if (data.currentZone !== undefined) state.currentZone = data.currentZone;
+  if (data.gameTime) state.gameTime = { ...data.gameTime };
+  if (data.timePaused !== undefined) state.timePaused = data.timePaused;
+  if (data.timeScale !== undefined) state.timeScale = data.timeScale;
+  if (data.player) state.player = { ...data.player };
+  if (data.visitedZones) state.visitedZones = [...data.visitedZones];
+  return true;
+}
+
+function hasSave() {
+  return !!localStorage.getItem(SAVE_KEY);
+}
+
+function deleteSave() {
+  localStorage.removeItem(SAVE_KEY);
+}
+
+// Auto-save every 30s
+setInterval(() => {
+  if (typeof saveGame === 'function') saveGame();
+}, 30000);
+
+// Save on page unload
+window.addEventListener('beforeunload', () => {
+  if (typeof saveGame === 'function') saveGame();
+});
+
+function manualSave() {
+  if (saveGame()) {
+    const btn = document.getElementById('saveBtn');
+    if (btn) {
+      btn.classList.add('saved');
+      btn.textContent = '✓';
+      setTimeout(() => { btn.classList.remove('saved'); btn.textContent = '💾'; }, 1500);
+    }
+  }
+}
+
+function manualLoad() {
+  const data = loadGame();
+  if (data) {
+    applySave(data);
+    // Trigger UI updates
+    if (typeof switchZone === 'function') switchZone(state.currentZone);
+    if (typeof updateTimeUI === 'function') updateTimeUI();
+    const btn = document.getElementById('loadBtn');
+    if (btn) {
+      btn.textContent = '✓';
+      setTimeout(() => { btn.textContent = '📂'; }, 1500);
+    }
+  } else {
+    const btn = document.getElementById('loadBtn');
+    if (btn) {
+      btn.textContent = '✗';
+      setTimeout(() => { btn.textContent = '📂'; }, 1500);
+    }
+  }
+}
+
+// Auto-load on boot (if save exists) — runs at end of script via init pattern
+function tryAutoLoad() {
+  if (hasSave()) {
+    const data = loadGame();
+    if (data) {
+      applySave(data);
+      // Apply player position to playerModel after load
+      if (playerModel) {
+        playerModel.position.set(state.player.x, state.player.y, state.player.z);
+        playerModel.rotation.y = state.player.rot;
+      }
+      // Update UI
+      if (typeof updateTimeUI === 'function') updateTimeUI();
+      console.log('Auto-loaded save from', new Date(data.savedAt).toLocaleTimeString());
+    }
+  }
+}
+
+// ========== PHASE 9: SAKURA PETALS ==========
+let sakuraGroup = null;
+let sakuraPetals = [];
+
+function createSakuraPetals() {
+  sakuraGroup = new THREE.Group();
+  const petalGeom = new THREE.PlaneGeometry(0.15, 0.15);
+  // Pink gradient material (procedural)
+  const petalMat = new THREE.MeshBasicMaterial({
+    color: 0xFFB7C5,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.85
+  });
+  for (let i = 0; i < 50; i++) {
+    const petal = new THREE.Mesh(petalGeom, petalMat);
+    petal.position.set(
+      (Math.random() - 0.5) * 40,
+      Math.random() * 15 + 5,
+      (Math.random() - 0.5) * 40
+    );
+    petal.rotation.set(
+      Math.random() * Math.PI,
+      Math.random() * Math.PI,
+      Math.random() * Math.PI
+    );
+    petal.userData = {
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: -0.5 - Math.random() * 0.3,
+      vz: (Math.random() - 0.5) * 0.3,
+      rotSpeed: (Math.random() - 0.5) * 2,
+      phase: Math.random() * Math.PI * 2
+    };
+    sakuraGroup.add(petal);
+    sakuraPetals.push(petal);
+  }
+  scene.add(sakuraGroup);
+}
+
+function updateSakuraPetals(t, tod) {
+  if (!sakuraGroup) return;
+  // Only show during day + sunset
+  const visible = (tod === 'day' || tod === 'sunset');
+  sakuraGroup.visible = visible;
+  if (!visible) return;
+  
+  for (const petal of sakuraPetals) {
+    const u = petal.userData;
+    petal.position.x += u.vx * 0.016 + Math.sin(t * 0.5 + u.phase) * 0.01;
+    petal.position.y += u.vy * 0.016;
+    petal.position.z += u.vz * 0.016 + Math.cos(t * 0.3 + u.phase) * 0.01;
+    petal.rotation.x += u.rotSpeed * 0.01;
+    petal.rotation.z += u.rotSpeed * 0.008;
+    if (petal.position.y < -1) {
+      petal.position.y = 15 + Math.random() * 3;
+      petal.position.x = (Math.random() - 0.5) * 40;
+      petal.position.z = (Math.random() - 0.5) * 40;
+    }
+  }
+}
+
+// ========== PHASE 9: CAMERA SMOOTHING ==========
+const cameraTarget = new THREE.Vector3();
+const cameraLookAt = new THREE.Vector3();
+let cameraSmoothFactor = 0.15;
+
+function smoothCamera() {
+  if (!playerModel) return;
+  const targetPos = new THREE.Vector3(
+    playerModel.position.x,
+    playerModel.position.y + 1.5,
+    playerModel.position.z + 4
+  );
+  const lookPos = new THREE.Vector3(
+    playerModel.position.x,
+    playerModel.position.y + 1,
+    playerModel.position.z
+  );
+  camera.position.lerp(targetPos, cameraSmoothFactor);
+  cameraLookAt.lerp(lookPos, cameraSmoothFactor);
+  camera.lookAt(cameraLookAt);
+}
 
 // ========== PHASE 7: DAY/NIGHT CYCLE ==========
 const TIME_PRESETS = {
@@ -1424,6 +1630,11 @@ async function switchZone(zone) {
     if (check) check.textContent = '✓';
   }
   
+  // Phase 9: Track visited zones
+  if (state.visitedZones && !state.visitedZones.includes(zone)) {
+    state.visitedZones.push(zone);
+  }
+  
   if (playerModel) {
     if (zone === 4) {
       // Spawn in front of LittlestTokyo
@@ -1443,6 +1654,8 @@ document.querySelectorAll('.zone-btn').forEach(btn => {
 // ========== CAMERA ==========
 const camTarget = new THREE.Vector3(0, 1, 0);
 function updateCamera() {
+  if (typeof smoothCamera === 'function') { smoothCamera(); return; }
+  // Fallback below
   if (!playerModel) return;
   const target = new THREE.Vector3(playerModel.position.x, playerModel.position.y + 1.2, playerModel.position.z);
   const camPos = target.clone().add(new THREE.Vector3(
@@ -1458,6 +1671,8 @@ function updateCamera() {
 // ========== INPUT ==========
 window.addEventListener('keydown', e => {
   if (e.code === 'KeyM') { if(typeof initAudio === 'function') initAudio(); toggleMute(); e.preventDefault(); return; }
+  if (e.code === 'KeyS') { manualSave(); e.preventDefault(); return; }
+  if (e.code === 'KeyL') { manualLoad(); e.preventDefault(); return; }
   state.keys[e.code] = true;
   if (e.code === 'Digit1') switchZone(1);
   if (e.code === 'Digit2') switchZone(2);
@@ -1499,6 +1714,12 @@ function update() {
   const now = performance.now();
   const dt = Math.min((now - lastT) / 1000, 0.1);
   if (typeof tickTime === 'function') tickTime(dt);
+  // Phase 9: Update sakura petals (after time of day is updated)
+  if (typeof updateSakuraPetals === 'function' && state && state.gameTime) {
+    const tod = typeof getTimeOfDay === 'function' ? getTimeOfDay(state.gameTime.hour) : 'day';
+    const tNow = performance.now() / 1000;
+    updateSakuraPetals(tNow, tod);
+  }
   lastT = now;
   
   if (playerModel) {
@@ -1618,11 +1839,20 @@ boot();
 // Phase 7: Time control buttons
 document.getElementById('timePause').addEventListener('click', () => { if(typeof initAudio === 'function') initAudio(); if(typeof playPauseToggle === 'function') playPauseToggle(); togglePause(); });
 document.getElementById('muteBtn').addEventListener('click', () => { if(typeof initAudio === 'function') initAudio(); toggleMute(); });
+document.getElementById('saveBtn').addEventListener('click', manualSave);
+document.getElementById('loadBtn').addEventListener('click', manualLoad);
 document.querySelectorAll('.time-speed').forEach(b => {
   b.addEventListener('click', () => setTimeScale(Number(b.dataset.speed)));
 });
 // Initialize time UI
 updateTimeUI();
+
+// Phase 9: Init sakura petals + auto-load
+if (typeof createSakuraPetals === 'function' && typeof scene !== 'undefined') {
+  createSakuraPetals();
+}
+// Try auto-load on boot
+setTimeout(() => { if (typeof tryAutoLoad === 'function') tryAutoLoad(); }, 500);
 
 // Expose for debugging/testing (after all functions defined)
 window.lights = lights;
@@ -1647,6 +1877,20 @@ window.playPauseToggle = playPauseToggle;
 window.toggleMute = toggleMute;
 window.masterGain = masterGain;
 window.ambientGain = ambientGain;
+// Phase 9
+window.saveGame = saveGame;
+window.loadGame = loadGame;
+window.applySave = applySave;
+window.hasSave = hasSave;
+window.deleteSave = deleteSave;
+window.manualSave = manualSave;
+window.manualLoad = manualLoad;
+window.tryAutoLoad = tryAutoLoad;
+window.createSakuraPetals = createSakuraPetals;
+window.sakuraPetals = sakuraPetals;
+window.sakuraGroup = sakuraGroup;
+window.smoothCamera = smoothCamera;
+window.SAVE_KEY = SAVE_KEY;
 
 </script>
 
