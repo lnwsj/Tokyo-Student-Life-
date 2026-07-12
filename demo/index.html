@@ -67,6 +67,41 @@
     .touch-controls { display: block; }
   }
 
+  /* Phase 13: Achievements */
+  .achievements-panel { position: fixed; bottom: 1.5rem; left: 1.5rem; background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 12px; padding: 0.5rem 0.7rem; z-index: 10; backdrop-filter: blur(10px); max-width: 240px; }
+  .achievements-title { font-family: 'Fraunces', serif; font-size: 0.75rem; color: var(--primary); margin-bottom: 0.3rem; }
+  .achievements-list { display: flex; flex-wrap: wrap; gap: 0.3rem; max-width: 220px; }
+  .ach-badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; cursor: help; transition: all 0.2s; }
+  .ach-badge.unlocked { background: linear-gradient(135deg, #FFD194, #FFB347); box-shadow: 0 2px 6px rgba(255, 179, 71, 0.4); }
+  .ach-badge.locked { background: rgba(0,0,0,0.08); color: rgba(0,0,0,0.3); }
+  .ach-badge:hover { transform: scale(1.15); }
+
+  /* Phase 13: Achievement toast (slide in from left) */
+  .achievement-toast { position: fixed; top: 30%; left: 2rem; transform: translateX(-120%); background: linear-gradient(135deg, #FFB347, #FF8C42); color: white; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); z-index: 45; opacity: 0; pointer-events: none; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); display: flex; gap: 0.8rem; align-items: center; max-width: 320px; }
+  .achievement-toast.show { opacity: 1; transform: translateX(0); }
+  .ach-icon { font-size: 2rem; }
+  .ach-text { display: flex; flex-direction: column; }
+  .ach-name { font-weight: 600; font-size: 0.95rem; }
+  .ach-desc { font-size: 0.75rem; opacity: 0.9; }
+
+  /* Phase 13: Vending machine modal */
+  .vending-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .vending-modal.show { display: flex; }
+  .vending-content { background: linear-gradient(180deg, #F5F0E6, #FFFAF0); border-radius: 20px; padding: 1.5rem 2rem; max-width: 540px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 2px solid var(--border); }
+  .vending-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .vending-title { font-family: 'Fraunces', serif; font-size: 1.4rem; color: var(--primary); }
+  .vending-balance { background: rgba(45, 74, 107, 0.1); padding: 0.4rem 0.8rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+  .vending-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin-bottom: 1rem; }
+  .drink-card { background: white; border: 2px solid var(--border); border-radius: 12px; padding: 0.8rem; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .drink-card:hover:not(.too-expensive) { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); border-color: var(--primary); }
+  .drink-card.too-expensive { opacity: 0.5; cursor: not-allowed; }
+  .drink-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 0.5rem; }
+  .drink-name { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.2rem; }
+  .drink-price { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #C62828; font-weight: 600; }
+  .drink-stamina { font-size: 0.7rem; color: var(--text-soft); margin-top: 0.2rem; }
+  .vending-close { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; width: 100%; }
+  .vending-close:hover { background: #1a3a52; }
+
   /* Phase 11: New Game button */
   .new-game-btn { position: fixed; top: 7.5rem; right: 0.5rem; background: rgba(220, 80, 80, 0.85); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 0.3rem 0.5rem; font-size: 0.9rem; cursor: pointer; z-index: 15; backdrop-filter: blur(8px); }
   .new-game-btn:hover { background: rgba(200, 60, 60, 0.95); }
@@ -174,6 +209,33 @@
     <div class="day-toast-main"></div>
     <div class="day-toast-sub"></div>
   </div>
+
+  <!-- Phase 13: Achievement toast -->
+  <div class="achievement-toast" id="achievementToast">
+    <div class="ach-icon"></div>
+    <div class="ach-text">
+      <div class="ach-name"></div>
+      <div class="ach-desc"></div>
+    </div>
+  </div>
+
+  <!-- Phase 13: Achievements panel (HUD) -->
+  <div class="achievements-panel" id="achievementsPanel" style="display:none">
+    <div class="achievements-title">🏆 ความสำเร็จ / Achievements</div>
+    <div class="achievements-list" id="achievementsList"></div>
+  </div>
+
+  <!-- Phase 13: Vending machine modal -->
+  <div class="vending-modal" id="vendingModal">
+    <div class="vending-content">
+      <div class="vending-header">
+        <div class="vending-title">🍱 ตู้ขายน้ำ / Vending Machine</div>
+        <div class="vending-balance">💴 <span id="vendingYen">1,200</span> เยน</div>
+      </div>
+      <div class="vending-grid" id="vendingGrid"></div>
+      <button class="vending-close" id="vendingCloseBtn">ปิด / Close (E)</button>
+    </div>
+  </div>
   <div class="save-load-btns">
     <button class="save-btn" id="saveBtn" title="Save (S)">💾</button>
     <button class="load-btn" id="loadBtn" title="Load (L)">📂</button>
@@ -274,7 +336,11 @@ const state = {
   player: { x: 0, y: 0, z: 0, vy: 0, onGround: true, rot: 0 },
   visitedZones: [],
   day: 1,
-  dayComplete: false
+  dayComplete: false,
+  yen: 1200,
+  stamina: 100,
+  achievements: [],
+  stats: { distanceWalked: 0, npcsTalked: 0, drinksBought: 0 }
 };
 
 const ZONES = {
@@ -761,6 +827,10 @@ function saveGame() {
       visitedZones: [...state.visitedZones],
       day: state.day,
       dayComplete: state.dayComplete,
+      yen: state.yen,
+      stamina: state.stamina,
+      achievements: [...state.achievements],
+      stats: { ...state.stats },
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -792,6 +862,10 @@ function applySave(data) {
   if (data.visitedZones) state.visitedZones = [...data.visitedZones];
   if (data.day !== undefined) state.day = data.day;
   if (data.dayComplete !== undefined) state.dayComplete = data.dayComplete;
+  if (data.yen !== undefined) state.yen = data.yen;
+  if (data.stamina !== undefined) state.stamina = data.stamina;
+  if (data.achievements) state.achievements = [...data.achievements];
+  if (data.stats) state.stats = { ...state.stats, ...data.stats };
   return true;
 }
 
@@ -858,6 +932,8 @@ function tryAutoLoad() {
       }
       // Update UI
       if (typeof updateTimeUI === 'function') updateTimeUI();
+      if (typeof updateHUD === 'function') updateHUD();
+      if (typeof updateAchievementsHUD === 'function') updateAchievementsHUD();
       console.log('Auto-loaded save from', new Date(data.savedAt).toLocaleTimeString());
     }
   }
@@ -874,6 +950,137 @@ function showDayToast(message, color) {
   if (color && color.includes('4CAF50')) toast.classList.add('complete');
   else toast.classList.remove('complete');
   setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ========== PHASE 13: ACHIEVEMENTS ==========
+const ACHIEVEMENT_DEFS = [
+  { id: 'first_steps', icon: '👟', name: 'ก้าวแรก / First Steps', desc: 'เดิน 50 เมตร / Walk 50m', check: (s) => s.stats.distanceWalked >= 50 },
+  { id: 'world_wanderer', icon: '🗺️', name: 'นักท่องเที่ยว / World Wanderer', desc: 'ไปครบ 5 โซน / Visit all 5 zones', check: (s) => s.visitedZones.length >= 5 },
+  { id: 'day_master', icon: '📅', name: 'เซียนปฏิทิน / Day Master', desc: 'ผ่านไป 3 วัน / Reach Day 3', check: (s) => s.day >= 3 },
+  { id: 'night_owl', icon: '🦉', name: 'นกฮูก / Night Owl', desc: 'อยู่หลัง 22:00 / Stay past 22:00', check: (s) => s.gameTime.hour >= 22 || s.gameTime.hour < 5 },
+  { id: 'early_bird', icon: '🐦', name: 'นกเช้า / Early Bird', desc: 'ตื่นก่อน 7:00 / Wake before 7:00', check: (s) => s.gameTime.hour < 7 },
+  { id: 'chatterbox', icon: '💬', name: 'นักพูด / Chatterbox', desc: 'คุย NPC 10 ครั้ง / Talk to NPCs 10x', check: (s) => s.stats.npcsTalked >= 10 },
+  { id: 'shopaholic', icon: '🛍️', name: 'ขาชอปปิ้ง / Shopaholic', desc: 'ซื้อเครื่องดื่ม 3 ครั้ง / Buy 3 drinks', check: (s) => s.stats.drinksBought >= 3 },
+  { id: 'completionist', icon: '🌟', name: 'คนสมบูรณ์ / Completionist', desc: 'Day 1 Complete / Complete Day 1', check: (s) => s.dayComplete }
+];
+
+function checkAchievements() {
+  if (!state) return;
+  for (const a of ACHIEVEMENT_DEFS) {
+    if (!state.achievements.includes(a.id) && a.check(state)) {
+      unlockAchievement(a);
+    }
+  }
+}
+
+function unlockAchievement(a) {
+  state.achievements.push(a.id);
+  showAchievementToast(a);
+  if (typeof playTone === 'function') {
+    playTone(880, 0.1, 'sine', 0.15);
+    setTimeout(() => playTone(1320, 0.15, 'sine', 0.15), 100);
+  }
+  updateAchievementsHUD();
+}
+
+function showAchievementToast(a) {
+  const toast = document.getElementById('achievementToast');
+  if (!toast) return;
+  toast.querySelector('.ach-icon').textContent = a.icon;
+  toast.querySelector('.ach-name').textContent = a.name;
+  toast.querySelector('.ach-desc').textContent = a.desc;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+function updateAchievementsHUD() {
+  const list = document.getElementById('achievementsList');
+  if (!list) return;
+  list.innerHTML = '';
+  for (const a of ACHIEVEMENT_DEFS) {
+    const unlocked = state.achievements.includes(a.id);
+    const div = document.createElement('div');
+    div.className = 'ach-badge ' + (unlocked ? 'unlocked' : 'locked');
+    div.title = a.name + '\n' + a.desc;
+    div.textContent = unlocked ? a.icon : '?';
+    list.appendChild(div);
+  }
+}
+
+// ========== PHASE 13: VENDING MACHINE ==========
+const DRINKS = [
+  { id: 'water', name: 'น้ำดื่ม / Water', price: 100, stamina: 20, color: '#4FC3F7', icon: '💧' },
+  { id: 'tea', name: 'ชาเขียว / Green Tea', price: 150, stamina: 30, color: '#A5D6A7', icon: '🍵' },
+  { id: 'cola', name: 'โคล่า / Cola', price: 180, stamina: 40, color: '#8D6E63', icon: '🥤' },
+  { id: 'milk', name: 'นมสด / Milk', price: 200, stamina: 50, color: '#FFF8E1', icon: '🥛' }
+];
+
+let vendingOpen = false;
+let nearestVending = null;
+
+function openVendingMachine() {
+  if (!nearestVending || vendingOpen) return;
+  vendingOpen = true;
+  const modal = document.getElementById('vendingModal');
+  const grid = document.getElementById('vendingGrid');
+  if (!modal || !grid) return;
+  grid.innerHTML = '';
+  DRINKS.forEach(drink => {
+    const canAfford = state.yen >= drink.price;
+    const card = document.createElement('div');
+    card.className = 'drink-card' + (canAfford ? '' : ' too-expensive');
+    card.innerHTML = `
+      <div class="drink-icon" style="background: ${drink.color}">${drink.icon}</div>
+      <div class="drink-name">${drink.name}</div>
+      <div class="drink-price">¥${drink.price}</div>
+      <div class="drink-stamina">+${drink.stamina} อิ่ม / stamina</div>
+    `;
+    if (canAfford) {
+      card.addEventListener('click', () => buyDrink(drink));
+    }
+    grid.appendChild(card);
+  });
+  document.getElementById('vendingYen').textContent = state.yen.toLocaleString();
+  modal.classList.add('show');
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playUIClick === 'function') playUIClick();
+}
+
+function buyDrink(drink) {
+  if (state.yen < drink.price) return;
+  state.yen -= drink.price;
+  state.stamina = Math.min(100, state.stamina + drink.stamina);
+  state.stats.drinksBought = (state.stats.drinksBought || 0) + 1;
+  updateHUD();
+  // Animate: replace card with 'drinking' message
+  if (typeof playTone === 'function') {
+    playTone(660, 0.1, 'sine', 0.15);
+    setTimeout(() => playTone(880, 0.15, 'sine', 0.12), 150);
+  }
+  showAchievementToast({
+    icon: drink.icon,
+    name: `ซื้อ ${drink.name}!`,
+    desc: `อิ่ม +${drink.stamina} / stamina +${drink.stamina}`
+  });
+  document.getElementById('vendingYen').textContent = state.yen.toLocaleString();
+  // Refresh grid to update affordability
+  setTimeout(() => openVendingMachine(), 100);
+  // Mark vending used so you can't buy 100/sec
+  if (nearestVending) nearestVending.userData.cooldownUntil = Date.now() + 800;
+  checkAchievements();
+}
+
+function closeVendingMachine() {
+  vendingOpen = false;
+  const modal = document.getElementById('vendingModal');
+  if (modal) modal.classList.remove('show');
+}
+
+function updateHUD() {
+  const yen = document.getElementById('moneyValue');
+  const stam = document.getElementById('staminaValue');
+  if (yen) yen.textContent = state.yen.toLocaleString();
+  if (stam) stam.textContent = Math.floor(state.stamina);
 }
 
 // ========== PHASE 9: SAKURA PETALS ==========
@@ -1215,6 +1422,8 @@ function buildVendingMachine(x, z, rotY = 0) {
       g.add(bottle);
     }
   }
+  g.userData.isVending = true;
+  g.userData.cooldownUntil = 0;
   return g;
 }
 
@@ -1495,62 +1704,135 @@ function buildNPC(type, x, z, rotY = 0) {
 const NPC_DEFS = {
   1: [
     { type: 'senpai', x: 0, z: -3, rotY: 0, name: 'รุ่นพีซัง', nameEn: 'Senpai-san',
-      dialogue: [
-        { th: 'อรุณสวัสดิ์! วันนี้เป็นไงบ้าง?', en: 'Good morning! How are you today?' },
-        { th: 'อย่าลืมเอากระเป๋าไปโรงเรียนนะ', en: "Don't forget your bag for school" },
-        { th: 'กลับมาเร็วๆ นะ!', en: 'Come back soon!' }
-      ]
+      dialogueByTime: {
+        morning: [
+          { th: 'อรุณสวัสดิ์ครับ! เช้านี้อากาศดีจัง', en: 'Good morning! Lovely weather today' },
+          { th: 'ไปโรงเรียนด้วยกันมั้ย?', en: 'Going to school together?' }
+        ],
+        day: [
+          { th: 'กลับมาแล้วเหรอ? เหนื่อยมั้ย', en: 'Back already? Was it tiring?' },
+          { th: 'วันนี้เรียนเป็นไงบ้าง?', en: 'How was school today?' }
+        ],
+        sunset: [
+          { th: 'พระอาทิตย์กำลังตก สวยจังเลย!', en: 'The sunset is beautiful!' },
+          { th: 'เย็นนี้ทำอะไรดี?', en: 'What are you doing this evening?' }
+        ],
+        night: [
+          { th: 'ดึกแล้วนะ เข้านอนเร็วๆ', en: "It's late, go to bed early" },
+          { th: 'พรุ่งนี้เจอกันใหม่!', en: 'See you tomorrow!' }
+        ]
+      }
     }
   ],
   2: [
     { type: 'classmate', x: 4, z: 0, rotY: -Math.PI/2, name: 'ยูอิ', nameEn: 'Yui',
-      dialogue: [
-        { th: 'สวัสดี! เรียนสนุกมั้ย?', en: 'Hi! Is class fun?' },
-        { th: 'พักเที่ยงกินเบนโตะด้วยกันมั้ย?', en: 'Eat bento together at lunch?' },
-        { th: 'ซากุระบานแล้วนะ!', en: 'Cherry blossoms are blooming!' }
-      ]
+      dialogueByTime: {
+        morning: [
+          { th: 'มาทันใน! เริ่มเข้าแถวกัน', en: 'Just in time! Lets line up' },
+          { th: 'เช้านี้อิ่มมั้ย?', en: 'Did you eat breakfast?' }
+        ],
+        day: [
+          { th: 'เรียนสนุกจัง!', en: 'Class is fun today!' },
+          { th: 'พักเที่ยงกินเบนโตะด้วยกันมั้ย?', en: 'Eat bento together at lunch?' }
+        ],
+        sunset: [
+          { th: 'ซากุระเริ่มบานแล้วนะ!', en: 'Cherry blossoms are starting to bloom!' },
+          { th: 'กลับบ้านด้วยกันมั้ย?', en: 'Go home together?' }
+        ],
+        night: [
+          { th: 'โรงเรียนปิดแล้วนะ', en: 'School is closed now' }
+        ]
+      }
     },
     { type: 'classmate', x: -4, z: 2, rotY: Math.PI/2, name: 'อาโออิ', nameEn: 'Aoi',
-      dialogue: [
-        { th: 'อ่านหนังสืออะไรอยู่?', en: 'What are you reading?' },
-        { th: 'พรุ่งนี้มีสอบนะ!', en: 'Exam tomorrow, study hard!' }
-      ]
+      dialogueByTime: {
+        morning: [
+          { th: 'เช้านี้อ่านหนังสืออะไรมา?', en: 'What did you read this morning?' }
+        ],
+        day: [
+          { th: 'อ่านหนังสืออะไรอยู่?', en: 'What are you reading?' },
+          { th: 'พรุ่งนี้มีสอบนะ!', en: 'Exam tomorrow, study hard!' }
+        ],
+        sunset: [
+          { th: 'ชอบตอนเย็นๆ แบบนี้จัง', en: 'I love this evening vibe' }
+        ],
+        night: [
+          { th: 'อย่าอ่านดึกนะ พักผ่อนบ้าง', en: "Don't read too late, rest well" }
+        ]
+      }
     }
   ],
   3: [
     { type: 'attendant', x: 0, z: 2, rotY: 0, name: 'เจ้าหน้าที่', nameEn: 'Conductor',
-      dialogue: [
-        { th: 'รถไฟมาอีก 5 นาทีครับ', en: 'Train arrives in 5 minutes' },
-        { th: 'ตั๋วใบละ 200 เยนครับ', en: 'Ticket is 200 yen' },
-        { th: 'ระวังของหายด้วยนะครับ', en: 'Watch your belongings' }
-      ]
+      dialogueByTime: {
+        morning: [
+          { th: 'รถไฟเช้ากำลังจะมาครับ', en: 'Morning train is coming' },
+          { th: 'ตั๋วใบละ 200 เยนครับ', en: 'Ticket is 200 yen' }
+        ],
+        day: [
+          { th: 'สถานีคึกคักช่วงเที่ยงๆ', en: 'The station is busy around noon' }
+        ],
+        sunset: [
+          { th: 'รถไฟเย็นคนเยอะนะครับ', en: 'Evening train is crowded' },
+          { th: 'ระวังของหายด้วยนะครับ', en: 'Watch your belongings' }
+        ],
+        night: [
+          { th: 'รถไฟสุดท้ายออก 23:30 นะครับ', en: 'Last train departs at 23:30' },
+          { th: 'สถานีปิด 24:00 นะครับ', en: 'Station closes at midnight' }
+        ]
+      }
     }
   ],
   4: [
     { type: 'shopkeeper', x: -3, z: 4, rotY: Math.PI/4, name: 'เจ้าของร้าน', nameEn: 'Shopkeeper',
-      dialogue: [
-        { th: 'ยินดีต้อนรับครับ!', en: 'Welcome!' },
-        { th: 'วันนี้ของสดมาใหม่', en: 'Fresh items today' },
-        { th: 'ซื้อครบ 1,000 ลด 10%', en: 'Buy 1,000 get 10% off' }
-      ]
+      dialogueByTime: {
+        morning: [
+          { th: 'อรุณสวัสดิ์ครับ! เปิดร้านแล้ว', en: 'Good morning! Shop is open' }
+        ],
+        day: [
+          { th: 'ยินดีต้อนรับครับ!', en: 'Welcome!' },
+          { th: 'วันนี้ของสดมาใหม่', en: 'Fresh items today' }
+        ],
+        sunset: [
+          { th: 'ใกล้ปิดร้านแล้วครับ', en: 'Almost closing time' },
+          { th: 'ซื้อครบ 1,000 ลด 10%', en: 'Buy 1,000 get 10% off' }
+        ],
+        night: [
+          { th: 'ขออภัยครับ ร้านปิดแล้ว', en: "Sorry, we're closed" },
+          { th: 'เปิดใหม่ 7:00 นะครับ', en: 'We open at 7:00 again' }
+        ]
+      }
     }
   ],
   5: [
     { type: 'miko', x: 0, z: 2, rotY: 0, name: 'มิโกะ', nameEn: 'Miko',
-      dialogue: [
-        { th: 'ยินดีต้อนรับสู่ศาลเจ้าค่ะ', en: 'Welcome to the shrine' },
-        { th: 'ขอพรให้ปลอดภัยนะคะ', en: 'May your wishes come true' },
-        { th: 'ซากุระกำลังจะบานเต็มทีค่ะ', en: 'Cherry blossoms will bloom soon' }
-      ]
+      dialogueByTime: {
+        morning: [
+          { th: 'อรุณสวัสดิ์ค่ะ! เช้านี้อากาศดี', en: 'Good morning! Lovely morning' }
+        ],
+        day: [
+          { th: 'ยินดีต้อนรับสู่ศาลเจ้าค่ะ', en: 'Welcome to the shrine' },
+          { th: 'ขอพรให้ปลอดภัยนะคะ', en: 'May your wishes come true' }
+        ],
+        sunset: [
+          { th: 'ซากุระกำลังจะบานเต็มทีค่ะ', en: 'Cherry blossoms will bloom soon' },
+          { th: 'ตอนเย็นแสงสวยมากค่ะ', en: 'The light is beautiful at sunset' }
+        ],
+        night: [
+          { th: 'ตอนกลางคืนเงียบสงบดีค่ะ', en: 'The night is peaceful here' },
+          { th: 'ระวังทางกลับนะคะ', en: 'Be careful going home' }
+        ]
+      }
     }
   ]
-};
+};;
 
 function placeNPCs(zoneNum) {
   currentZoneNPCs.forEach(n => {
     if (n.model && n.model.parent) n.model.parent.remove(n.model);
   });
-  currentZoneNPCs = [];
+  // Clear in place (don't reassign — window.currentZoneNPCs reference must stay valid)
+  currentZoneNPCs.length = 0;
   const defs = NPC_DEFS[zoneNum] || [];
   defs.forEach((def) => {
     const model = buildNPC(def.type, def.x, def.z, def.rotY);
@@ -1578,16 +1860,23 @@ function startDialogue(npc) {
   if (dialogue.active) return;
   if (typeof initAudio === 'function') initAudio();
   if (typeof playDialogueChime === 'function') playDialogueChime();
+  // Phase 13: Track NPC talk for achievement
+  if (state && state.stats) {
+    state.stats.npcsTalked = (state.stats.npcsTalked || 0) + 1;
+  }
   dialogue.active = true;
   dialogue.npc = npc;
+  // Phase 13: Get dialogue for current time of day
+  const tod = typeof getTimeOfDay === 'function' ? getTimeOfDay(state.gameTime.hour) : 'day';
+  const timeDialogue = (npc.def.dialogueByTime && npc.def.dialogueByTime[tod]) || npc.def.dialogue || [];
   if (npc.firstVisit) {
     dialogue.lines = [
       { th: `สวัสดีค่ะ! ฉันชื่อ ${npc.def.name}`, en: `Hello! I'm ${npc.def.nameEn}` },
-      ...npc.def.dialogue
+      ...timeDialogue
     ];
     npc.firstVisit = false;
   } else {
-    dialogue.lines = npc.def.dialogue;
+    dialogue.lines = timeDialogue;
   }
   dialogue.currentLine = 0;
   showDialogue();
@@ -1634,6 +1923,33 @@ function checkNPCInteraction() {
   }
   document.getElementById('interact-prompt').style.display = 'none';
   window._nearestNPC = null;
+}
+
+// Phase 13: Vending machine proximity check
+function updateVendingProximity() {
+  if (!playerModel) return null;
+  if (vendingOpen) return null;
+  const px = playerModel.position.x, pz = playerModel.position.z;
+  let nearest = null, minDist = 3.0;
+  if (typeof scene !== 'undefined' && scene) {
+    scene.traverse(obj => {
+      if (obj.userData && obj.userData.isVending) {
+        if (obj.userData.cooldownUntil && Date.now() < obj.userData.cooldownUntil) return;
+        const dx = obj.position.x - px, dz = obj.position.z - pz;
+        const dist = Math.sqrt(dx*dx + dz*dz);
+        if (dist < minDist) { minDist = dist; nearest = obj; }
+      }
+    });
+  }
+  nearestVending = nearest;
+  if (nearest) {
+    const prompt = document.getElementById('interact-prompt');
+    if (prompt && !window._nearestNPC) {
+      prompt.style.display = 'block';
+      prompt.innerHTML = '[E] ซื้อเครื่องดื่ม / Buy drink';
+    }
+  }
+  return nearest;
 }
 
 function buildZoneProps(zoneNum) {
@@ -1757,6 +2073,8 @@ async function switchZone(zone) {
     state.dayComplete = true;
     showDayToast(`🎉 วันที่ ${state.day} สำเร็จ! / Day ${state.day} Complete!`, '#4CAF50');
   }
+  // Phase 13: Check achievements (visit zone, day complete)
+  if (typeof checkAchievements === 'function') checkAchievements();
   
   if (playerModel) {
     if (zone === 4) {
@@ -1809,11 +2127,33 @@ window.addEventListener('keydown', e => {
     e.preventDefault();
     return;
   }
+  // Phase 13: Vending machine
+  if (e.code === 'KeyE' && vendingOpen) {
+    closeVendingMachine();
+    e.preventDefault();
+    return;
+  }
+  if (e.code === 'KeyE' && nearestVending && !vendingOpen) {
+    openVendingMachine();
+    e.preventDefault();
+    return;
+  }
   // Start dialogue
+  // Phase 13: Vending machine E handler (priority over NPC)
+  if (e.code === 'KeyE') {
+    if (vendingOpen) { closeVendingMachine(); e.preventDefault(); return; }
+    if (nearestVending) { openVendingMachine(); e.preventDefault(); return; }
+  }
   if (e.code === 'KeyE' && !dialogue.active && window._nearestNPC) {
     startDialogue(window._nearestNPC);
     e.preventDefault();
   }
+});
+
+// Phase 13: Vending modal close button
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('vendingCloseBtn');
+  if (btn) btn.addEventListener('click', closeVendingMachine);
 });
 window.addEventListener('keyup', e => { state.keys[e.code] = false; });
 
@@ -1917,6 +2257,18 @@ function update() {
   updateCamera();
   updateNPCs();
   checkNPCInteraction();
+  if (typeof updateVendingProximity === 'function') updateVendingProximity();
+  if (typeof checkAchievements === 'function') checkAchievements();
+  // Phase 13: Track distance walked for achievements
+  if (state && state.player && state.stats) {
+    const dx = state.player.x - (state._lastX ?? state.player.x);
+    const dz = state.player.z - (state._lastZ ?? state.player.z);
+    if (state._lastX !== undefined) {
+      state.stats.distanceWalked += Math.sqrt(dx*dx + dz*dz);
+    }
+    state._lastX = state.player.x;
+    state._lastZ = state.player.z;
+  }
   renderer.render(scene, camera);
   requestAnimationFrame(update);
 }
@@ -1979,6 +2331,10 @@ function newGame() {
   state.visitedZones = [];
   state.day = 1;
   state.dayComplete = false;
+  state.yen = 1200;
+  state.stamina = 100;
+  state.achievements = [];
+  state.stats = { distanceWalked: 0, npcsTalked: 0, drinksBought: 0 };
   // Clear schedule UI
   for (let z = 1; z <= 5; z++) {
     const el = document.getElementById('sched-' + z);
@@ -1986,6 +2342,8 @@ function newGame() {
   }
   if (typeof switchZone === 'function') switchZone(1);
   if (typeof updateTimeUI === 'function') updateTimeUI();
+  if (typeof updateHUD === 'function') updateHUD();
+  if (typeof updateAchievementsHUD === 'function') updateAchievementsHUD();
   // Visual feedback
   const btn = document.getElementById('newGameBtn');
   if (btn) {
@@ -2025,6 +2383,13 @@ if (typeof createSakuraPetals === 'function' && typeof scene !== 'undefined') {
 }
 // Try auto-load on boot
 setTimeout(() => { if (typeof tryAutoLoad === 'function') tryAutoLoad(); }, 500);
+// Phase 13: Show achievements panel + initial check
+setTimeout(() => {
+  const panel = document.getElementById('achievementsPanel');
+  if (panel) panel.style.display = 'block';
+  if (typeof updateAchievementsHUD === 'function') updateAchievementsHUD();
+  if (typeof checkAchievements === 'function') checkAchievements();
+}, 1500);
 
 // Expose for debugging/testing (after all functions defined)
 window.lights = lights;
@@ -2049,6 +2414,23 @@ window.playPauseToggle = playPauseToggle;
 window.toggleMute = toggleMute;
 window.masterGain = masterGain;
 window.ambientGain = ambientGain;
+window.playerModel = playerModel;
+window.currentZoneNPCs = currentZoneNPCs;
+window.dialogue = dialogue;
+window.scene = scene;
+window.camera = camera;
+window.renderer = renderer;
+// Phase 13
+window.openVendingMachine = openVendingMachine;
+window.closeVendingMachine = closeVendingMachine;
+window.updateVendingProximity = updateVendingProximity;
+window.buyDrink = buyDrink;
+window.updateHUD = updateHUD;
+window.unlockAchievement = unlockAchievement;
+window.showAchievementToast = showAchievementToast;
+window.updateAchievementsHUD = updateAchievementsHUD;
+window.checkAchievements = checkAchievements;
+window.startDialogue = startDialogue;
 // Phase 9
 window.saveGame = saveGame;
 window.loadGame = loadGame;
