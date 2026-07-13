@@ -10,7 +10,7 @@
 
 ---
 
-## 🌟 What's Done (Phase 0-14) / ทำอะไรไปแล้ว
+## 🌟 What's Done (Phase 0-15) / ทำอะไรไปแล้ว
 
 | Phase | Status | What was shipped | Deliverable |
 |-------|--------|------------------|-------------|
@@ -220,6 +220,32 @@
 | 0 JS errors | ✅ |
 
 **Live demo (Phase 14):** https://u9xstdkkpd5r.space.minimax.io
+
+### 🚲 NEW: Bicycle + Moving Train (Phase 15)
+
+- ✅ **Bicycle mounting** — Walk up to bike, press E to mount
+- ✅ **Sits on bike** — Player Y = 0.6 when riding (visible sitting position)
+- ✅ **1.8x speed boost** — Walk/run speed × 1.8 while riding
+- ✅ **Spinning wheels** — Front + back wheels spin (10x fast when moving)
+- ✅ **Dismount** — Press E again to get off
+- ✅ **Bell sound** — 2-tone bell on mount
+- ✅ **Moving train at station** — JR Yamanote green + red, 3 cars, windows with glow
+- ✅ **Train state machine** — Arrives from x=-30, stops at x=5 (5s), departs to x=35
+- ✅ **Train horn** — Arrival + departure sounds
+- ✅ **2 new achievements** — First Ride, Cyclist (200m)
+
+#### Phase 15 Test Results
+| Test | Result |
+|------|--------|
+| Mount bike | ✅ playerY=0.306 (sitting) |
+| Bike distance in 2s | ✅ 0→3.6m |
+| first_ride | ✅ |
+| Cyclist (200m) | ✅ |
+| Train exists (3 cars) | ✅ |
+| Train animation | ✅ x: -25.2 → -4.8 → 5.0 |
+| 0 JS errors | ✅ |
+
+**Live demo (Phase 15):** https://hk87oq2c8c0n.space.minimax.io
 
 ---
 
