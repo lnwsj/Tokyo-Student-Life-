@@ -378,7 +378,10 @@ const state = {
   achievements: [],
   stats: { distanceWalked: 0, npcsTalked: 0, drinksBought: 0 },
   currentOutfit: 'school',
-  outfitsUsed: ['school']
+  outfitsUsed: ['school'],
+  ridingBike: false,
+  currentBike: null,
+  bikeDistance: 0
 };
 
 const ZONES = {
@@ -899,6 +902,7 @@ function saveGame() {
       stats: { ...state.stats },
       currentOutfit: state.currentOutfit,
       outfitsUsed: [...(state.outfitsUsed || [])],
+      bikeDistance: state.bikeDistance || 0,
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -936,6 +940,7 @@ function applySave(data) {
   if (data.stats) state.stats = { ...state.stats, ...data.stats };
   if (data.currentOutfit !== undefined) state.currentOutfit = data.currentOutfit;
   if (data.outfitsUsed) state.outfitsUsed = [...data.outfitsUsed];
+  if (data.bikeDistance !== undefined) state.bikeDistance = data.bikeDistance;
   return true;
 }
 
@@ -1039,7 +1044,9 @@ const ACHIEVEMENT_DEFS = [
   { id: 'shopaholic', icon: '🛍️', name: 'ขาชอปปิ้ง / Shopaholic', desc: 'ซื้อเครื่องดื่ม 3 ครั้ง / Buy 3 drinks', check: (s) => s.stats.drinksBought >= 3 },
   { id: 'completionist', icon: '🌟', name: 'คนสมบูรณ์ / Completionist', desc: 'Day 1 Complete / Complete Day 1', check: (s) => s.dayComplete },
   { id: 'fashionista', icon: '👗', name: 'แฟชั่นนิสต้า / Fashionista', desc: 'ลองสวม 3 ชุด / Try 3 outfits', check: (s) => (s.outfitsUsed?.length || 0) >= 3 },
-  { id: 'wardrobe_master', icon: '💃', name: 'สาวแฟชั่น / Wardrobe Master', desc: 'ครบทุกชุด / Try all 5 outfits', check: (s) => (s.outfitsUsed?.length || 0) >= 5 }
+  { id: 'wardrobe_master', icon: '💃', name: 'สาวแฟชั่น / Wardrobe Master', desc: 'ครบทุกชุด / Try all 5 outfits', check: (s) => (s.outfitsUsed?.length || 0) >= 5 },
+  { id: 'first_ride', icon: '🚲', name: 'ปั่นครั้งแรก / First Ride', desc: 'ขึ้นจักรยาน / Mount a bicycle', check: (s) => s.ridingBike },
+  { id: 'cyclist', icon: '🏁', name: 'นักปั่น / Cyclist', desc: 'ปั่น 200 เมตร / Ride 200m', check: (s) => (s.bikeDistance || 0) >= 200 }
 ];
 
 function checkAchievements() {
@@ -1325,6 +1332,170 @@ function openWardrobe() {
 function closeWardrobe() {
   const modal = document.getElementById('wardrobeModal');
   if (modal) modal.classList.remove('show');
+}
+
+// ========== PHASE 15: BICYCLE SYSTEM ==========
+let nearestBicycle = null;
+
+function mountBike(bicycle) {
+  if (!bicycle || state.ridingBike) return;
+  if (bicycle.userData.cooldownUntil && Date.now() < bicycle.userData.cooldownUntil) return;
+  state.ridingBike = true;
+  state.currentBike = bicycle;
+  state.bikeDistance = 0;
+  // Snap player to bike position
+  state.player.x = bicycle.position.x;
+  state.player.z = bicycle.position.z;
+  state.player.rot = bicycle.rotation.y;
+  state.player.y = 0.6; // sitting height
+  state.player.vy = 0;
+  // Position player visually on bike (sitting height)
+  if (playerModel) {
+    playerModel.position.set(bicycle.position.x, 0.6, bicycle.position.z);
+    playerModel.rotation.y = bicycle.rotation.y;
+  }
+  // Sound: bell
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playTone === 'function') {
+    playTone(1200, 0.1, 'sine', 0.15);
+    setTimeout(() => playTone(1200, 0.1, 'sine', 0.15), 150);
+  }
+  // Show toast
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({
+      icon: '🚲',
+      name: 'ขึ้นจักรยาน / Mounted Bike',
+      desc: 'กด E อีกครั้งเพื่อลง / Press E to dismount'
+    });
+  }
+  if (typeof checkAchievements === 'function') checkAchievements();
+}
+
+function dismountBike() {
+  if (!state.ridingBike) return;
+  const bike = state.currentBike;
+  if (bike) bike.userData.cooldownUntil = Date.now() + 1000;
+  state.ridingBike = false;
+  state.currentBike = null;
+  state.player.y = 0;
+  if (playerModel) playerModel.position.y = 0;
+  if (typeof playTone === 'function') playTone(600, 0.1, 'triangle', 0.12);
+}
+
+function updateBicycleProximity() {
+  if (!playerModel || state.ridingBike) { nearestBicycle = null; return null; }
+  const px = playerModel.position.x, pz = playerModel.position.z;
+  let nearest = null, minDist = 2.5;
+  if (typeof scene !== 'undefined' && scene) {
+    scene.traverse(obj => {
+      if (obj.userData && obj.userData.isBicycle) {
+        if (obj.userData.cooldownUntil && Date.now() < obj.userData.cooldownUntil) return;
+        const dx = obj.position.x - px, dz = obj.position.z - pz;
+        const dist = Math.sqrt(dx*dx + dz*dz);
+        if (dist < minDist) { minDist = dist; nearest = obj; }
+      }
+    });
+  }
+  nearestBicycle = nearest;
+  if (nearest && !window._nearestNPC && !nearestVending) {
+    const prompt = document.getElementById('interact-prompt');
+    if (prompt) {
+      prompt.style.display = 'block';
+      prompt.innerHTML = '[E] ขึ้นจักรยาน / Mount bike';
+    }
+  }
+  return nearest;
+}
+
+function spinBikeWheels(dt, moving) {
+  if (!state.ridingBike || !state.currentBike) return;
+  const wheels = state.currentBike.userData.wheels;
+  if (wheels) {
+    const sp = moving ? 10 : 1;
+    for (const w of wheels) {
+      if (w) w.rotation.x += dt * sp;
+    }
+  }
+}
+
+// ========== PHASE 15: TRAIN AT STATION ==========
+let stationTrain = null;
+let trainState = 'arriving';
+let trainStopTimer = 0;
+let trainArrivalProgress = 0;
+
+function buildStationTrain() {
+  const g = new THREE.Group();
+  g.userData.isTrain = true;
+  const colors = [0x00A86B, 0x00A86B, 0xE60012];
+  for (let i = 0; i < 3; i++) {
+    const car = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(8, 2.2, 2.6),
+      new THREE.MeshStandardMaterial({ color: colors[i], roughness: 0.4, metalness: 0.3 })
+    );
+    body.position.y = 1.3; body.castShadow = true; body.receiveShadow = true;
+    car.add(body);
+    const roof = new THREE.Mesh(
+      new THREE.BoxGeometry(8.1, 0.15, 2.7),
+      new THREE.MeshStandardMaterial({ color: 0xC0C0C0, roughness: 0.5, metalness: 0.5 })
+    );
+    roof.position.y = 2.5; car.add(roof);
+    for (let w = -3; w <= 3; w++) {
+      const win = new THREE.Mesh(
+        new THREE.BoxGeometry(0.7, 0.7, 0.05),
+        new THREE.MeshStandardMaterial({ color: 0x1A1A2A, roughness: 0.2, metalness: 0.8, emissive: 0x6688AA, emissiveIntensity: 0.2 })
+      );
+      win.position.set(w * 1.1, 1.5, 1.32);
+      car.add(win);
+      const win2 = win.clone();
+      win2.position.z = -1.32;
+      car.add(win2);
+    }
+    const door = new THREE.Mesh(
+      new THREE.BoxGeometry(0.9, 1.7, 0.06),
+      new THREE.MeshStandardMaterial({ color: 0x1A1A1A, roughness: 0.4, metalness: 0.4 })
+    );
+    door.position.set(0, 1.1, 1.34); car.add(door);
+    car.position.x = i * 9;
+    g.add(car);
+  }
+  g.position.set(-30, 0, 5);
+  return g;
+}
+
+function updateStationTrain(dt) {
+  if (!stationTrain) return;
+  const speed = 8;
+  if (trainState === 'arriving') {
+    trainArrivalProgress += dt * 0.15;
+    stationTrain.position.x = -30 + trainArrivalProgress * 40;
+    if (stationTrain.position.x >= 5) {
+      stationTrain.position.x = 5;
+      trainState = 'stopped';
+      trainStopTimer = 0;
+      if (typeof playTone === 'function') {
+        playTone(440, 0.4, 'square', 0.1);
+        setTimeout(() => playTone(330, 0.5, 'square', 0.1), 200);
+      }
+    }
+  } else if (trainState === 'stopped') {
+    trainStopTimer += dt;
+    if (trainStopTimer > 5) {
+      trainState = 'departing';
+      if (typeof playTone === 'function') {
+        playTone(330, 0.5, 'square', 0.1);
+        setTimeout(() => playTone(440, 0.4, 'square', 0.1), 200);
+      }
+    }
+  } else if (trainState === 'departing') {
+    stationTrain.position.x += speed * dt;
+    if (stationTrain.position.x > 35) {
+      stationTrain.position.x = -30;
+      trainState = 'arriving';
+      trainArrivalProgress = 0;
+    }
+  }
 }
 
 // ========== PHASE 9: SAKURA PETALS ==========
@@ -1729,6 +1900,7 @@ function buildBicycle(x, z, rotY = 0) {
       new THREE.TorusGeometry(0.3, 0.04, 8, 16),
       new THREE.MeshStandardMaterial({ color: 0x1A1A1A, roughness: 0.7, metalness: 0.2 })
     );
+    wheel.name = i === 0 ? 'wheelFront' : 'wheelBack';
     wheel.position.set(i * 0.8 - 0.4, 0.3, 0);
     wheel.rotation.y = Math.PI / 2;
     wheel.castShadow = true;
@@ -1736,13 +1908,20 @@ function buildBicycle(x, z, rotY = 0) {
   }
   // Frame
   const frame = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.05), mat);
+  frame.name = 'frame';
   frame.position.set(0, 0.55, 0); g.add(frame);
   // Handlebar
   const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.4), mat);
+  handle.name = 'handlebar';
   handle.position.set(0.4, 0.7, 0); g.add(handle);
   // Seat
   const seat = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.15), new THREE.MeshStandardMaterial({ color: 0x2C2C2C, roughness: 0.8 }));
+  seat.name = 'seat';
   seat.position.set(-0.3, 0.7, 0); g.add(seat);
+  // Phase 15: Mark as interactive bicycle
+  g.userData.isBicycle = true;
+  g.userData.cooldownUntil = 0;
+  g.userData.wheels = [g.children[0], g.children[1]]; // first 2 are wheels
   return g;
 }
 
@@ -2227,6 +2406,11 @@ function buildZoneProps(zoneNum) {
       props.push(buildLantern(5, 5, 0));
       props.push(buildGreenTree(-7, 7, 0.8));
       props.push(buildGreenTree(7, 7, 0.8));
+      // Phase 15: Build moving train
+      if (typeof buildStationTrain === 'function') {
+        stationTrain = buildStationTrain();
+        scene.add(stationTrain);
+      }
       break;
     case 4: // Shopping (LittlestTokyo) - skip props, GLB is the scene
       break;
@@ -2389,6 +2573,11 @@ window.addEventListener('keydown', e => {
     if (vendingOpen) { closeVendingMachine(); e.preventDefault(); return; }
     if (nearestVending) { openVendingMachine(); e.preventDefault(); return; }
   }
+  // Phase 15: Bicycle mount/dismount
+  if (e.code === 'KeyE') {
+    if (state.ridingBike) { dismountBike(); e.preventDefault(); return; }
+    if (nearestBicycle) { mountBike(nearestBicycle); e.preventDefault(); return; }
+  }
   if (e.code === 'KeyE' && !dialogue.active && window._nearestNPC) {
     startDialogue(window._nearestNPC);
     e.preventDefault();
@@ -2432,7 +2621,9 @@ function update() {
   lastT = now;
   
   if (playerModel) {
-    const spd = (state.keys.ShiftLeft || state.keys.ShiftRight) ? 8 : 4;
+    // Phase 15: Bike speed boost
+    const baseSpd = (state.keys.ShiftLeft || state.keys.ShiftRight) ? 8 : 4;
+    const spd = state.ridingBike ? baseSpd * 1.8 : baseSpd;
     let mx = 0, mz = 0;
     if (state.keys.KeyW || state.keys.ArrowUp) mz -= 1;
     if (state.keys.KeyS || state.keys.ArrowDown) mz += 1;
@@ -2446,11 +2637,16 @@ function update() {
       mx /= len; mz /= len;
       const c = Math.cos(state.player.rot), s = Math.sin(state.player.rot);
       const wx = mx * c - mz * s, wz = mx * s + mz * c;
-      state.player.x += wx * spd * dt;
-      state.player.z += wz * spd * dt;
+      const moveDist = spd * dt;
+      state.player.x += wx * moveDist;
+      state.player.z += wz * moveDist;
       state.player.x = Math.max(-25, Math.min(25, state.player.x));
       state.player.z = Math.max(-25, Math.min(25, state.player.z));
       playerModel.rotation.y = Math.atan2(wx, wz);
+      // Phase 15: Track bike distance
+      if (state.ridingBike) {
+        state.bikeDistance = (state.bikeDistance || 0) + moveDist;
+      }
     }
     
     // Phase 8: Footstep sound (every ~0.4s walking, 0.25s running)
@@ -2503,6 +2699,9 @@ function update() {
   updateNPCs();
   checkNPCInteraction();
   if (typeof updateVendingProximity === 'function') updateVendingProximity();
+  if (typeof updateBicycleProximity === 'function') updateBicycleProximity();
+  if (typeof spinBikeWheels === 'function') spinBikeWheels(dt, (state.keys && (state.keys.KeyW || state.keys.KeyA || state.keys.KeyS || state.keys.KeyD || state.keys.ArrowUp || state.keys.ArrowDown || state.keys.ArrowLeft || state.keys.ArrowRight)));
+  if (typeof updateStationTrain === 'function') updateStationTrain(dt);
   if (typeof checkAchievements === 'function') checkAchievements();
   // Phase 13: Track distance walked for achievements
   if (state && state.player && state.stats) {
@@ -2584,6 +2783,9 @@ function newGame() {
   state.stats = { distanceWalked: 0, npcsTalked: 0, drinksBought: 0 };
   state.currentOutfit = 'school';
   state.outfitsUsed = ['school'];
+  state.ridingBike = false;
+  state.currentBike = null;
+  state.bikeDistance = 0;
   // Clear schedule UI
   for (let z = 1; z <= 5; z++) {
     const el = document.getElementById('sched-' + z);
@@ -2690,6 +2892,15 @@ window.OUTFITS = OUTFITS;
 window.applyOutfit = applyOutfit;
 window.openWardrobe = openWardrobe;
 window.closeWardrobe = closeWardrobe;
+// Phase 15
+window.mountBike = mountBike;
+window.dismountBike = dismountBike;
+window.updateBicycleProximity = updateBicycleProximity;
+window.nearestBicycle = nearestBicycle;
+window.buildStationTrain = buildStationTrain;
+window.stationTrain = stationTrain;
+Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
+Object.defineProperty(window, 'trainState', { get: () => trainState });
 // Phase 9
 window.saveGame = saveGame;
 window.loadGame = loadGame;
