@@ -10,7 +10,7 @@
 
 ---
 
-## 🌟 What's Done (Phase 0-13) / ทำอะไรไปแล้ว
+## 🌟 What's Done (Phase 0-14) / ทำอะไรไปแล้ว
 
 | Phase | Status | What was shipped | Deliverable |
 |-------|--------|------------------|-------------|
@@ -193,6 +193,33 @@
 | 0 JS errors | ✅ |
 
 **Live demo (Phase 13):** https://8bu5eowarv1h.space.minimax.io
+
+### 👗 NEW: Outfit System (Phase 14)
+
+- ✅ **5 outfits** — School Uniform (default), Casual, Miko (shrine), Pajamas, Gym
+- ✅ **Wardrobe modal** — Grid of 5 outfit cards with icon + bilingual name + status
+- ✅ **Pink 👗 button** in HUD + W key shortcut to open
+- ✅ **Color swap system** — Each named player part (torso, collar, ribbon, skirt, hair, sleeve, cuff, sock, shoe, bag) gets its own material color
+- ✅ **Equipped badge** — Currently-worn outfit highlighted in red
+- ✅ **"New" badge** — Untried outfits highlighted in yellow
+- ✅ **Save/Load** — currentOutfit + outfitsUsed persisted
+- ✅ **Re-applies on boot** — Auto-load + deferred applyOutfit for visual consistency
+
+#### Phase 14 Test Results
+| Test | Result |
+|------|--------|
+| School torso | ✅ #f8f8f2 (white) |
+| Casual torso | ✅ #ff8c9c (pink tshirt) |
+| Casual skirt | ✅ #404040 (dark denim) |
+| Shrine skirt | ✅ #c8102e (red hakama) |
+| Gym torso | ✅ #6b8e5a (green) |
+| All 5 outfits | ✅ |
+| fashionista + wardrobe_master | ✅ |
+| Save/load preserves | ✅ |
+| W key opens wardrobe | ✅ |
+| 0 JS errors | ✅ |
+
+**Live demo (Phase 14):** https://u9xstdkkpd5r.space.minimax.io
 
 ---
 
