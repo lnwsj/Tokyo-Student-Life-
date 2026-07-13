@@ -67,6 +67,26 @@
     .touch-controls { display: block; }
   }
 
+  /* Phase 14: Wardrobe modal */
+  .wardrobe-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 42; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .wardrobe-modal.show { display: flex; }
+  .wardrobe-content { background: linear-gradient(180deg, #FFF0F5, #FFFAF0); border-radius: 20px; padding: 1.5rem 2rem; max-width: 720px; width: 92%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 2px solid var(--border); }
+  .wardrobe-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(0,0,0,0.1); }
+  .wardrobe-title { font-family: 'Fraunces', serif; font-size: 1.4rem; color: var(--primary); }
+  .wardrobe-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem; }
+  .outfit-card { background: white; border: 2px solid var(--border); border-radius: 12px; padding: 1rem; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .outfit-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); border-color: var(--primary); }
+  .outfit-card.equipped { background: linear-gradient(135deg, #FFE4E1, #FFC9D9); border-color: #C8102E; box-shadow: 0 4px 12px rgba(200, 16, 46, 0.3); }
+  .outfit-card.unused { background: rgba(255, 255, 200, 0.3); }
+  .outfit-icon { font-size: 2.2rem; margin-bottom: 0.4rem; }
+  .outfit-name { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem; }
+  .outfit-desc { font-size: 0.7rem; color: var(--text-soft); margin-bottom: 0.3rem; min-height: 1.5em; }
+  .outfit-status { font-size: 0.7rem; font-weight: 500; padding: 0.15rem 0.4rem; border-radius: 6px; display: inline-block; background: rgba(45, 74, 107, 0.1); }
+  .outfit-card.equipped .outfit-status { background: #4CAF50; color: white; }
+  .wardrobe-close { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0.5rem 1.2rem; font-size: 0.85rem; cursor: pointer; }
+  .wardrobe-close:hover { background: #1a3a52; }
+  .wardrobe-footer { text-align: center; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(0,0,0,0.1); }
+
   /* Phase 13: Achievements */
   .achievements-panel { position: fixed; bottom: 1.5rem; left: 1.5rem; background: rgba(245, 240, 230, 0.85); border: 1px solid var(--border); border-radius: 12px; padding: 0.5rem 0.7rem; z-index: 10; backdrop-filter: blur(10px); max-width: 240px; }
   .achievements-title { font-family: 'Fraunces', serif; font-size: 0.75rem; color: var(--primary); margin-bottom: 0.3rem; }
@@ -106,6 +126,9 @@
   .new-game-btn { position: fixed; top: 7.5rem; right: 0.5rem; background: rgba(220, 80, 80, 0.85); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 0.3rem 0.5rem; font-size: 0.9rem; cursor: pointer; z-index: 15; backdrop-filter: blur(8px); }
   .new-game-btn:hover { background: rgba(200, 60, 60, 0.95); }
   .new-game-btn.confirm { background: #4CAF50; }
+
+  /* Phase 14: Wardrobe button */
+  .wardrobe-btn { background: rgba(255, 192, 203, 0.85) !important; }
 
   /* Phase 10: Day complete toast */
   .day-toast { position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: linear-gradient(135deg, #FFB347, #FF8C42); color: white; padding: 1.5rem 2.5rem; border-radius: 16px; font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 500; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 50; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); text-align: center; min-width: 280px; }
@@ -225,6 +248,18 @@
     <div class="achievements-list" id="achievementsList"></div>
   </div>
 
+  <!-- Phase 14: Wardrobe modal -->
+  <div class="wardrobe-modal" id="wardrobeModal">
+    <div class="wardrobe-content">
+      <div class="wardrobe-header">
+        <div class="wardrobe-title">👗 ตู้เสื้อผ้า / Wardrobe</div>
+        <button class="wardrobe-close" id="wardrobeCloseBtn">ปิด / Close</button>
+      </div>
+      <div class="wardrobe-grid" id="wardrobeGrid"></div>
+      <div class="wardrobe-footer" style="font-size:0.75rem;color:var(--text-soft);">คลิกชุดเพื่อสวม / Click outfit to equip</div>
+    </div>
+  </div>
+
   <!-- Phase 13: Vending machine modal -->
   <div class="vending-modal" id="vendingModal">
     <div class="vending-content">
@@ -240,6 +275,7 @@
     <button class="save-btn" id="saveBtn" title="Save (S)">💾</button>
     <button class="load-btn" id="loadBtn" title="Load (L)">📂</button>
     <button class="new-game-btn" id="newGameBtn" title="New Game">🔄</button>
+    <button class="wardrobe-btn" id="wardrobeBtn" title="Wardrobe (W)">👗</button>
   </div>
 
   <!-- Phase 11: Mobile touch controls -->
@@ -340,7 +376,9 @@ const state = {
   yen: 1200,
   stamina: 100,
   achievements: [],
-  stats: { distanceWalked: 0, npcsTalked: 0, drinksBought: 0 }
+  stats: { distanceWalked: 0, npcsTalked: 0, drinksBought: 0 },
+  currentOutfit: 'school',
+  outfitsUsed: ['school']
 };
 
 const ZONES = {
@@ -429,21 +467,27 @@ function buildSchoolgirl() {
   const body = new THREE.Group();
   // Sailor top (white box with navy collar)
   const torso = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.45, 0.24), white);
+  torso.name = 'torso';
   torso.position.y = 1.08; torso.castShadow = true;
   body.add(torso);
   // Navy collar (V-shape approximation: 2 angled boxes)
   const collarL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.06, 0.26), navy);
+  collarL.name = 'collarL';
   collarL.position.set(-0.05, 1.32, 0); collarL.rotation.z = 0.2; body.add(collarL);
   const collarR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.06, 0.26), navy);
+  collarR.name = 'collarR';
   collarR.position.set(0.05, 1.32, 0); collarR.rotation.z = -0.2; body.add(collarR);
   // Red ribbon (cross shape at chest)
   const ribbonH = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.04, 0.04), ribbon);
+  ribbonH.name = 'ribbonH';
   ribbonH.position.set(0, 1.26, 0.14); body.add(ribbonH);
   const ribbonV = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, 0.04), ribbon);
+  ribbonV.name = 'ribbonV';
   ribbonV.position.set(0, 1.21, 0.14); body.add(ribbonV);
 
   // === SKIRT (pleated navy) ===
   const skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.32, 8), navy);
+  skirt.name = 'skirt';
   skirt.position.y = 0.78; skirt.castShadow = true;
   body.add(skirt);
   // Pleats (vertical lines on skirt)
@@ -460,26 +504,33 @@ function buildSchoolgirl() {
 
   // === HEAD + HAIR ===
   const headGroup = new THREE.Group();
+  headGroup.name = 'headGroup';
   headGroup.position.y = 1.5;
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), skin);
+  head.name = 'head';
   head.castShadow = true; headGroup.add(head);
   // Hair: back (long)
   const hairBack = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.55, 0.18), hair);
+  hairBack.name = 'hairBack';
   hairBack.position.set(0, -0.12, -0.1); hairBack.castShadow = true; headGroup.add(hairBack);
   // Hair: top
   const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 10), hair);
+  hairTop.name = 'hairTop';
   hairTop.position.set(0, 0.06, 0); headGroup.add(hairTop);
   // Hair: bangs (front)
   const bangs = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.08, 0.14), hair);
+  bangs.name = 'bangs';
   bangs.position.set(0, 0.1, 0.08); headGroup.add(bangs);
   // Hair: side strands
   for (let s of [-1, 1]) {
     const side = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 0.16), hair);
+    side.name = `side_${s}`;
     side.position.set(s * 0.18, -0.08, 0); headGroup.add(side);
   }
   // Hair ribbons (red bows on sides)
   for (let s of [-1, 1]) {
     const bow = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), ribbon);
+    bow.name = `bow_${s}`;
     bow.position.set(s * 0.18, 0.05, 0.05); headGroup.add(bow);
   }
   // Eyes (tiny black dots)
@@ -496,18 +547,23 @@ function buildSchoolgirl() {
   function makeArm() {
     const armGroup = new THREE.Group();
     const sleeve = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.32, 0.12), white);
+    sleeve.name = 'sleeve';
     sleeve.position.y = -0.16; sleeve.castShadow = true; armGroup.add(sleeve);
     // Navy cuff
     const cuff = new THREE.Mesh(new THREE.BoxGeometry(0.125, 0.05, 0.125), navy);
+    cuff.name = 'cuff';
     cuff.position.y = -0.31; armGroup.add(cuff);
     // Hand
     const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), skin);
+    hand.name = 'hand';
     hand.position.y = -0.36; armGroup.add(hand);
     return armGroup;
   }
   const armL = makeArm();
+  armL.name = 'armL';
   armL.position.set(-0.26, 1.25, 0); body.add(armL);
   const armR = makeArm();
+  armR.name = 'armR';
   armR.position.set(0.26, 1.25, 0); body.add(armR);
 
   // === LEGS (long navy socks) ===
@@ -515,32 +571,42 @@ function buildSchoolgirl() {
     const legGroup = new THREE.Group();
     // Sock (navy, knee-high)
     const sock = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.4, 0.12), navy);
+    sock.name = 'sock';
     sock.position.y = -0.2; sock.castShadow = true; legGroup.add(sock);
     // Sock top white stripe
     const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.125, 0.03, 0.125), white);
+    stripe.name = 'stripe';
     stripe.position.y = -0.04; legGroup.add(stripe);
     // Shoe (brown loafer)
     const shoeMesh = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.08, 0.22), shoe);
+    shoeMesh.name = 'shoe';
     shoeMesh.position.set(0, -0.4, 0.04); legGroup.add(shoeMesh);
     return legGroup;
   }
   const legL = makeLeg();
+  legL.name = 'legL';
   legL.position.set(-0.1, 0.6, 0); body.add(legL);
   const legR = makeLeg();
+  legR.name = 'legR';
   legR.position.set(0.1, 0.6, 0); body.add(legR);
 
   // === RANDOSERU (school bag) on back ===
   const bagGroup = new THREE.Group();
+  bagGroup.name = 'bagGroup';
   const bagBody = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.42, 0.16), bagMat);
+  bagBody.name = 'bagBody';
   bagBody.castShadow = true; bagGroup.add(bagBody);
   // Flap (top)
   const flap = new THREE.Mesh(new THREE.BoxGeometry(0.33, 0.13, 0.17), bagMat);
+  flap.name = 'flap';
   flap.position.y = 0.26; bagGroup.add(flap);
   // Metal buckle
   const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.02), new THREE.MeshStandardMaterial({ color: 0xD0D0D0, metalness: 0.9, roughness: 0.2 }));
+  buckle.name = 'buckle';
   buckle.position.set(0, 0.18, 0.09); bagGroup.add(buckle);
   // Strap hint (thin strip on top of body)
   const strap = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.02), bagMat);
+  strap.name = 'strap';
   strap.position.set(0, 0.1, 0.08); bagGroup.add(strap);
   bagGroup.position.set(0, 1.05, -0.18);
   body.add(bagGroup);
@@ -831,6 +897,8 @@ function saveGame() {
       stamina: state.stamina,
       achievements: [...state.achievements],
       stats: { ...state.stats },
+      currentOutfit: state.currentOutfit,
+      outfitsUsed: [...(state.outfitsUsed || [])],
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -866,6 +934,8 @@ function applySave(data) {
   if (data.stamina !== undefined) state.stamina = data.stamina;
   if (data.achievements) state.achievements = [...data.achievements];
   if (data.stats) state.stats = { ...state.stats, ...data.stats };
+  if (data.currentOutfit !== undefined) state.currentOutfit = data.currentOutfit;
+  if (data.outfitsUsed) state.outfitsUsed = [...data.outfitsUsed];
   return true;
 }
 
@@ -934,6 +1004,12 @@ function tryAutoLoad() {
       if (typeof updateTimeUI === 'function') updateTimeUI();
       if (typeof updateHUD === 'function') updateHUD();
       if (typeof updateAchievementsHUD === 'function') updateAchievementsHUD();
+      // Re-apply outfit (deferred so playerModel is built)
+      setTimeout(() => {
+        if (typeof applyOutfit === 'function' && state.currentOutfit) {
+          applyOutfit(state.currentOutfit);
+        }
+      }, 100);
       console.log('Auto-loaded save from', new Date(data.savedAt).toLocaleTimeString());
     }
   }
@@ -961,7 +1037,9 @@ const ACHIEVEMENT_DEFS = [
   { id: 'early_bird', icon: '🐦', name: 'นกเช้า / Early Bird', desc: 'ตื่นก่อน 7:00 / Wake before 7:00', check: (s) => s.gameTime.hour < 7 },
   { id: 'chatterbox', icon: '💬', name: 'นักพูด / Chatterbox', desc: 'คุย NPC 10 ครั้ง / Talk to NPCs 10x', check: (s) => s.stats.npcsTalked >= 10 },
   { id: 'shopaholic', icon: '🛍️', name: 'ขาชอปปิ้ง / Shopaholic', desc: 'ซื้อเครื่องดื่ม 3 ครั้ง / Buy 3 drinks', check: (s) => s.stats.drinksBought >= 3 },
-  { id: 'completionist', icon: '🌟', name: 'คนสมบูรณ์ / Completionist', desc: 'Day 1 Complete / Complete Day 1', check: (s) => s.dayComplete }
+  { id: 'completionist', icon: '🌟', name: 'คนสมบูรณ์ / Completionist', desc: 'Day 1 Complete / Complete Day 1', check: (s) => s.dayComplete },
+  { id: 'fashionista', icon: '👗', name: 'แฟชั่นนิสต้า / Fashionista', desc: 'ลองสวม 3 ชุด / Try 3 outfits', check: (s) => (s.outfitsUsed?.length || 0) >= 3 },
+  { id: 'wardrobe_master', icon: '💃', name: 'สาวแฟชั่น / Wardrobe Master', desc: 'ครบทุกชุด / Try all 5 outfits', check: (s) => (s.outfitsUsed?.length || 0) >= 5 }
 ];
 
 function checkAchievements() {
@@ -1081,6 +1159,172 @@ function updateHUD() {
   const stam = document.getElementById('staminaValue');
   if (yen) yen.textContent = state.yen.toLocaleString();
   if (stam) stam.textContent = Math.floor(state.stamina);
+}
+
+// ========== PHASE 14: OUTFIT SYSTEM ==========
+const OUTFITS = {
+  school: {
+    name: 'ชุดนักเรียน / School Uniform',
+    icon: '🎀',
+    desc: 'เซฟุกุสาว / Seifuku girl',
+    cost: 0,
+    colors: {
+      torso: 0xF8F8F2,    // white sailor top
+      collarL: 0x1A2B4A, collarR: 0x1A2B4A,  // navy collar
+      ribbonH: 0xC8102E, ribbonV: 0xC8102E,   // red bow
+      skirt: 0x1A2B4A,    // navy pleated skirt
+      hairBack: 0x1A1A1A, hairTop: 0x1A1A1A, bangs: 0x1A1A1A, // black hair
+      side_1: 0x1A1A1A, side_m1: 0x1A1A1A,
+      bow_1: 0xC8102E, bow_m1: 0xC8102E,    // red bows
+      sleeve: 0xF8F8F2, cuff: 0x1A2B4A,     // white sleeves navy cuffs
+      sock: 0x1A2B4A, stripe: 0xF8F8F2,     // navy socks
+      shoe: 0x2C1810,                       // brown loafer
+      bagBody: 0x8B0000, flap: 0x8B0000, strap: 0x8B0000   // dark red randoseru
+    }
+  },
+  casual: {
+    name: 'ชุดลำลอง / Casual',
+    icon: '👕',
+    desc: 'เสื้อยืด + กางเกงขาสั้น / T-shirt + shorts',
+    cost: 0,
+    colors: {
+      torso: 0xFF8C9C,    // pink tshirt
+      collarL: 0xFFFFFF, collarR: 0xFFFFFF,
+      ribbonH: 0xFFFFFF, ribbonV: 0xFFFFFF,
+      skirt: 0x404040,    // dark denim shorts
+      hairBack: 0x4A3020, hairTop: 0x4A3020, bangs: 0x4A3020, // brown hair
+      side_1: 0x4A3020, side_m1: 0x4A3020,
+      bow_1: 0xFFFFFF, bow_m1: 0xFFFFFF,    // no bows
+      sleeve: 0xFF8C9C, cuff: 0xFFFFFF,     // pink sleeves
+      sock: 0xFFFFFF, stripe: 0xFF8C9C,     // white socks
+      shoe: 0xFFFFFF,                       // white sneakers
+      bagBody: 0x8B4513, flap: 0x8B4513, strap: 0x8B4513  // brown tote
+    }
+  },
+  shrine: {
+    name: 'ชุดเซน / Miko Outfit',
+    icon: '⛩️',
+    desc: 'ชุดมิโกะผู้ดูแลศาลเจ้า / Shrine maiden',
+    cost: 0,
+    colors: {
+      torso: 0xF8F8F2,    // white top
+      collarL: 0xC8102E, collarR: 0xC8102E,  // red collar
+      ribbonH: 0xFFFFFF, ribbonV: 0xFFFFFF,
+      skirt: 0xC8102E,    // red hakama
+      hairBack: 0x1A1A1A, hairTop: 0x1A1A1A, bangs: 0x1A1A1A,
+      side_1: 0x1A1A1A, side_m1: 0x1A1A1A,
+      bow_1: 0xFFFFFF, bow_m1: 0xFFFFFF,    // hair tied up no bows
+      sleeve: 0xF8F8F2, cuff: 0xC8102E,     // white sleeves red cuffs
+      sock: 0xF8F8F2, stripe: 0xC8102E,     // white socks
+      shoe: 0x2C1810,                       // dark geta
+      bagBody: 0x8B0000, flap: 0x8B0000, strap: 0x8B0000
+    }
+  },
+  pajamas: {
+    name: 'ชุดนอน / Pajamas',
+    icon: '🌙',
+    desc: 'ชุดนอนน่ารัก / Cozy sleepwear',
+    cost: 0,
+    colors: {
+      torso: 0xB5C7E0,    // pastel blue
+      collarL: 0xFFFFFF, collarR: 0xFFFFFF,
+      ribbonH: 0xFFB7C5, ribbonV: 0xFFB7C5,  // pink heart
+      skirt: 0xE0BBE4,    // pastel purple shorts
+      hairBack: 0xFFB7C5, hairTop: 0xFFB7C5, bangs: 0xFFB7C5, // pink messy hair
+      side_1: 0xFFB7C5, side_m1: 0xFFB7C5,
+      bow_1: 0xFFFFFF, bow_m1: 0xFFFFFF,
+      sleeve: 0xB5C7E0, cuff: 0xFFFFFF,
+      sock: 0xFFFFFF, stripe: 0xB5C7E0,
+      shoe: 0x8B4513,  // brown slippers
+      bagBody: 0xFFFFFF, flap: 0xFFFFFF, strap: 0xFFFFFF  // no bag
+    }
+  },
+  gym: {
+    name: 'ชุดกีฬา / Gym',
+    icon: '🏃‍♀️',
+    desc: 'ชุดออกกำลังกาย / Sporty',
+    cost: 0,
+    colors: {
+      torso: 0x6B8E5A,    // green sports top
+      collarL: 0xFFFFFF, collarR: 0xFFFFFF,
+      ribbonH: 0xFFFFFF, ribbonV: 0xFFFFFF,
+      skirt: 0x2C3E50,    // dark navy shorts
+      hairBack: 0x1A1A1A, hairTop: 0x1A1A1A, bangs: 0x1A1A1A,
+      side_1: 0x1A1A1A, side_m1: 0x1A1A1A,
+      bow_1: 0xFFFFFF, bow_m1: 0xFFFFFF,   // ponytail no bows
+      sleeve: 0x6B8E5A, cuff: 0xFFFFFF,
+      sock: 0xFFFFFF, stripe: 0x6B8E5A,   // white sports socks
+      shoe: 0xFF6B6B,  // red sneakers
+      bagBody: 0xFFFFFF, flap: 0xFFFFFF, strap: 0xFFFFFF  // no bag
+    }
+  }
+};
+
+function applyOutfit(outfitId) {
+  if (!playerModel) return;
+  const outfit = OUTFITS[outfitId];
+  if (!outfit) return;
+  state.currentOutfit = outfitId;
+  state.outfitsUsed = state.outfitsUsed || [];
+  if (!state.outfitsUsed.includes(outfitId)) {
+    state.outfitsUsed.push(outfitId);
+  }
+  // Traverse and update material colors by name
+  // Clone material on first access to break shared references (navy/white/ribbon are shared in buildSchoolgirl)
+  const seenMaterials = new WeakSet();
+  playerModel.traverse(obj => {
+    if (obj.isMesh && obj.name && outfit.colors[obj.name] !== undefined) {
+      if (!seenMaterials.has(obj.material)) {
+        obj.material = obj.material.clone();
+        seenMaterials.add(obj.material);
+      }
+      obj.material.color.setHex(outfit.colors[obj.name]);
+    }
+  });
+  // Sound
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playUIClick === 'function') playUIClick();
+  // Close modal
+  closeWardrobe();
+  // Show toast
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({
+      icon: outfit.icon,
+      name: outfit.name,
+      desc: outfit.desc
+    });
+  }
+  // Check achievements
+  if (typeof checkAchievements === 'function') checkAchievements();
+}
+
+function openWardrobe() {
+  const modal = document.getElementById('wardrobeModal');
+  const grid = document.getElementById('wardrobeGrid');
+  if (!modal || !grid) return;
+  grid.innerHTML = '';
+  Object.entries(OUTFITS).forEach(([id, outfit]) => {
+    const isEquipped = state.currentOutfit === id;
+    const used = (state.outfitsUsed || []).includes(id);
+    const card = document.createElement('div');
+    card.className = 'outfit-card' + (isEquipped ? ' equipped' : '') + (used ? '' : ' unused');
+    card.innerHTML = `
+      <div class="outfit-icon">${outfit.icon}</div>
+      <div class="outfit-name">${outfit.name}</div>
+      <div class="outfit-desc">${outfit.desc}</div>
+      <div class="outfit-status">${isEquipped ? '✓ สวมใส่อยู่ / Equipped' : (used ? 'เคยสวม / Tried' : 'ใหม่ / New')}</div>
+    `;
+    card.addEventListener('click', () => applyOutfit(id));
+    grid.appendChild(card);
+  });
+  modal.classList.add('show');
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playUIClick === 'function') playUIClick();
+}
+
+function closeWardrobe() {
+  const modal = document.getElementById('wardrobeModal');
+  if (modal) modal.classList.remove('show');
 }
 
 // ========== PHASE 9: SAKURA PETALS ==========
@@ -2115,6 +2359,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyS') { manualSave(); e.preventDefault(); return; }
   if (e.code === 'KeyL') { manualLoad(); e.preventDefault(); return; }
   if (e.code === 'KeyN') { if(typeof nextDay === 'function') nextDay(); e.preventDefault(); return; }
+  if (e.code === 'KeyW') { if(typeof openWardrobe === 'function') { openWardrobe(); e.preventDefault(); return; } }
   state.keys[e.code] = true;
   if (e.code === 'Digit1') switchZone(1);
   if (e.code === 'Digit2') switchZone(2);
@@ -2317,6 +2562,8 @@ document.getElementById('timePause').addEventListener('click', () => { if(typeof
 document.getElementById('muteBtn').addEventListener('click', () => { if(typeof initAudio === 'function') initAudio(); toggleMute(); });
 document.getElementById('saveBtn').addEventListener('click', manualSave);
 document.getElementById('loadBtn').addEventListener('click', manualLoad);
+document.getElementById('wardrobeBtn').addEventListener('click', openWardrobe);
+document.getElementById('wardrobeCloseBtn').addEventListener('click', closeWardrobe);
 
 // Phase 11: New Game button
 function newGame() {
@@ -2335,6 +2582,8 @@ function newGame() {
   state.stamina = 100;
   state.achievements = [];
   state.stats = { distanceWalked: 0, npcsTalked: 0, drinksBought: 0 };
+  state.currentOutfit = 'school';
+  state.outfitsUsed = ['school'];
   // Clear schedule UI
   for (let z = 1; z <= 5; z++) {
     const el = document.getElementById('sched-' + z);
@@ -2344,6 +2593,8 @@ function newGame() {
   if (typeof updateTimeUI === 'function') updateTimeUI();
   if (typeof updateHUD === 'function') updateHUD();
   if (typeof updateAchievementsHUD === 'function') updateAchievementsHUD();
+  // Re-apply default outfit
+  setTimeout(() => { if (typeof applyOutfit === 'function') applyOutfit('school'); }, 100);
   // Visual feedback
   const btn = document.getElementById('newGameBtn');
   if (btn) {
@@ -2414,12 +2665,15 @@ window.playPauseToggle = playPauseToggle;
 window.toggleMute = toggleMute;
 window.masterGain = masterGain;
 window.ambientGain = ambientGain;
-window.playerModel = playerModel;
-window.currentZoneNPCs = currentZoneNPCs;
-window.dialogue = dialogue;
-window.scene = scene;
-window.camera = camera;
-window.renderer = renderer;
+// Use getters so window always returns current values
+Object.defineProperty(window, 'playerModel', { get: () => playerModel });
+Object.defineProperty(window, 'currentZoneNPCs', { get: () => currentZoneNPCs });
+Object.defineProperty(window, 'scene', { get: () => scene });
+Object.defineProperty(window, 'camera', { get: () => camera });
+Object.defineProperty(window, 'renderer', { get: () => renderer });
+Object.defineProperty(window, 'dialogue', { get: () => dialogue });
+Object.defineProperty(window, 'lights', { get: () => lights });
+Object.defineProperty(window, 'playerParts', { get: () => playerParts });
 // Phase 13
 window.openVendingMachine = openVendingMachine;
 window.closeVendingMachine = closeVendingMachine;
@@ -2431,6 +2685,11 @@ window.showAchievementToast = showAchievementToast;
 window.updateAchievementsHUD = updateAchievementsHUD;
 window.checkAchievements = checkAchievements;
 window.startDialogue = startDialogue;
+// Phase 14
+window.OUTFITS = OUTFITS;
+window.applyOutfit = applyOutfit;
+window.openWardrobe = openWardrobe;
+window.closeWardrobe = closeWardrobe;
 // Phase 9
 window.saveGame = saveGame;
 window.loadGame = loadGame;
