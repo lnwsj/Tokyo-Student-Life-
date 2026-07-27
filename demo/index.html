@@ -67,6 +67,9 @@
     .touch-controls { display: block; }
   }
 
+  /* Phase 18: Interior mode body */
+  body.interior-mode { background: #F5E6D3; }
+
   /* Phase 17: Phone/Messages */
   .phone-fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); border: 2px solid white; transition: transform 0.2s; }
   .phone-fab:hover { transform: scale(1.08); }
@@ -1431,6 +1434,232 @@ function dismountBike() {
   if (typeof playTone === 'function') playTone(600, 0.1, 'triangle', 0.12);
 }
 
+// ========== PHASE 18: HOME INTERIOR ==========
+let interiorState = {
+  active: false,
+  scene: null,
+  group: null,
+  doorToExit: null
+};
+
+function buildHomeInterior() {
+  const interiorScene = new THREE.Scene();
+  interiorScene.background = new THREE.Color(0xF5E6D3);
+  interiorScene.fog = new THREE.Fog(0xF5E6D3, 8, 18);
+  const group = new THREE.Group();
+  group.name = 'home-interior';
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0xC19A6B, roughness: 0.7, metalness: 0.05 });
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(8, 0.1, 8), floorMat);
+  floor.position.y = 0; floor.receiveShadow = true; group.add(floor);
+  const tatamiMat = new THREE.MeshStandardMaterial({ color: 0xD4B896, roughness: 0.85 });
+  const tatami = new THREE.Mesh(new THREE.BoxGeometry(3, 0.05, 4), tatamiMat);
+  tatami.position.set(2, 0.06, 0); tatami.receiveShadow = true; group.add(tatami);
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xFFF5E1, roughness: 0.9 });
+  const wallH = 3.2;
+  const back = new THREE.Mesh(new THREE.BoxGeometry(8, wallH, 0.15), wallMat);
+  back.position.set(0, wallH/2, -4); group.add(back);
+  const frontL = new THREE.Mesh(new THREE.BoxGeometry(3, wallH, 0.15), wallMat);
+  frontL.position.set(-2.5, wallH/2, 4); group.add(frontL);
+  const frontR = new THREE.Mesh(new THREE.BoxGeometry(3, wallH, 0.15), wallMat);
+  frontR.position.set(2.5, wallH/2, 4); group.add(frontR);
+  const frontT = new THREE.Mesh(new THREE.BoxGeometry(2, 1.0, 0.15), wallMat);
+  frontT.position.set(0, wallH-0.5, 4); group.add(frontT);
+  const left = new THREE.Mesh(new THREE.BoxGeometry(0.15, wallH, 8), wallMat);
+  left.position.set(-4, wallH/2, 0); group.add(left);
+  const right = new THREE.Mesh(new THREE.BoxGeometry(0.15, wallH, 8), wallMat);
+  right.position.set(4, wallH/2, 0); group.add(right);
+  const bedMat = new THREE.MeshStandardMaterial({ color: 0xE0B4D0, roughness: 0.8 });
+  const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(2, 0.4, 1.4), new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.7 }));
+  bedFrame.position.set(-2.5, 0.2, -3); bedFrame.castShadow = true; group.add(bedFrame);
+  const blanket = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.1, 1.3), bedMat);
+  blanket.position.set(-2.5, 0.45, -3); group.add(blanket);
+  const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.4), new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.9 }));
+  pillow.position.set(-3.0, 0.5, -3.3); group.add(pillow);
+  const desk = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.05, 0.8), new THREE.MeshStandardMaterial({ color: 0xA0826D, roughness: 0.7 }));
+  desk.position.set(2.3, 0.75, -3); desk.castShadow = true; group.add(desk);
+  const deskLeg1 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.75, 0.05), new THREE.MeshStandardMaterial({ color: 0x5C3A21 }));
+  deskLeg1.position.set(1.6, 0.375, -3.3); group.add(deskLeg1);
+  const deskLeg2 = deskLeg1.clone(); deskLeg2.position.set(3.0, 0.375, -3.3); group.add(deskLeg2);
+  const laptop = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 0.35), new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.5 }));
+  laptop.position.set(2.0, 0.78, -3); group.add(laptop);
+  const laptopScreen = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.04), new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x66AAFF, emissiveIntensity: 0.3 }));
+  laptopScreen.position.set(2.0, 0.95, -2.85); laptopScreen.rotation.x = -0.2; group.add(laptopScreen);
+  const tv = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.9, 0.05), new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.6, emissive: 0x4466AA, emissiveIntensity: 0.1 }));
+  tv.position.set(-2.5, 2.0, 3.93); group.add(tv);
+  const tvFrame = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 0.04), new THREE.MeshStandardMaterial({ color: 0x4A3728, roughness: 0.7 }));
+  tvFrame.position.set(-2.5, 2.0, 3.91); group.add(tvFrame);
+  const fridge = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.6, 0.6), new THREE.MeshStandardMaterial({ color: 0xF5F5F5, roughness: 0.3, metalness: 0.4 }));
+  fridge.position.set(3.4, 0.8, 3.3); fridge.castShadow = true; group.add(fridge);
+  const fridgeDoor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.04), new THREE.MeshStandardMaterial({ color: 0xE0E0E0, roughness: 0.3, metalness: 0.5 }));
+  fridgeDoor.position.set(3.81, 1.2, 3.3); group.add(fridgeDoor);
+  const table = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.6), new THREE.MeshStandardMaterial({ color: 0x6B4423, roughness: 0.7 }));
+  table.position.set(2, 0.15, 0); group.add(table);
+  const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.7), new THREE.MeshStandardMaterial({ color: 0xC44569, roughness: 0.9 }));
+  cushion.position.set(2, 0.1, 1.5); group.add(cushion);
+  const windowFrame = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.2, 0.05), new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.2, emissive: 0xFFFFEE, emissiveIntensity: 0.4 }));
+  windowFrame.position.set(2.5, 1.8, -3.93); group.add(windowFrame);
+  const winH = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: 0x5C3A21 }));
+  winH.position.set(2.5, 1.8, -3.9); group.add(winH);
+  const winV = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.2, 0.05), new THREE.MeshStandardMaterial({ color: 0x5C3A21 }));
+  winV.position.set(2.5, 1.8, -3.9); group.add(winV);
+  const lampShade = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.4, 12), new THREE.MeshStandardMaterial({ color: 0xFFE4B5, roughness: 0.6, emissive: 0xFFE4B5, emissiveIntensity: 0.5, transparent: true, opacity: 0.95 }));
+  lampShade.position.set(0, 3.0, 0); group.add(lampShade);
+  const lampCord = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.2), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+  lampCord.position.set(0, 3.2, 0); group.add(lampCord);
+  const exitDoor = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5, 2.0, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0x66BB6A, emissive: 0x66BB6A, emissiveIntensity: 0.2, roughness: 0.5 })
+  );
+  exitDoor.position.set(0, 1.0, 4.05);
+  exitDoor.userData.isExitDoor = true;
+  group.add(exitDoor);
+  const frame = new THREE.Mesh(
+    new THREE.BoxGeometry(1.7, 2.2, 0.05),
+    new THREE.MeshBasicMaterial({ color: 0x4CAF50 })
+  );
+  frame.position.set(0, 1.1, 4.0);
+  group.add(frame);
+  const ambient = new THREE.AmbientLight(0xFFE4B5, 0.7);
+  interiorScene.add(ambient);
+  const sunFromWindow = new THREE.DirectionalLight(0xFFFFEE, 0.8);
+  sunFromWindow.position.set(2.5, 4, -4);
+  sunFromWindow.target.position.set(0, 0, 0);
+  interiorScene.add(sunFromWindow);
+  interiorScene.add(sunFromWindow.target);
+  const lampLight = new THREE.PointLight(0xFFE4B5, 0.6, 8);
+  lampLight.position.set(0, 2.8, 0);
+  interiorScene.add(lampLight);
+  interiorScene.add(group);
+  return { scene: interiorScene, group, exitDoor, ambient, sunFromWindow, lampLight };
+}
+
+function enterHome() {
+  if (interiorState.active) return;
+  if (state.currentZone !== 1) return;
+  if (state.ridingBike) dismountBike();
+  if (!interiorState.scene) {
+    const built = buildHomeInterior();
+    interiorState.scene = built.scene;
+    interiorState.group = built.group;
+    interiorState.doorToExit = built.exitDoor;
+    interiorState.ambient = built.ambient;
+    interiorState.sun = built.sunFromWindow;
+    interiorState.lamp = built.lampLight;
+  }
+  applyInteriorTimeOfDay();
+  interiorState.active = true;
+  if (typeof scene !== 'undefined' && scene) scene.visible = false;
+  // Remove body zone class so the Ghibli background doesn't show through the canvas
+  document.body.className = '';
+  document.body.classList.add('interior-mode');
+  if (playerModel) {
+    // Position player so camera (player.z + 4) is at the door (z=2.5), looking into room
+    playerModel.position.set(0, 0, -1.5);
+    playerModel.rotation.y = 0;
+  }
+  state.player.x = 0; state.player.y = 0; state.player.z = -1.5;
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playTone === 'function') {
+    playTone(440, 0.15, 'sine', 0.12);
+    setTimeout(() => playTone(550, 0.15, 'sine', 0.1), 100);
+  }
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({ icon: '🏠', name: 'เข้าบ้าน / Entered Home', desc: 'กด E ที่ประตูเพื่อออก / Press E at door to exit' });
+  }
+}
+
+function applyInteriorTimeOfDay() {
+  if (!interiorState.scene || !state || !state.gameTime) return;
+  const h = state.gameTime.hour;
+  const a = interiorState.ambient, s = interiorState.sun, l = interiorState.lamp;
+  const bg = interiorState.scene.background, fog = interiorState.scene.fog;
+  if (h < 7 || h >= 19) {
+    if (a) a.intensity = 0.3;
+    if (s) s.intensity = 0.1;
+    if (l) l.intensity = 1.0;
+    if (bg) bg.setHex(0x2A2A4A);
+    if (fog) fog.color.set(0x2A2A4A);
+  } else if (h >= 17 && h < 19) {
+    if (a) a.color.setHex(0xFFAA66);
+    if (bg) bg.setHex(0xFF9966);
+    if (fog) fog.color.set(0xFF9966);
+  } else if (h >= 11 && h < 14) {
+    if (a) a.intensity = 0.9;
+    if (s) s.intensity = 1.2;
+  } else {
+    if (a) { a.intensity = 0.7; a.color.setHex(0xFFE4B5); }
+    if (s) s.intensity = 0.8;
+    if (l) l.intensity = 0.6;
+    if (bg) bg.setHex(0xF5E6D3);
+    if (fog) fog.color.set(0xF5E6D3);
+  }
+}
+
+function exitHome() {
+  if (!interiorState.active) return;
+  interiorState.active = false;
+  if (typeof scene !== 'undefined' && scene) scene.visible = true;
+  document.body.classList.remove('interior-mode');
+  // Body class is restored by switchZone — force re-apply of current zone
+  document.body.className = '';
+  document.body.classList.add('zone' + state.currentZone);
+  if (playerModel) {
+    playerModel.position.set(0, 0, 6);
+    playerModel.rotation.y = Math.PI;
+  }
+  state.player.x = 0; state.player.y = 0; state.player.z = 6; state.player.rot = Math.PI;
+  if (typeof playTone === 'function') {
+    playTone(550, 0.15, 'sine', 0.1);
+    setTimeout(() => playTone(440, 0.15, 'sine', 0.12), 100);
+  }
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({ icon: '🚪', name: 'ออกจากบ้าน / Exited Home', desc: 'กลับสู่ภายนอก / Back outside' });
+  }
+}
+
+function updateDoorProximity() {
+  if (!playerModel || state.ridingBike) return;
+  if (interiorState.active) {
+    if (interiorState.doorToExit) {
+      const dx = interiorState.doorToExit.position.x - playerModel.position.x;
+      const dz = interiorState.doorToExit.position.z - playerModel.position.z;
+      const dist = Math.sqrt(dx*dx + dz*dz);
+      if (dist < 2.0 && !window._nearestNPC) {
+        const prompt = document.getElementById('interact-prompt');
+        if (prompt) {
+          prompt.style.display = 'block';
+          prompt.innerHTML = '[E] ออกจากบ้าน / Exit Home';
+        }
+        interiorState.nearExit = true;
+      } else {
+        interiorState.nearExit = false;
+      }
+    }
+    return;
+  }
+  const px = playerModel.position.x, pz = playerModel.position.z;
+  let near = null, minDist = 2.0;
+  if (typeof scene !== 'undefined' && scene) {
+    scene.traverse(obj => {
+      if (obj.userData && obj.userData.isDoor) {
+        const dx = obj.position.x - px, dz = obj.position.z - pz;
+        const dist = Math.sqrt(dx*dx + dz*dz);
+        if (dist < minDist) { minDist = dist; near = obj; }
+      }
+    });
+  }
+  if (near && !window._nearestNPC && !nearestVending && !state.ridingBike) {
+    const prompt = document.getElementById('interact-prompt');
+    if (prompt) {
+      prompt.style.display = 'block';
+      prompt.innerHTML = '[E] เข้าบ้าน / Enter Home';
+    }
+    interiorState.nearDoor = near;
+  } else {
+    interiorState.nearDoor = null;
+  }
+}
+
 function updateBicycleProximity() {
   if (!playerModel || state.ridingBike) { nearestBicycle = null; return null; }
   const px = playerModel.position.x, pz = playerModel.position.z;
@@ -2231,7 +2460,10 @@ function buildSmallHouse(x, z, rotY = 0) {
   // Door
   const doorMat = new THREE.MeshStandardMaterial({ color: 0x6B3F1A, roughness: 0.8 });
   const door = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.6, 0.05), doorMat);
-  door.position.set(0, 0.8, 1.76); g.add(door);
+  door.position.set(0, 0.8, 1.76);
+  door.userData.isDoor = true;
+  door.userData.zone = 1; // home door
+  g.add(door);
   // Window
   const window_ = new THREE.Mesh(
     new THREE.BoxGeometry(0.6, 0.5, 0.05),
@@ -2876,6 +3108,20 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyE' && !dialogue.active && window._nearestNPC) {
     startDialogue(window._nearestNPC);
     e.preventDefault();
+    return;
+  }
+  // Phase 18: Home interior door
+  if (e.code === 'KeyE') {
+    if (interiorState.active && interiorState.nearExit) {
+      exitHome();
+      e.preventDefault();
+      return;
+    }
+    if (interiorState.nearDoor && !interiorState.active) {
+      enterHome();
+      e.preventDefault();
+      return;
+    }
   }
 });
 
@@ -2995,6 +3241,8 @@ function update() {
   checkNPCInteraction();
   if (typeof updateVendingProximity === 'function') updateVendingProximity();
   if (typeof updateBicycleProximity === 'function') updateBicycleProximity();
+  if (typeof updateDoorProximity === 'function') updateDoorProximity();
+  if (typeof updateStationTrain === 'function') updateStationTrain(dt);
   if (typeof spinBikeWheels === 'function') spinBikeWheels(dt, (state.keys && (state.keys.KeyW || state.keys.KeyA || state.keys.KeyS || state.keys.KeyD || state.keys.ArrowUp || state.keys.ArrowDown || state.keys.ArrowLeft || state.keys.ArrowRight)));
   if (typeof updateStationTrain === 'function') updateStationTrain(dt);
   if (typeof checkAchievements === 'function') checkAchievements();
@@ -3009,6 +3257,25 @@ function update() {
     state._lastZ = state.player.z;
   }
   renderer.render(scene, camera);
+  if (interiorState.active && interiorState.scene && camera) {
+    // Move playerModel into interior scene
+    if (playerModel && playerModel.parent !== interiorState.group) {
+      // Detach from main scene
+      if (playerModel.parent) playerModel.parent.remove(playerModel);
+      interiorState.group.add(playerModel);
+    }
+    // Re-apply interior time-of-day on hour change
+    if (state && state.gameTime) {
+      applyInteriorTimeOfDay();
+    }
+    renderer.autoClear = false;
+    renderer.clear();
+    renderer.render(interiorState.scene, camera);
+  } else if (playerModel && playerModel.parent && playerModel.parent.name === 'home-interior') {
+    // Player should be back in main scene
+    interiorState.group.remove(playerModel);
+    if (typeof scene !== 'undefined' && scene) scene.add(playerModel);
+  }
   requestAnimationFrame(update);
 }
 
@@ -3229,6 +3496,12 @@ window.closePhone = closePhone;
 window.checkPhoneMessages = checkPhoneMessages;
 window.addPhoneMessage = addPhoneMessage;
 window.newGame = newGame;
+// Phase 18
+Object.defineProperty(window, 'interiorState', { get: () => interiorState });
+window.enterHome = enterHome;
+window.exitHome = exitHome;
+window.updateDoorProximity = updateDoorProximity;
+window.applyInteriorTimeOfDay = applyInteriorTimeOfDay;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
