@@ -77,6 +77,23 @@
   .sleep-day { font-size: 3rem; margin-top: 1rem; opacity: 0.95; }
   .sleep-sub { font-size: 1rem; margin-top: 0.5rem; opacity: 0.6; }
 
+  /* Phase 23: Fridge modal */
+  .fridge-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .fridge-modal.show { display: flex; }
+  .fridge-content { background: linear-gradient(180deg, #E3F2FD, #FFFFFF); border-radius: 20px; padding: 1.5rem 2rem; max-width: 540px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 2px solid #B3D9F2; }
+  .fridge-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .fridge-title { font-family: 'Fraunces', serif; font-size: 1.4rem; color: #1E5A87; }
+  .fridge-balance { background: rgba(30, 90, 135, 0.1); padding: 0.4rem 0.8rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+  .fridge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin-bottom: 1rem; }
+  .fridge-item { background: white; border-radius: 14px; padding: 1rem; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; border: 2px solid transparent; }
+  .fridge-item:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-color: #66BB6A; }
+  .fridge-icon { font-size: 2rem; text-align: center; }
+  .fridge-name { font-weight: 600; color: var(--primary); text-align: center; margin-top: 0.3rem; font-size: 0.9rem; }
+  .fridge-stamina { font-size: 0.75rem; text-align: center; color: var(--text-soft); margin-top: 0.2rem; }
+  .fridge-price { font-family: 'JetBrains Mono', monospace; color: #C46A1F; text-align: center; font-size: 0.85rem; margin-top: 0.3rem; font-weight: 600; }
+  .fridge-close { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; width: 100%; }
+  .fridge-close:hover { background: #1a3a52; }
+
   /* Phase 17: Phone/Messages */
   .phone-fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); border: 2px solid white; transition: transform 0.2s; }
   .phone-fab:hover { transform: scale(1.08); }
@@ -279,6 +296,18 @@
   <div class="achievements-panel" id="achievementsPanel" style="display:none">
     <div class="achievements-title">🏆 ความสำเร็จ / Achievements</div>
     <div class="achievements-list" id="achievementsList"></div>
+  </div>
+
+  <!-- Phase 23: Fridge modal -->
+  <div class="fridge-modal" id="fridgeModal">
+    <div class="fridge-content">
+      <div class="fridge-header">
+        <div class="fridge-title">🧊 ตู้เย็น / Fridge</div>
+        <div class="fridge-balance" id="fridgeBalance">💴 1,200 เยน</div>
+      </div>
+      <div class="fridge-grid" id="fridgeGrid"></div>
+      <button class="fridge-close" id="fridgeCloseBtn">ปิด / Close</button>
+    </div>
   </div>
 
   <!-- Phase 22: Sleep fade overlay -->
@@ -960,6 +989,8 @@ function saveGame() {
       catFedUnique: state._catFedUnique || 0,
       catFedNames: state._fedCatNames || [],
       wellRested: !!state._wellRested,
+      eatenFoods: state._eatenFoods || [],
+      eatenCount: state._eatenCount || 0,
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -1007,6 +1038,8 @@ function applySave(data) {
   if (data.catFedUnique !== undefined) state._catFedUnique = data.catFedUnique;
   if (data.catFedNames) state._fedCatNames = [...data.catFedNames];
   if (data.wellRested !== undefined) state._wellRested = data.wellRested;
+  if (data.eatenFoods) state._eatenFoods = [...data.eatenFoods];
+  if (data.eatenCount !== undefined) state._eatenCount = data.eatenCount;
   return true;
 }
 
@@ -1124,7 +1157,9 @@ const ACHIEVEMENT_DEFS = [
   { id: 'cyclist', icon: '🏁', name: 'นักปั่น / Cyclist', desc: 'ปั่น 200 เมตร / Ride 200m', check: (s) => (s.bikeDistance || 0) >= 200 },
   { id: 'cat_friend', icon: '🐱', name: 'เพื่อนแมว / Cat Friend', desc: 'ให้อาหารแมว / Feed a cat', check: (s) => (s._catFedCount || 0) >= 1 },
   { id: 'cat_whisperer', icon: '🐈', name: 'นิยายแมว / Cat Whisperer', desc: 'ให้อาหารแมว 3 ตัว / Feed 3 different cats', check: (s) => (s._catFedUnique || 0) >= 3 },
-  { id: 'well_rested', icon: '☀️', name: 'นอนเต็มอิ่ม / Well Rested', desc: 'นอนในเตียง / Sleep in your bed', check: (s) => (s.day || 1) > 1 }
+  { id: 'well_rested', icon: '☀️', name: 'นอนเต็มอิ่ม / Well Rested', desc: 'นอนในเตียง / Sleep in your bed', check: (s) => (s.day || 1) > 1 },
+  { id: 'first_meal', icon: '🍱', name: 'มื้อแรก / First Meal', desc: 'ทานอาหารครั้งแรก / Eat your first food', check: (s) => (s._eatenCount || 0) >= 1 },
+  { id: 'gourmet', icon: '🍜', name: 'กูร์เมต์ / Gourmet', desc: 'ลองทุกเมนู / Try all 4 foods', check: (s) => (s._eatenFoods?.length || 0) >= 4 }
 ];
 
 function checkAchievements() {
@@ -1521,7 +1556,9 @@ function buildHomeInterior() {
   const tvFrame = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 0.04), new THREE.MeshStandardMaterial({ color: 0x4A3728, roughness: 0.7 }));
   tvFrame.position.set(-2.5, 2.0, 3.91); group.add(tvFrame);
   const fridge = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.6, 0.6), new THREE.MeshStandardMaterial({ color: 0xF5F5F5, roughness: 0.3, metalness: 0.4 }));
-  fridge.position.set(3.4, 0.8, 3.3); fridge.castShadow = true; group.add(fridge);
+  fridge.position.set(3.4, 0.8, 3.3); fridge.castShadow = true;
+  fridge.userData.isFridge = true;
+  group.add(fridge);
   const fridgeDoor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.04), new THREE.MeshStandardMaterial({ color: 0xE0E0E0, roughness: 0.3, metalness: 0.5 }));
   fridgeDoor.position.set(3.81, 1.2, 3.3); group.add(fridgeDoor);
   const table = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.6), new THREE.MeshStandardMaterial({ color: 0x6B4423, roughness: 0.7 }));
@@ -1580,6 +1617,8 @@ function enterHome() {
   }
   applyInteriorTimeOfDay();
   interiorState.active = true;
+  // Clear nearby NPC reference to prevent prompts from outside NPCs
+  window._nearestNPC = null;
   if (typeof scene !== 'undefined' && scene) scene.visible = false;
   // Remove body zone class so the Ghibli background doesn't show through the canvas
   document.body.className = '';
@@ -1677,6 +1716,17 @@ function updateDoorProximity() {
       interiorState.nearBed = true;
     } else {
       interiorState.nearBed = false;
+    }
+    // Phase 23: Fridge prompt
+    if (isNearFridge()) {
+      const prompt = document.getElementById('interact-prompt');
+      if (prompt) {
+        prompt.style.display = 'block';
+        prompt.innerHTML = '[E] เปิดตู้เย็น / Open Fridge (eat)';
+      }
+      interiorState.nearFridge = true;
+    } else {
+      interiorState.nearFridge = false;
     }
     return;
   }
@@ -1997,8 +2047,89 @@ function isNearBed() {
   return Math.sqrt(dx*dx + dz*dz) < 1.8;
 }
 
+// ========== PHASE 23: HUNGER / EAT SYSTEM ==========
+const FOODS = [
+  { id: 'rice_ball', name: 'ข้าวปั้น / Onigiri', price: 80, hunger: 25, icon: '🍙' },
+  { id: 'sandwich', name: 'แซนด์วิช / Sandwich', price: 120, hunger: 35, icon: '🥪' },
+  { id: 'bento', name: 'เบนโตะ / Bento Box', price: 250, hunger: 60, icon: '🍱' },
+  { id: 'ramen', name: 'ราเมง / Ramen', price: 450, hunger: 90, icon: '🍜' }
+];
+
+function getFoodItem(id) { return FOODS.find(f => f.id === id); }
+
+function buyFood(foodId) {
+  const food = getFoodItem(foodId);
+  if (!food) return false;
+  if (state.yen < food.price) {
+    if (typeof showAchievementToast === 'function') {
+      showAchievementToast({ icon: '💴', name: 'เงินไม่พอ / Not enough money', desc: `ต้องการ ${food.price} เยน` });
+    }
+    return false;
+  }
+  state.yen -= food.price;
+  state.stamina = Math.min(state._wellRested ? 150 : 100, state.stamina + food.hunger);
+  if (!state._eatenFoods) state._eatenFoods = [];
+  if (!state._eatenFoods.includes(foodId)) state._eatenFoods.push(foodId);
+  state._eatenCount = (state._eatenCount || 0) + 1;
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({ icon: food.icon, name: `ทาน ${food.name.split(' /')[0]}`, desc: `+${food.hunger} ความอิ่ม / Stamina` });
+  }
+  if (typeof playTone === 'function') {
+    playTone(440, 0.1, 'sine', 0.1);
+    setTimeout(() => playTone(660, 0.1, 'sine', 0.1), 80);
+  }
+  if (typeof updateHUD === 'function') updateHUD();
+  if (typeof checkAchievements === 'function') checkAchievements();
+  return true;
+}
+
+function isNearFridge() {
+  if (!interiorState.active || !playerModel) return null;
+  // Fridge at x=3.4, z=3.3
+  const dx = playerModel.position.x - 3.4;
+  const dz = playerModel.position.z - 3.3;
+  return Math.sqrt(dx*dx + dz*dz) < 1.8;
+}
+
+function openFridgeModal() {
+  if (!interiorState.active) return;
+  const modal = document.getElementById('fridgeModal');
+  const grid = document.getElementById('fridgeGrid');
+  const balance = document.getElementById('fridgeBalance');
+  if (!modal || !grid) return;
+  // Update balance
+  if (balance) balance.textContent = `💴 ${state.yen.toLocaleString()} เยน`;
+  // Render foods
+  grid.innerHTML = '';
+  for (const food of FOODS) {
+    const div = document.createElement('div');
+    div.className = 'fridge-item';
+    div.innerHTML = `
+      <div class="fridge-icon">${food.icon}</div>
+      <div class="fridge-name">${food.name}</div>
+      <div class="fridge-stamina">+${food.hunger} ความอิ่ม / stamina</div>
+      <div class="fridge-price">${food.price} เยน</div>
+    `;
+    div.addEventListener('click', () => {
+      if (buyFood(food.id)) {
+        // Refresh balance
+        if (balance) balance.textContent = `💴 ${state.yen.toLocaleString()} เยน`;
+      }
+    });
+    grid.appendChild(div);
+  }
+  modal.classList.add('show');
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playUIClick === 'function') playUIClick();
+}
+
+function closeFridgeModal() {
+  const modal = document.getElementById('fridgeModal');
+  if (modal) modal.classList.remove('show');
+}
+
 function updateBicycleProximity() {
-  if (!playerModel || state.ridingBike) { nearestBicycle = null; return null; }
+  if (!playerModel || state.ridingBike || interiorState.active) { nearestBicycle = null; return null; }
   const px = playerModel.position.x, pz = playerModel.position.z;
   let nearest = null, minDist = 2.5;
   if (typeof scene !== 'undefined' && scene) {
@@ -2460,6 +2591,22 @@ function tickTime(dt) {
   // Phase 10: Day cycle — if we wrapped from 23 → 0, advance to next day
   if (hourChanged && state.gameTime.hour === 0) {
     nextDay();
+  }
+  // Phase 23: Stamina drain (only when moving, not while sleeping/interior stationary)
+  if (state && state.stamina !== undefined && !interiorState.active) {
+    const isMoving = state.keys && (state.keys.KeyW || state.keys.KeyA || state.keys.KeyS || state.keys.KeyD || state.keys.ArrowUp || state.keys.ArrowDown || state.keys.ArrowLeft || state.keys.ArrowRight);
+    if (isMoving) {
+      const drainRate = state.ridingBike ? 0.3 : 1.2;  // bike uses less stamina
+      state.stamina = Math.max(0, state.stamina - drainRate * dt);
+      // Check hungry achievement
+      if (state.stamina < 30 && !state._hungryWarned) {
+        state._hungryWarned = true;
+        if (typeof showAchievementToast === 'function') {
+          showAchievementToast({ icon: '🍱', name: 'หิวแล้ว! / Hungry!', desc: 'ทานอาหารจากร้านค้า / Eat food from shop' });
+        }
+      }
+      if (state.stamina >= 30) state._hungryWarned = false;
+    }
   }
   updateTimeUI();
 }
@@ -3195,6 +3342,11 @@ function showDialogue() {
 function checkNPCInteraction() {
   if (dialogue.active) return;
   if (!playerModel) return;
+  // Skip NPC detection when inside home interior
+  if (interiorState.active) {
+    window._nearestNPC = null;
+    return;
+  }
   const px = playerModel.position.x, pz = playerModel.position.z;
   for (const npc of currentZoneNPCs) {
     const dx = npc.model.position.x - px, dz = npc.model.position.z - pz;
@@ -3443,11 +3595,11 @@ window.addEventListener('keydown', e => {
     if (nearestVending) { openVendingMachine(); e.preventDefault(); return; }
   }
   // Phase 15: Bicycle mount/dismount
-  if (e.code === 'KeyE') {
+  if (e.code === 'KeyE' && !interiorState.active) {
     if (state.ridingBike) { dismountBike(); e.preventDefault(); return; }
     if (nearestBicycle) { mountBike(nearestBicycle); e.preventDefault(); return; }
   }
-  if (e.code === 'KeyE' && !dialogue.active && window._nearestNPC) {
+  if (e.code === 'KeyE' && !dialogue.active && window._nearestNPC && !interiorState.active) {
     startDialogue(window._nearestNPC);
     e.preventDefault();
     return;
@@ -3464,9 +3616,15 @@ window.addEventListener('keydown', e => {
       e.preventDefault();
       return;
     }
-    // Phase 22: Sleep
+    // Phase 22: Sleep (only if not exiting)
     if (interiorState.active && interiorState.nearBed) {
       sleepAtBed();
+      e.preventDefault();
+      return;
+    }
+    // Phase 23: Fridge (only if not sleeping/exiting)
+    if (interiorState.active && interiorState.nearFridge) {
+      openFridgeModal();
       e.preventDefault();
       return;
     }
@@ -3685,6 +3843,7 @@ document.getElementById('wardrobeBtn').addEventListener('click', openWardrobe);
 document.getElementById('wardrobeCloseBtn').addEventListener('click', closeWardrobe);
 document.getElementById('phoneFab').addEventListener('click', openPhone);
 document.getElementById('phoneCloseBtn').addEventListener('click', closePhone);
+document.getElementById('fridgeCloseBtn').addEventListener('click', closeFridgeModal);
 
 // Phase 11: New Game button
 function newGame() {
@@ -3712,6 +3871,11 @@ function newGame() {
   state._catFedCount = 0;
   state._catFedUnique = 0;
   state._fedCatNames = [];
+  // Phase 22-23: Reset sleep/food state
+  state._wellRested = false;
+  state._eatenFoods = [];
+  state._eatenCount = 0;
+  state._hungryWarned = false;
   // Phase 17: Clear phone messages
   if (typeof state_phone !== 'undefined') {
     state_phone.messages = [];
@@ -3883,6 +4047,12 @@ window.buildCat = buildCat;
 Object.defineProperty(window, 'sleepState', { get: () => sleepState });
 window.sleepAtBed = sleepAtBed;
 window.isNearBed = isNearBed;
+// Phase 23
+window.FOODS = FOODS;
+window.buyFood = buyFood;
+window.openFridgeModal = openFridgeModal;
+window.closeFridgeModal = closeFridgeModal;
+window.isNearFridge = isNearFridge;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
