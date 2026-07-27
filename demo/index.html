@@ -154,6 +154,22 @@
   .save-slot-btn.load { background: #2196F3; }
   .save-slot-btn.delete { background: #F44336; }
 
+  /* Phase 29: Reply Modal */
+  .reply-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 70; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .reply-modal.show { display: flex; }
+  .reply-content { background: linear-gradient(180deg, #E8F5E9, #FFFFFF); border-radius: 20px; padding: 1.5rem; max-width: 480px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 2px solid #4CAF50; }
+  .reply-original { background: white; border-radius: 12px; padding: 0.8rem; margin-bottom: 1rem; }
+  .reply-original-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; font-weight: 600; }
+  .reply-original-avatar { font-size: 1.2rem; }
+  .reply-original-text { font-size: 0.9rem; line-height: 1.4; }
+  .reply-options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .reply-option-btn { background: white; border: 2px solid #4CAF50; border-radius: 10px; padding: 0.8rem 1rem; display: flex; align-items: center; gap: 0.7rem; cursor: pointer; text-align: left; transition: all 0.15s; font-size: 0.9rem; }
+  .reply-option-btn:hover { background: #4CAF50; color: white; transform: translateX(4px); }
+  .reply-emoji { font-size: 1.4rem; }
+  .phone-msg-reply { margin-top: 0.5rem; }
+  .phone-reply-btn { background: #4CAF50; color: white; border: none; border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; }
+  .phone-msg-reply-text { margin-top: 0.5rem; padding: 0.5rem; background: rgba(76, 175, 80, 0.1); border-radius: 6px; font-size: 0.85rem; color: #2D6B3A; }
+
   /* Phase 17: Phone/Messages */
   .phone-fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); border: 2px solid white; transition: transform 0.2s; }
   .phone-fab:hover { transform: scale(1.08); }
@@ -356,6 +372,11 @@
   <div class="achievements-panel" id="achievementsPanel" style="display:none">
     <div class="achievements-title">🏆 ความสำเร็จ / Achievements</div>
     <div class="achievements-list" id="achievementsList"></div>
+  </div>
+
+  <!-- Phase 29: Reply Modal -->
+  <div class="reply-modal" id="replyModal">
+    <div class="reply-content" id="replyContent"></div>
   </div>
 
   <!-- Phase 28: Save Slot Modal -->
@@ -1213,6 +1234,8 @@ function saveGame() {
       eatenCount: state._eatenCount || 0,
       photoCount: state._photoCount || 0,
       busRides: state._busRides || 0,
+      relationships: state._relationships || {},
+      replyCount: state._replyCount || 0,
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -1253,7 +1276,11 @@ function applySave(data) {
   if (data.bikeDistance !== undefined) state.bikeDistance = data.bikeDistance;
   if (data.phoneMessages && Array.isArray(data.phoneMessages)) {
     if (typeof state_phone === 'undefined') window.state_phone = { messages: [], lastMessageHour: -1, lastMessageDay: 0 };
-    state_phone.messages = [...data.phoneMessages];
+    state_phone.messages = data.phoneMessages.map(m => ({
+      ...m,
+      replied: m.replied || false,
+      reply: m.reply || null
+    }));
     if (typeof updatePhoneUI === 'function') updatePhoneUI();
   }
   if (data.catFedCount !== undefined) state._catFedCount = data.catFedCount;
@@ -1264,6 +1291,8 @@ function applySave(data) {
   if (data.eatenCount !== undefined) state._eatenCount = data.eatenCount;
   if (data.photoCount !== undefined) state._photoCount = data.photoCount;
   if (data.busRides !== undefined) state._busRides = data.busRides;
+  if (data.relationships) state._relationships = data.relationships;
+  if (data.replyCount !== undefined) state._replyCount = data.replyCount;
   return true;
 }
 
@@ -1487,7 +1516,9 @@ const ACHIEVEMENT_DEFS = [
   { id: 'photographer', icon: '📸', name: 'ช่างภาพ / Photographer', desc: 'ถ่ายรูป 1 ภาพ / Take 1 photo', check: (s) => (s._photoCount || 0) >= 1 },
   { id: 'shutterbug', icon: '🎞️', name: 'เด็กถ่ายรูป / Shutterbug', desc: 'ถ่ายรูป 5 ภาพ / Take 5 photos', check: (s) => (s._photoCount || 0) >= 5 },
   { id: 'bus_rider', icon: '🚌', name: 'นั่งรถเมล์ / Bus Rider', desc: 'ขึ้นรถเมล์ครั้งแรก / Take bus first time', check: (s) => (s._busRides || 0) >= 1 },
-  { id: 'commuter', icon: '🚆', name: 'คนเดินทาง / Commuter', desc: 'ขึ้นรถเมล์ 3 ครั้ง / Take bus 3 times', check: (s) => (s._busRides || 0) >= 3 }
+  { id: 'commuter', icon: '🚆', name: 'คนเดินทาง / Commuter', desc: 'ขึ้นรถเมล์ 3 ครั้ง / Take bus 3 times', check: (s) => (s._busRides || 0) >= 3 },
+  { id: 'social_butterfly', icon: '💌', name: 'เข้าสังคม / Social Butterfly', desc: 'ตอบกลับ 3 ข้อความ / Reply 3 messages', check: (s) => (s._replyCount || 0) >= 3 },
+  { id: 'best_friend', icon: '💕', name: 'เพื่อนซี้ / Best Friend', desc: 'relationship 5+ กับใครก็ได้ / 5+ relationship with anyone', check: (s) => s._relationships && Object.values(s._relationships).some(v => v >= 5) }
 ];
 
 function checkAchievements() {
@@ -2970,10 +3001,122 @@ function updatePhoneUI() {
         <span class="phone-msg-time">Day ${m.day} · ${m.time}</span>
       </div>
       <div class="phone-msg-text">${m.text}</div>
+      ${!m.replied ? '<div class="phone-msg-reply"><button class="phone-reply-btn" data-msg-id="' + m.id + '">↩️ ตอบกลับ / Reply</button></div>' : (m.reply ? '<div class="phone-msg-reply-text">↩️ ' + m.reply + '</div>' : '')}
     `;
-    div.addEventListener('click', () => { m.read = true; updatePhoneUI(); });
+    div.addEventListener('click', (e) => {
+      if (e.target.classList.contains('phone-reply-btn')) {
+        e.stopPropagation();
+        openReplyModal(m);
+      } else {
+        m.read = true; updatePhoneUI();
+      }
+    });
     container.appendChild(div);
   }
+}
+
+// ========== PHASE 29: PHONE REPLY ==========
+let replyModalState = { msgId: null, msg: null };
+
+const REPLY_OPTIONS = {
+  mom: [
+    { th: '💖 คิดถึงจ้า / I miss you too', emoji: '❤️', relationship: 1 },
+    { th: '🍳 กินข้าวแล้ว / I ate already', emoji: '🍱', relationship: 0 },
+    { th: '📚 กำลังเรียน / Studying', emoji: '📖', relationship: 0 }
+  ],
+  yui: [
+    { th: '🌸 เจอกัน! / See you!', emoji: '👋', relationship: 1 },
+    { th: '🍱 เอาเบนโตะมา / Bringing bento', emoji: '🍱', relationship: 1 },
+    { th: '😊 ขอบคุณ / Thanks!', emoji: '✨', relationship: 1 }
+  ],
+  senpai_msg: [
+    { th: '🌸 ขอบคุณค่ะ / Thank you!', emoji: '✨', relationship: 2 },
+    { th: '🏠 กลับแล้วค่ะ / I\'m back', emoji: '🏠', relationship: 1 },
+    { th: '☕ ไปกินข้าวมั้ย? / Want to eat?', emoji: '🍜', relationship: 2 }
+  ]
+};
+
+function openReplyModal(msg) {
+  if (!msg) return;
+  replyModalState.msgId = msg.id;
+  replyModalState.msg = msg;
+  const modal = document.getElementById('replyModal');
+  const content = document.getElementById('replyContent');
+  if (!modal || !content) return;
+  const senderKey = msg.from in REPLY_OPTIONS ? msg.from : 'mom';
+  const options = REPLY_OPTIONS[senderKey];
+  content.innerHTML = `
+    <div class="reply-original">
+      <div class="reply-original-header">
+        <span class="reply-original-avatar">${msg.avatar}</span>
+        <span>${msg.from}</span>
+      </div>
+      <div class="reply-original-text">${msg.text}</div>
+    </div>
+    <div class="reply-options">
+      ${options.map((opt, i) => `
+        <button class="reply-option-btn" data-idx="${i}">
+          <span class="reply-emoji">${opt.emoji}</span>
+          <span class="reply-text">${opt.th}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+  // Bind buttons
+  content.querySelectorAll('.reply-option-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      const chosen = options[idx];
+      sendReply(msg, chosen);
+    });
+  });
+  modal.classList.add('show');
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playUIClick === 'function') playUIClick();
+}
+
+function closeReplyModal() {
+  const modal = document.getElementById('replyModal');
+  if (modal) modal.classList.remove('show');
+  replyModalState.msgId = null;
+  replyModalState.msg = null;
+}
+
+function sendReply(msg, option) {
+  if (!msg || !state_phone) return;
+  // Mark replied
+  msg.replied = true;
+  msg.reply = option.th;
+  // Increase relationship
+  if (state) {
+    if (!state._relationships) state._relationships = {};
+    state._relationships[msg.from] = (state._relationships[msg.from] || 0) + option.relationship;
+    if (state._replyCount === undefined) state._replyCount = 0;
+    state._replyCount++;
+  }
+  // Schedule a reply back from the sender
+  setTimeout(() => {
+    addPhoneMessage(msg.from, msg.avatar, getReplyAck(msg.from), state.gameTime.hour, state.day);
+  }, 100);
+  if (typeof playTone === 'function') {
+    playTone(660, 0.1, 'sine', 0.12);
+    setTimeout(() => playTone(880, 0.1, 'sine', 0.1), 100);
+  }
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({ icon: '💬', name: 'ส่งข้อความแล้ว / Reply sent!', desc: option.th });
+  }
+  closeReplyModal();
+  updatePhoneUI();
+  if (typeof checkAchievements === 'function') checkAchievements();
+}
+
+function getReplyAck(from) {
+  const acks = {
+    mom: '❤️ แม่รักนะ / Love you',
+    yui: '🌸 ดีใจจัง! / Yaaay!',
+    senpai_msg: '🎀 ดีใจนะ / So happy'
+  };
+  return acks[from] || '😊 OK!';
 }
 
 function checkPhoneMessages() {
@@ -4945,6 +5088,13 @@ window.closeSaveSlotModal = closeSaveSlotModal;
 window.getSaveSlotMeta = getSaveSlotMeta;
 window.setSaveSlot = setSaveSlot;
 window.deleteSaveSlot = deleteSaveSlot;
+// Phase 29
+Object.defineProperty(window, 'replyModalState', { get: () => replyModalState });
+window.openReplyModal = openReplyModal;
+window.closeReplyModal = closeReplyModal;
+window.sendReply = sendReply;
+window.getReplyAck = getReplyAck;
+window.REPLY_OPTIONS = REPLY_OPTIONS;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
