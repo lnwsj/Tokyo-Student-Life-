@@ -336,6 +336,18 @@
     <div class="achievements-list" id="achievementsList"></div>
   </div>
 
+  <!-- Phase 27: Bus modal -->
+  <div class="vending-modal" id="busModal">
+    <div class="vending-content">
+      <div class="vending-header">
+        <div class="vending-title">🚌 รถเมล์ / Bus</div>
+        <div class="vending-balance" id="busBalance">💴 1,200 เยน</div>
+      </div>
+      <div class="vending-grid" id="busGrid"></div>
+      <button class="vending-close" id="busCloseBtn">ปิด / Close</button>
+    </div>
+  </div>
+
   <!-- Phase 25: Tutorial Overlay -->
   <div class="tutorial-overlay" id="tutorialOverlay">
     <div class="tutorial-card">
@@ -1167,6 +1179,7 @@ function saveGame() {
       eatenFoods: state._eatenFoods || [],
       eatenCount: state._eatenCount || 0,
       photoCount: state._photoCount || 0,
+      busRides: state._busRides || 0,
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -1217,6 +1230,7 @@ function applySave(data) {
   if (data.eatenFoods) state._eatenFoods = [...data.eatenFoods];
   if (data.eatenCount !== undefined) state._eatenCount = data.eatenCount;
   if (data.photoCount !== undefined) state._photoCount = data.photoCount;
+  if (data.busRides !== undefined) state._busRides = data.busRides;
   return true;
 }
 
@@ -1338,7 +1352,9 @@ const ACHIEVEMENT_DEFS = [
   { id: 'first_meal', icon: '🍱', name: 'มื้อแรก / First Meal', desc: 'ทานอาหารครั้งแรก / Eat your first food', check: (s) => (s._eatenCount || 0) >= 1 },
   { id: 'gourmet', icon: '🍜', name: 'กูร์เมต์ / Gourmet', desc: 'ลองทุกเมนู / Try all 4 foods', check: (s) => (s._eatenFoods?.length || 0) >= 4 },
   { id: 'photographer', icon: '📸', name: 'ช่างภาพ / Photographer', desc: 'ถ่ายรูป 1 ภาพ / Take 1 photo', check: (s) => (s._photoCount || 0) >= 1 },
-  { id: 'shutterbug', icon: '🎞️', name: 'เด็กถ่ายรูป / Shutterbug', desc: 'ถ่ายรูป 5 ภาพ / Take 5 photos', check: (s) => (s._photoCount || 0) >= 5 }
+  { id: 'shutterbug', icon: '🎞️', name: 'เด็กถ่ายรูป / Shutterbug', desc: 'ถ่ายรูป 5 ภาพ / Take 5 photos', check: (s) => (s._photoCount || 0) >= 5 },
+  { id: 'bus_rider', icon: '🚌', name: 'นั่งรถเมล์ / Bus Rider', desc: 'ขึ้นรถเมล์ครั้งแรก / Take bus first time', check: (s) => (s._busRides || 0) >= 1 },
+  { id: 'commuter', icon: '🚆', name: 'คนเดินทาง / Commuter', desc: 'ขึ้นรถเมล์ 3 ครั้ง / Take bus 3 times', check: (s) => (s._busRides || 0) >= 3 }
 ];
 
 function checkAchievements() {
@@ -1929,6 +1945,14 @@ function updateDoorProximity() {
     interiorState.nearDoor = near;
   } else {
     interiorState.nearDoor = null;
+  }
+  // Phase 27: Bus stop prompt
+  if (typeof isNearBusStop === 'function' && isNearBusStop()) {
+    const prompt = document.getElementById('interact-prompt');
+    if (prompt) {
+      prompt.style.display = 'block';
+      prompt.innerHTML = `[B] ขึ้นรถเมล์ ${BUS_FARE} เยน / Take bus`;
+    }
   }
 }
 
@@ -3200,6 +3224,108 @@ function buildLantern(x, z, rotY = 0) {
   return g;
 }
 
+// ========== PHASE 27: BUS STOP & VEHICLE ==========
+function buildBusStop(x, z, rotY = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rotY;
+  g.userData.isBusStop = true;
+  const pole = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.06, 0.06, 2.4, 8),
+    new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.6, roughness: 0.4 })
+  );
+  pole.position.set(0, 1.2, 0); pole.castShadow = true; g.add(pole);
+  // Sign (blue rectangle with white "BUS" text via red dot accent)
+  const signBg = new THREE.Mesh(
+    new THREE.BoxGeometry(0.8, 0.5, 0.05),
+    new THREE.MeshStandardMaterial({ color: 0x2196F3, roughness: 0.6 })
+  );
+  signBg.position.set(0.15, 2.0, 0); g.add(signBg);
+  const signInner = new THREE.Mesh(
+    new THREE.BoxGeometry(0.65, 0.35, 0.06),
+    new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.5 })
+  );
+  signInner.position.set(0.15, 2.0, 0.01); g.add(signInner);
+  // Red dot (bus icon)
+  const dot = new THREE.Mesh(
+    new THREE.CircleGeometry(0.1, 16),
+    new THREE.MeshBasicMaterial({ color: 0xF44336 })
+  );
+  dot.position.set(-0.15, 2.0, 0.04); g.add(dot);
+  // Bench
+  const bench = new THREE.Mesh(
+    new THREE.BoxGeometry(1.0, 0.08, 0.35),
+    new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.7 })
+  );
+  bench.position.set(0, 0.55, 0.6); bench.castShadow = true; g.add(bench);
+  const leg1 = new THREE.Mesh(
+    new THREE.BoxGeometry(0.06, 0.55, 0.06),
+    new THREE.MeshStandardMaterial({ color: 0x5C3A21 })
+  );
+  leg1.position.set(-0.4, 0.275, 0.6); g.add(leg1);
+  const leg2 = leg1.clone(); leg2.position.set(0.4, 0.275, 0.6); g.add(leg2);
+  // Roof (small shelter)
+  const roof = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5, 0.05, 0.9),
+    new THREE.MeshStandardMaterial({ color: 0x1E5A87, roughness: 0.5 })
+  );
+  roof.position.set(0, 2.4, 0.4); roof.castShadow = true; g.add(roof);
+  const roofPole1 = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.04, 0.04, 2.0, 6),
+    new THREE.MeshStandardMaterial({ color: 0x666666 })
+  );
+  roofPole1.position.set(-0.7, 1.4, 0); g.add(roofPole1);
+  const roofPole2 = roofPole1.clone(); roofPole2.position.set(0.7, 1.4, 0); g.add(roofPole2);
+  return g;
+}
+
+function buildBus(x = 0, y = 0, z = 0, rotY = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, y, z);
+  g.rotation.y = rotY;
+  g.userData.isBus = true;
+  // Body (large box)
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(3.5, 1.5, 1.4),
+    new THREE.MeshStandardMaterial({ color: 0xFFEB3B, roughness: 0.4 })
+  );
+  body.position.y = 0.9; body.castShadow = true; g.add(body);
+  // Stripes (red)
+  const stripe = new THREE.Mesh(
+    new THREE.BoxGeometry(3.5, 0.15, 1.42),
+    new THREE.MeshStandardMaterial({ color: 0xF44336 })
+  );
+  stripe.position.y = 0.4; g.add(stripe);
+  // Windows (4 across)
+  for (let i = 0; i < 4; i++) {
+    const win = new THREE.Mesh(
+      new THREE.BoxGeometry(0.6, 0.7, 1.43),
+      new THREE.MeshStandardMaterial({ color: 0x88CCFF, emissive: 0x88CCFF, emissiveIntensity: 0.2, roughness: 0.2, metalness: 0.4 })
+    );
+    win.position.set(-1.2 + i * 0.8, 1.3, 0); g.add(win);
+  }
+  // Windshield (front)
+  const windshield = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.6, 1.43),
+    new THREE.MeshStandardMaterial({ color: 0x88CCFF, emissive: 0x88CCFF, emissiveIntensity: 0.2, roughness: 0.2, metalness: 0.4 })
+  );
+  windshield.position.set(1.4, 1.4, 0); g.add(windshield);
+  // Wheels (4)
+  const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 12);
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 });
+  const wheelPositions = [[-1.0, 0.3, 0.7], [-1.0, 0.3, -0.7], [1.0, 0.3, 0.7], [1.0, 0.3, -0.7]];
+  const wheels = [];
+  for (const [wx, wy, wz] of wheelPositions) {
+    const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+    wheel.position.set(wx, wy, wz);
+    wheel.rotation.z = Math.PI / 2;
+    g.add(wheel);
+    wheels.push(wheel);
+  }
+  g.userData.wheels = wheels;
+  return g;
+}
+
 function buildVendingMachine(x, z, rotY = 0) {
   const g = new THREE.Group();
   g.position.set(x, 0, z);
@@ -3779,6 +3905,158 @@ function updateVendingProximity() {
   return nearest;
 }
 
+// ========== PHASE 27: BUS STATE ==========
+let busState = {
+  model: null,
+  currentZone: 1,
+  targetZone: 1,
+  progress: 0,         // 0-1, animation progress
+  speed: 0.4,         // per second
+  isMoving: false,
+  rideActive: false   // true if player is riding
+};
+
+const BUS_FARE = 50;   // yen per ride
+
+function isNearBusStop() {
+  if (!playerModel || interiorState.active) return false;
+  const px = playerModel.position.x, pz = playerModel.position.z;
+  // Bus stop is at zone-specific position; check distance to nearest one
+  const zoneBusStop = BUS_STOP_POSITIONS[state.currentZone];
+  if (!zoneBusStop) return false;
+  const dx = px - zoneBusStop.x;
+  const dz = pz - zoneBusStop.z;
+  return Math.sqrt(dx*dx + dz*dz) < 2.0;
+}
+
+const BUS_STOP_POSITIONS = {
+  1: { x: -4, z: 6 },    // Home
+  2: { x: 6, z: -6 },   // School
+  3: { x: -6, z: 6 },   // Station
+  4: { x: 6, z: 6 },    // Shopping
+  5: { x: 0, z: -7 }    // Shrine
+};
+
+function getNearestStopZone(zone) {
+  return Object.keys(BUS_STOP_POSITIONS).map(Number).filter(z => z !== zone);
+}
+
+function takeBus(targetZone) {
+  if (!isNearBusStop()) return false;
+  if (state.currentZone === targetZone) return false;
+  if (state.yen < BUS_FARE) {
+    if (typeof showAchievementToast === 'function') {
+      showAchievementToast({ icon: '💴', name: 'เงินไม่พอ / Not enough money', desc: `ต้องการ ${BUS_FARE} เยน / Need ${BUS_FARE} yen` });
+    }
+    return false;
+  }
+  state.yen -= BUS_FARE;
+  if (state) state._busRides = (state._busRides || 0) + 1;
+  if (typeof updateHUD === 'function') updateHUD();
+  // Trigger bus animation
+  busState.targetZone = targetZone;
+  busState.progress = 0;
+  busState.isMoving = true;
+  busState.rideActive = true;
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({ icon: '🚌', name: `ไปโซน ${targetZone}!`, desc: `ZONE 0${targetZone} · ${BUS_FARE} เยน` });
+  }
+  if (typeof playTone === 'function') {
+    playTone(180, 0.2, 'square', 0.1);
+  }
+  return true;
+}
+
+function spawnBus(zone) {
+  if (!scene) return;
+  if (busState.model && busState.model.parent) {
+    busState.model.parent.remove(busState.model);
+  }
+  const pos = BUS_STOP_POSITIONS[zone] || { x: 0, z: 0 };
+  busState.model = buildBus(pos.x + 2, 0, pos.z, 0);
+  busState.currentZone = zone;
+  busState.targetZone = zone;
+  busState.isMoving = false;
+  busState.progress = 0;
+  scene.add(busState.model);
+}
+
+function openBusModal() {
+  const modal = document.getElementById('busModal');
+  const grid = document.getElementById('busGrid');
+  const balance = document.getElementById('busBalance');
+  if (!modal || !grid) return;
+  if (balance) balance.textContent = `💴 ${state.yen.toLocaleString()} เยน`;
+  const ZONE_INFO = { 1: { icon: '🏠', name: 'บ้าน / Home' }, 2: { icon: '🏫', name: 'โรงเรียน / School' }, 3: { icon: '🚉', name: 'สถานี / Station' }, 4: { icon: '🛍️', name: 'ช้อปปิ้ง / Shop' }, 5: { icon: '⛩️', name: 'ศาลเจ้า / Shrine' } };
+  grid.innerHTML = '';
+  for (let z = 1; z <= 5; z++) {
+    if (z === state.currentZone) continue;
+    const info = ZONE_INFO[z];
+    const item = document.createElement('div');
+    item.className = 'vending-item';
+    item.innerHTML = `
+      <div class="vending-icon">${info.icon}</div>
+      <div class="vending-name">${info.name}</div>
+      <div class="vending-stamina">ZONE 0${z}</div>
+      <div class="vending-price">${BUS_FARE} เยน</div>
+    `;
+    item.style.cursor = 'pointer';
+    item.addEventListener('click', () => {
+      if (takeBus(z)) {
+        setTimeout(() => closeBusModal(), 200);
+      }
+    });
+    grid.appendChild(item);
+  }
+  modal.classList.add('show');
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playUIClick === 'function') playUIClick();
+}
+
+function closeBusModal() {
+  const modal = document.getElementById('busModal');
+  if (modal) modal.classList.remove('show');
+}
+
+function updateBus(dt) {
+  if (!busState.model) return;
+  if (!busState.isMoving) return;
+  busState.progress += dt * busState.speed;
+  if (busState.progress >= 1) {
+    busState.progress = 1;
+    busState.isMoving = false;
+    busState.currentZone = busState.targetZone;
+    // Teleport player to target zone
+    if (typeof switchZone === 'function') {
+      switchZone(busState.targetZone);
+    }
+    if (busState.rideActive && state) {
+      const newStop = BUS_STOP_POSITIONS[busState.targetZone];
+      if (playerModel && newStop) {
+        playerModel.position.set(newStop.x, 0, newStop.z - 1);
+        state.player.x = newStop.x; state.player.z = newStop.z - 1;
+      }
+      busState.rideActive = false;
+    }
+  }
+  // Animate bus position between stops
+  const start = BUS_STOP_POSITIONS[busState.currentZone];
+  const end = BUS_STOP_POSITIONS[busState.targetZone];
+  if (start && end) {
+    const t = busState.progress;
+    const x = start.x + (end.x - start.x) * t;
+    const z = start.z + (end.z - start.z) * t;
+    busState.model.position.set(x, 0, z);
+    busState.model.rotation.y = Math.atan2(end.x - start.x, end.z - start.z);
+  }
+  // Spin wheels
+  if (busState.model.userData.wheels) {
+    for (const w of busState.model.userData.wheels) {
+      w.rotation.x += dt * 8;
+    }
+  }
+}
+
 function buildZoneProps(zoneNum) {
   // Returns array of prop Groups for the given zone
   const props = [];
@@ -3790,6 +4068,7 @@ function buildZoneProps(zoneNum) {
       props.push(buildBench(0, 4, Math.PI));
       props.push(buildGreenTree(-7, 4, 0.9));
       props.push(buildGreenTree(7, 5, 1.0));
+      props.push(buildBusStop(-4, 6, 0));
       break;
     case 2: // School
       props.push(buildSchoolBuilding(-5, -6, 0));
@@ -3800,6 +4079,7 @@ function buildZoneProps(zoneNum) {
       props.push(buildSakuraTree(-2, 6, 1.0));
       props.push(buildBench(2, -2, Math.PI / 2));
       props.push(buildBicycle(7, 4, -Math.PI / 4));
+      props.push(buildBusStop(6, -6, -Math.PI / 4));
       break;
     case 3: // Station
       props.push(buildStationGate(0, -5, 0));
@@ -3815,6 +4095,7 @@ function buildZoneProps(zoneNum) {
         stationTrain = buildStationTrain();
         scene.add(stationTrain);
       }
+      props.push(buildBusStop(-6, 6, Math.PI / 2));
       break;
     case 4: // Shopping (LittlestTokyo) - skip props, GLB is the scene
       break;
@@ -3829,6 +4110,11 @@ function buildZoneProps(zoneNum) {
       props.push(buildLantern(-2, 1, 0));
       props.push(buildLantern(2, 1, 0));
       props.push(buildBench(0, 4, Math.PI));
+      // Phase 27: Bus stop
+      const busStop = buildBusStop(0, -7, 0);
+      props.push(busStop);
+      // Phase 27: Bus vehicle
+      if (typeof window.spawnBus === 'function') window.spawnBus(5);
       break;
   }
   return props;
@@ -3955,6 +4241,10 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyW') { if(typeof openWardrobe === 'function') { openWardrobe(); e.preventDefault(); return; } }
   if (e.code === 'KeyP') { if(typeof openPhone === 'function') { openPhone(); e.preventDefault(); return; } }
   if (e.code === 'F2') { e.preventDefault(); if(typeof takePhoto === 'function') takePhoto(); return; }
+  // Phase 27: Bus selection
+  if (e.code === 'KeyB' && typeof isNearBusStop === 'function' && isNearBusStop()) {
+    if (typeof openBusModal === 'function') { openBusModal(); e.preventDefault(); return; }
+  }
   if (e.code === 'Escape' && tutorialState.active) { if(typeof skipTutorial === 'function') skipTutorial(); return; }
   state.keys[e.code] = true;
   if (e.code === 'Digit1') switchZone(1);
@@ -4150,6 +4440,7 @@ function update() {
   if (typeof updateDoorProximity === 'function') updateDoorProximity();
   if (typeof updateStationTrain === 'function') updateStationTrain(dt);
   if (typeof updateCats === 'function') updateCats(dt);
+  if (typeof updateBus === 'function') updateBus(dt);
   if (typeof spinBikeWheels === 'function') spinBikeWheels(dt, (state.keys && (state.keys.KeyW || state.keys.KeyA || state.keys.KeyS || state.keys.KeyD || state.keys.ArrowUp || state.keys.ArrowDown || state.keys.ArrowLeft || state.keys.ArrowRight)));
   if (typeof updateStationTrain === 'function') updateStationTrain(dt);
   if (typeof checkAchievements === 'function') checkAchievements();
@@ -4239,6 +4530,7 @@ document.getElementById('photoFab').addEventListener('click', openPhotoGallery);
 document.getElementById('photoCloseBtn').addEventListener('click', closePhotoGallery);
 document.getElementById('tutNextBtn').addEventListener('click', nextTutorialStep);
 document.getElementById('tutSkipBtn').addEventListener('click', skipTutorial);
+document.getElementById('busCloseBtn').addEventListener('click', closeBusModal);
 
 // Phase 11: New Game button
 function newGame() {
@@ -4383,6 +4675,11 @@ setTimeout(() => {
   if (typeof startTutorial === 'function') startTutorial();
 }, 3000);
 
+// Phase 27: Spawn bus at first bus stop
+setTimeout(() => {
+  if (typeof spawnBus === 'function') spawnBus(1);
+}, 2500);
+
 // Expose for debugging/testing (after all functions defined)
 window.lights = lights;
 window.state = state;
@@ -4496,6 +4793,18 @@ window.stopBGM = stopBGM;
 window.updateBGMForTime = updateBGMForTime;
 window.getBGMTimePreset = getBGMTimePreset;
 window.BGM_PRESETS = BGM_PRESETS;
+// Phase 27
+Object.defineProperty(window, 'busState', { get: () => busState });
+window.BUS_STOP_POSITIONS = BUS_STOP_POSITIONS;
+window.BUS_FARE = BUS_FARE;
+window.buildBusStop = buildBusStop;
+window.buildBus = buildBus;
+window.spawnBus = spawnBus;
+window.updateBus = updateBus;
+window.takeBus = takeBus;
+window.isNearBusStop = isNearBusStop;
+window.openBusModal = openBusModal;
+window.closeBusModal = closeBusModal;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
