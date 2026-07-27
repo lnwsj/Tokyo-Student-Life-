@@ -111,6 +111,27 @@
   .photo-empty { color: rgba(255,255,255,0.5); text-align: center; padding: 3rem 1rem; grid-column: 1 / -1; }
   .photo-counter { position: fixed; top: 4.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.85rem; z-index: 16; display: none; }
 
+  /* Phase 25: Tutorial Overlay */
+  .tutorial-overlay { position: fixed; inset: 0; background: rgba(15, 25, 40, 0.85); z-index: 90; display: none; align-items: center; justify-content: center; backdrop-filter: blur(6px); padding: 1rem; }
+  .tutorial-overlay.show { display: flex; }
+  .tutorial-card { background: linear-gradient(180deg, #FAF6EE, #FFFFFF); border-radius: 20px; max-width: 480px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .tutorial-header { background: linear-gradient(135deg, #2D4A6B, #1a3a52); color: white; padding: 1rem 1.5rem; text-align: center; }
+  .tutorial-step { font-size: 0.75rem; opacity: 0.7; letter-spacing: 1px; }
+  .tutorial-title { font-family: 'Fraunces', serif; font-size: 1.4rem; margin-top: 0.3rem; }
+  .tutorial-body { padding: 1.5rem; text-align: center; }
+  .tutorial-icon { font-size: 4rem; margin-bottom: 0.8rem; }
+  .tutorial-text { font-size: 1rem; line-height: 1.6; color: var(--text); }
+  .tutorial-text-en { font-size: 0.85rem; color: var(--text-soft); margin-top: 0.5rem; }
+  .tutorial-footer { padding: 0 1.5rem 1.2rem; display: flex; gap: 0.6rem; justify-content: space-between; align-items: center; }
+  .tutorial-dots { display: flex; gap: 0.4rem; }
+  .tutorial-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(45, 74, 107, 0.2); }
+  .tutorial-dot.active { background: var(--primary); }
+  .tutorial-btn { background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.7rem 1.4rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+  .tutorial-btn:hover { background: #1a3a52; }
+  .tutorial-btn.skip { background: transparent; color: var(--text-soft); border: 1px solid var(--border); }
+  .tutorial-key { display: inline-block; background: var(--bg-warm); color: var(--primary); padding: 0.2rem 0.6rem; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; border: 1px solid var(--border); margin: 0 0.2rem; }
+
   /* Phase 17: Phone/Messages */
   .phone-fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); border: 2px solid white; transition: transform 0.2s; }
   .phone-fab:hover { transform: scale(1.08); }
@@ -313,6 +334,28 @@
   <div class="achievements-panel" id="achievementsPanel" style="display:none">
     <div class="achievements-title">🏆 ความสำเร็จ / Achievements</div>
     <div class="achievements-list" id="achievementsList"></div>
+  </div>
+
+  <!-- Phase 25: Tutorial Overlay -->
+  <div class="tutorial-overlay" id="tutorialOverlay">
+    <div class="tutorial-card">
+      <div class="tutorial-header">
+        <div class="tutorial-step" id="tutStep">ขั้นตอนที่ 1 / 6</div>
+        <div class="tutorial-title">ยินดีต้อนรับ! / Welcome!</div>
+      </div>
+      <div class="tutorial-body">
+        <div class="tutorial-icon" id="tutIcon">🏠</div>
+        <div class="tutorial-text" id="tutText">คุณอยู่ที่โซนบ้าน เริ่มต้นเกมใหม่</div>
+        <div class="tutorial-text-en" id="tutTextEn">You're at Home zone — the start of your day</div>
+      </div>
+      <div class="tutorial-footer">
+        <div class="tutorial-dots" id="tutDots"></div>
+        <div>
+          <button class="tutorial-btn skip" id="tutSkipBtn">ข้าม / Skip</button>
+          <button class="tutorial-btn" id="tutNextBtn">ถัดไป →</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Phase 24: Photo Mode -->
@@ -2230,6 +2273,105 @@ function updatePhotoUI() {
   updatePhotoGrid();
 }
 
+// ========== PHASE 25: TUTORIAL OVERLAY ==========
+let tutorialState = { currentStep: 0, active: false, completed: false };
+
+const TUTORIAL_STEPS = [
+  {
+    icon: '🏠',
+    text: 'คุณอยู่ที่โซนบ้าน จุดเริ่มต้นของวันใหม่<br>You start at Home zone — beginning of a new day',
+    enText: 'Day starts at 7:00 AM at the apartment'
+  },
+  {
+    icon: '🎮',
+    text: 'เดินด้วย <span class="tutorial-key">W</span><span class="tutorial-key">A</span><span class="tutorial-key">S</span><span class="tutorial-key">D</span> หรือลูกศร และกด <span class="tutorial-key">E</span> เพื่อคุย/โต้ตอบ',
+    enText: 'Use WASD/Arrows to move, press E to interact'
+  },
+  {
+    icon: '🗺️',
+    text: 'กดปุ่มโซนด้านล่างขวา หรือ <span class="tutorial-key">1</span>-<span class="tutorial-key">5</span> เพื่อเปลี่ยนโซน',
+    enText: 'Click zone buttons or press 1-5 to teleport'
+  },
+  {
+    icon: '⏰',
+    text: 'เวลาเดินตามชีวิตจริง — 1 นาที/วินาที<br>กด <span class="tutorial-key">2x</span> หรือ <span class="tutorial-key">4x</span> เพื่อเร่งเวลา',
+    enText: 'Time advances in real-time. Use 2x/4x to speed up'
+  },
+  {
+    icon: '🎯',
+    text: 'ทำภารกิจ 5 อย่างให้ครบเพื่อจบวัน<br>คุย NPC, ซื้อของ, เปลี่ยนชุด, ถ่ายรูป, นอน',
+    enText: 'Complete 5 tasks daily — talk, shop, dress up, snap, sleep'
+  },
+  {
+    icon: '🎉',
+    text: 'พร้อมแล้ว! ออกไปสำรวจโตเกียวได้เลย!',
+    enText: "You're ready! Have fun exploring Tokyo!"
+  }
+];
+
+function startTutorial() {
+  if (tutorialState.completed) return;
+  // Don't show if user has completed it
+  if (localStorage.getItem('tsl-tutorial-done') === '1') {
+    tutorialState.completed = true;
+    return;
+  }
+  tutorialState.active = true;
+  tutorialState.currentStep = 0;
+  renderTutorialStep();
+  const overlay = document.getElementById('tutorialOverlay');
+  if (overlay) overlay.classList.add('show');
+}
+
+function renderTutorialStep() {
+  const step = TUTORIAL_STEPS[tutorialState.currentStep];
+  if (!step) return;
+  const total = TUTORIAL_STEPS.length;
+  document.getElementById('tutStep').textContent = `ขั้นตอนที่ ${tutorialState.currentStep + 1} / ${total} · Step ${tutorialState.currentStep + 1}/${total}`;
+  document.getElementById('tutIcon').innerHTML = step.icon;
+  document.getElementById('tutText').innerHTML = step.text;
+  document.getElementById('tutTextEn').innerHTML = step.enText;
+  // Dots
+  const dots = document.getElementById('tutDots');
+  if (dots) {
+    dots.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+      const d = document.createElement('div');
+      d.className = 'tutorial-dot' + (i === tutorialState.currentStep ? ' active' : '');
+      dots.appendChild(d);
+    }
+  }
+  // Button text
+  const nextBtn = document.getElementById('tutNextBtn');
+  if (nextBtn) {
+    nextBtn.textContent = tutorialState.currentStep === total - 1 ? 'เริ่ม! / Start!' : 'ถัดไป →';
+  }
+}
+
+function nextTutorialStep() {
+  if (tutorialState.currentStep < TUTORIAL_STEPS.length - 1) {
+    tutorialState.currentStep++;
+    renderTutorialStep();
+  } else {
+    finishTutorial();
+  }
+}
+
+function skipTutorial() {
+  finishTutorial();
+}
+
+function finishTutorial() {
+  tutorialState.active = false;
+  tutorialState.completed = true;
+  const overlay = document.getElementById('tutorialOverlay');
+  if (overlay) overlay.classList.remove('show');
+  try { localStorage.setItem('tsl-tutorial-done', '1'); } catch (e) {}
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({ icon: '🎓', name: 'จบบทเรียนแล้ว / Tutorial Complete!', desc: 'ออกไปสำรวจโตเกียวได้เลย / Go explore Tokyo!' });
+  }
+}
+
 function openFridgeModal() {
   if (!interiorState.active) return;
   const modal = document.getElementById('fridgeModal');
@@ -3705,6 +3847,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyW') { if(typeof openWardrobe === 'function') { openWardrobe(); e.preventDefault(); return; } }
   if (e.code === 'KeyP') { if(typeof openPhone === 'function') { openPhone(); e.preventDefault(); return; } }
   if (e.code === 'F2') { e.preventDefault(); if(typeof takePhoto === 'function') takePhoto(); return; }
+  if (e.code === 'Escape' && tutorialState.active) { if(typeof skipTutorial === 'function') skipTutorial(); return; }
   state.keys[e.code] = true;
   if (e.code === 'Digit1') switchZone(1);
   if (e.code === 'Digit2') switchZone(2);
@@ -3986,6 +4129,8 @@ document.getElementById('phoneCloseBtn').addEventListener('click', closePhone);
 document.getElementById('fridgeCloseBtn').addEventListener('click', closeFridgeModal);
 document.getElementById('photoFab').addEventListener('click', openPhotoGallery);
 document.getElementById('photoCloseBtn').addEventListener('click', closePhotoGallery);
+document.getElementById('tutNextBtn').addEventListener('click', nextTutorialStep);
+document.getElementById('tutSkipBtn').addEventListener('click', skipTutorial);
 
 // Phase 11: New Game button
 function newGame() {
@@ -4022,6 +4167,10 @@ function newGame() {
   state._photoCount = 0;
   photoGallery = [];
   try { localStorage.removeItem('tsl-photos-v1'); } catch (e) {}
+  // Phase 25: Reset tutorial
+  try { localStorage.removeItem('tsl-tutorial-done'); } catch (e) {}
+  tutorialState.completed = false;
+  tutorialState.currentStep = 0;
   // Phase 17: Clear phone messages
   if (typeof state_phone !== 'undefined') {
     state_phone.messages = [];
@@ -4120,6 +4269,11 @@ setTimeout(() => {
     }
   } catch (e) { /* ignore */ }
 }, 2500);
+
+// Phase 25: Start tutorial on first run
+setTimeout(() => {
+  if (typeof startTutorial === 'function') startTutorial();
+}, 3000);
 
 // Expose for debugging/testing (after all functions defined)
 window.lights = lights;
@@ -4220,6 +4374,13 @@ window.takePhoto = takePhoto;
 window.openPhotoGallery = openPhotoGallery;
 window.closePhotoGallery = closePhotoGallery;
 window.updatePhotoUI = updatePhotoUI;
+// Phase 25
+Object.defineProperty(window, 'tutorialState', { get: () => tutorialState });
+window.startTutorial = startTutorial;
+window.nextTutorialStep = nextTutorialStep;
+window.skipTutorial = skipTutorial;
+window.finishTutorial = finishTutorial;
+window.TUTORIAL_STEPS = TUTORIAL_STEPS;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
