@@ -1573,7 +1573,8 @@ const ACHIEVEMENT_DEFS = [
   { id: 'social_butterfly', icon: '💌', name: 'เข้าสังคม / Social Butterfly', desc: 'ตอบกลับ 3 ข้อความ / Reply 3 messages', check: (s) => (s._replyCount || 0) >= 3 },
   { id: 'best_friend', icon: '💕', name: 'เพื่อนซี้ / Best Friend', desc: 'relationship 5+ กับใครก็ได้ / 5+ relationship with anyone', check: (s) => s._relationships && Object.values(s._relationships).some(v => v >= 5) },
   { id: 'home_chef', icon: '🍳', name: 'เชฟบ้าน / Home Chef', desc: 'ทำอาหาร 1 ครั้ง / Cook 1 time', check: (s) => (s._cookingCount || 0) >= 1 },
-  { id: 'master_chef', icon: '👨‍🍳', name: 'เชฟมาสเตอร์ / Master Chef', desc: 'ทำอาหาร 5 ครั้ง / Cook 5 times', check: (s) => (s._cookingCount || 0) >= 5 }
+  { id: 'master_chef', icon: '👨‍🍳', name: 'เชฟมาสเตอร์ / Master Chef', desc: 'ทำอาหาร 5 ครั้ง / Cook 5 times', check: (s) => (s._cookingCount || 0) >= 5 },
+  { id: 'four_seasons', icon: '🌸', name: 'สี่ฤดู / Four Seasons', desc: 'เล่นครบ 4 วัน (4 seasons)', check: (s) => (s.day || 1) >= 4 }
 ];
 
 function checkAchievements() {
@@ -2458,6 +2459,10 @@ function sleepAtBed() {
           desc: 'ตื่นเช้า! Stamina ฟื้นเต็ม + Well Rested buff'
         });
       }, 300);
+    }
+    // Phase 31: Apply new season
+    if (typeof applySeasonVisuals === 'function') {
+      applySeasonVisuals(getSeasonForDay(state.day));
     }
     if (typeof playTone === 'function') {
       playTone(440, 0.2, 'sine', 0.12);
@@ -3699,6 +3704,7 @@ function makeTrunk(h = 2, r = 0.2, color = 0x6B4F2A) {
 function buildSakuraTree(x, z, scale = 1) {
   const g = new THREE.Group();
   g.position.set(x, 0, z);
+  g.userData.isTree = true;
   // Trunk
   const trunk = makeTrunk(2 * scale, 0.25 * scale, 0x6B4F2A);
   trunk.position.y = 1 * scale;
@@ -3710,6 +3716,7 @@ function buildSakuraTree(x, z, scale = 1) {
     [0, 2.4, 0, 1.1], [0.7, 2.6, 0.3, 0.9], [-0.6, 2.7, -0.4, 0.85],
     [0.3, 3.1, -0.5, 0.7], [-0.4, 3.0, 0.6, 0.75]
   ];
+  const foliageMats = [pinkMat];
   positions.forEach(([px, py, pz, pr]) => {
     const foliage = new THREE.Mesh(
       new THREE.SphereGeometry(pr * scale, 12, 10),
@@ -3717,14 +3724,18 @@ function buildSakuraTree(x, z, scale = 1) {
     );
     foliage.position.set(px * scale, py * scale, pz * scale);
     foliage.castShadow = true;
+    foliage.userData.isSakuraFoliage = true;
     g.add(foliage);
   });
+  g.userData.foliageMats = foliageMats;
+  g.userData.originalColor = 0xFFB6C1;
   return g;
 }
 
 function buildGreenTree(x, z, scale = 1) {
   const g = new THREE.Group();
   g.position.set(x, 0, z);
+  g.userData.isTree = true;
   const trunk = makeTrunk(2.5 * scale, 0.2 * scale, 0x5C3D1F);
   trunk.position.y = 1.25 * scale;
   trunk.castShadow = true; trunk.receiveShadow = true;
@@ -3741,7 +3752,42 @@ function buildGreenTree(x, z, scale = 1) {
     cone.castShadow = true;
     g.add(cone);
   }
+  g.userData.originalColor = 0x4A7C4E;
+  g.userData.foliageMats = [greenMat];
   return g;
+}
+
+// ========== PHASE 31: SEASONS ==========
+const SEASON_PRESETS = {
+  spring: { sakuraColor: 0xFFB6C1, treeColor: 0x6BAA70, groundTint: 0xA0C896, name: 'ซากุระ / Spring', icon: '🌸' },
+  summer: { sakuraColor: 0x90D890, treeColor: 0x2D6B2D, groundTint: 0x8AB870, name: 'ฤดูร้อน / Summer', icon: '☀️' },
+  autumn: { sakuraColor: 0xFF6B35, treeColor: 0xC84B1A, groundTint: 0xB89A6A, name: 'ใบไม้แดง / Autumn', icon: '🍁' },
+  winter: { sakuraColor: 0xFFFFFF, treeColor: 0xD4E5F0, groundTint: 0xC8D0D8, name: 'หิมะ / Winter', icon: '❄️' }
+};
+
+function getSeasonForDay(day) {
+  const seasons = ['spring', 'summer', 'autumn', 'winter'];
+  return seasons[(day - 1) % 4];
+}
+
+function applySeasonVisuals(seasonKey) {
+  const preset = SEASON_PRESETS[seasonKey];
+  if (!preset) return;
+  if (typeof scene === 'undefined' || !scene) return;
+  scene.traverse(obj => {
+    if (obj.userData && obj.userData.isTree && obj.userData.foliageMats) {
+      for (const mat of obj.userData.foliageMats) {
+        mat.color.setHex(preset.treeColor);
+      }
+    }
+    if (obj.userData && obj.userData.isSakuraFoliage) {
+      obj.material.color.setHex(preset.sakuraColor);
+    }
+  });
+  // Update ground tint
+  if (typeof groundPlane !== 'undefined' && groundPlane && groundPlane.material) {
+    groundPlane.material.color.multiplyScalar(1);  // could tint
+  }
 }
 
 function buildLantern(x, z, rotY = 0) {
@@ -5229,6 +5275,13 @@ setTimeout(() => {
   if (typeof spawnBus === 'function') spawnBus(1);
 }, 2500);
 
+// Phase 31: Apply season based on day
+setTimeout(() => {
+  if (typeof applySeasonVisuals === 'function' && state) {
+    applySeasonVisuals(getSeasonForDay(state.day || 1));
+  }
+}, 2800);
+
 // Expose for debugging/testing (after all functions defined)
 window.lights = lights;
 window.state = state;
@@ -5374,6 +5427,10 @@ window.openCookModal = openCookModal;
 window.closeCookModal = closeCookModal;
 window.cookPress = cookPress;
 window.isNearCookTable = isNearCookTable;
+// Phase 31
+window.SEASON_PRESETS = SEASON_PRESETS;
+window.getSeasonForDay = getSeasonForDay;
+window.applySeasonVisuals = applySeasonVisuals;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
