@@ -94,6 +94,23 @@
   .fridge-close { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0.6rem 1.2rem; font-size: 0.9rem; cursor: pointer; width: 100%; }
   .fridge-close:hover { background: #1a3a52; }
 
+  /* Phase 24: Photo Mode */
+  .photo-fab { position: fixed; bottom: 9.5rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #FFB347, #E08E45); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(224, 142, 69, 0.4); border: 2px solid white; transition: transform 0.2s; }
+  .photo-fab:hover { transform: scale(1.08); }
+  .photo-flash { position: fixed; inset: 0; background: white; z-index: 99; pointer-events: none; opacity: 0; transition: opacity 0.05s; }
+  .photo-flash.flash { opacity: 1; transition: opacity 0.3s; }
+  .photo-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 50; display: none; flex-direction: column; overflow: hidden; backdrop-filter: blur(8px); }
+  .photo-modal.show { display: flex; }
+  .photo-header { background: linear-gradient(135deg, #E08E45, #C46A1F); color: white; padding: 0.8rem 1.2rem; display: flex; justify-content: space-between; align-items: center; }
+  .photo-title { font-family: 'Fraunces', serif; font-size: 1.2rem; }
+  .photo-close { background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+  .photo-grid { flex: 1; overflow-y: auto; padding: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; align-content: start; }
+  .photo-item { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .photo-item img { width: 100%; height: auto; display: block; }
+  .photo-meta { padding: 0.5rem 0.7rem; font-size: 0.75rem; color: var(--text-soft); display: flex; justify-content: space-between; }
+  .photo-empty { color: rgba(255,255,255,0.5); text-align: center; padding: 3rem 1rem; grid-column: 1 / -1; }
+  .photo-counter { position: fixed; top: 4.5rem; right: 0.5rem; background: rgba(0,0,0,0.7); color: white; padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.85rem; z-index: 16; display: none; }
+
   /* Phase 17: Phone/Messages */
   .phone-fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); border: 2px solid white; transition: transform 0.2s; }
   .phone-fab:hover { transform: scale(1.08); }
@@ -296,6 +313,19 @@
   <div class="achievements-panel" id="achievementsPanel" style="display:none">
     <div class="achievements-title">🏆 ความสำเร็จ / Achievements</div>
     <div class="achievements-list" id="achievementsList"></div>
+  </div>
+
+  <!-- Phase 24: Photo Mode -->
+  <button class="photo-fab" id="photoFab" title="ถ่ายรูป / Take photo (F2)">📸</button>
+  <div class="photo-flash" id="photoFlash"></div>
+  <div class="photo-modal" id="photoModal">
+    <div class="photo-header">
+      <div class="photo-title">📸 แกลเลอรี / Gallery</div>
+      <button class="photo-close" id="photoCloseBtn">×</button>
+    </div>
+    <div class="photo-grid" id="photoGrid">
+      <div class="photo-empty">ยังไม่มีรูป / No photos yet<br>กด F2 หรือปุ่ม 📸 เพื่อถ่าย</div>
+    </div>
   </div>
 
   <!-- Phase 23: Fridge modal -->
@@ -991,6 +1021,7 @@ function saveGame() {
       wellRested: !!state._wellRested,
       eatenFoods: state._eatenFoods || [],
       eatenCount: state._eatenCount || 0,
+      photoCount: state._photoCount || 0,
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -1040,6 +1071,7 @@ function applySave(data) {
   if (data.wellRested !== undefined) state._wellRested = data.wellRested;
   if (data.eatenFoods) state._eatenFoods = [...data.eatenFoods];
   if (data.eatenCount !== undefined) state._eatenCount = data.eatenCount;
+  if (data.photoCount !== undefined) state._photoCount = data.photoCount;
   return true;
 }
 
@@ -1159,7 +1191,9 @@ const ACHIEVEMENT_DEFS = [
   { id: 'cat_whisperer', icon: '🐈', name: 'นิยายแมว / Cat Whisperer', desc: 'ให้อาหารแมว 3 ตัว / Feed 3 different cats', check: (s) => (s._catFedUnique || 0) >= 3 },
   { id: 'well_rested', icon: '☀️', name: 'นอนเต็มอิ่ม / Well Rested', desc: 'นอนในเตียง / Sleep in your bed', check: (s) => (s.day || 1) > 1 },
   { id: 'first_meal', icon: '🍱', name: 'มื้อแรก / First Meal', desc: 'ทานอาหารครั้งแรก / Eat your first food', check: (s) => (s._eatenCount || 0) >= 1 },
-  { id: 'gourmet', icon: '🍜', name: 'กูร์เมต์ / Gourmet', desc: 'ลองทุกเมนู / Try all 4 foods', check: (s) => (s._eatenFoods?.length || 0) >= 4 }
+  { id: 'gourmet', icon: '🍜', name: 'กูร์เมต์ / Gourmet', desc: 'ลองทุกเมนู / Try all 4 foods', check: (s) => (s._eatenFoods?.length || 0) >= 4 },
+  { id: 'photographer', icon: '📸', name: 'ช่างภาพ / Photographer', desc: 'ถ่ายรูป 1 ภาพ / Take 1 photo', check: (s) => (s._photoCount || 0) >= 1 },
+  { id: 'shutterbug', icon: '🎞️', name: 'เด็กถ่ายรูป / Shutterbug', desc: 'ถ่ายรูป 5 ภาพ / Take 5 photos', check: (s) => (s._photoCount || 0) >= 5 }
 ];
 
 function checkAchievements() {
@@ -2089,6 +2123,111 @@ function isNearFridge() {
   const dx = playerModel.position.x - 3.4;
   const dz = playerModel.position.z - 3.3;
   return Math.sqrt(dx*dx + dz*dz) < 1.8;
+}
+
+// ========== PHASE 24: PHOTO MODE ==========
+let photoGallery = [];  // { id, dataURL, zone, day, hour, timestamp }
+let photoState = { shutter: false };
+
+function takePhoto() {
+  if (interiorState.active) {
+    // Inside home: still works (renders interior scene)
+  }
+  if (!renderer || !camera) return;
+  // Force a fresh render to get current frame
+  if (typeof scene !== 'undefined' && scene) scene.visible = true;  // temporarily show for render
+  if (interiorState.active && interiorState.scene) {
+    renderer.autoClear = false;
+    renderer.clear();
+    renderer.render(interiorState.scene, camera);
+    renderer.autoClear = true;
+  }
+  if (typeof scene !== 'undefined' && scene) {
+    renderer.render(scene, camera);
+    if (interiorState.active) scene.visible = false;  // restore
+  }
+  // Get canvas data
+  const canvas = renderer.domElement;
+  const dataURL = canvas.toDataURL('image/jpeg', 0.85);
+  // Build photo record
+  const photo = {
+    id: Date.now() + Math.random(),
+    dataURL,
+    zone: state.currentZone,
+    zoneName: (typeof ZONES !== 'undefined' && ZONES[state.currentZone]) ? ZONES[state.currentZone].name : '?',
+    day: state.day,
+    hour: Math.floor(state.gameTime.hour),
+    minute: Math.floor(state.gameTime.minute),
+    timestamp: Date.now()
+  };
+  photoGallery.unshift(photo);
+  if (photoGallery.length > 30) photoGallery.length = 30;  // cap
+  if (state) state._photoCount = photoGallery.length;
+  // Save to localStorage (dataURLs are large; cap at 20)
+  try {
+    const toSave = photoGallery.slice(0, 20);
+    localStorage.setItem('tsl-photos-v1', JSON.stringify(toSave));
+  } catch (e) {
+    console.warn('Photo save failed (likely quota):', e);
+  }
+  // Flash effect
+  const flash = document.getElementById('photoFlash');
+  if (flash) {
+    flash.classList.add('flash');
+    setTimeout(() => flash.classList.remove('flash'), 50);
+  }
+  // Shutter sound
+  if (typeof playTone === 'function') {
+    playTone(2000, 0.05, 'square', 0.15);
+    setTimeout(() => playTone(1500, 0.05, 'square', 0.12), 30);
+  }
+  // Achievement toast
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({ icon: '📸', name: 'ถ่ายรูป! / Photo taken!', desc: `Day ${photo.day} · ${String(photo.hour).padStart(2,'0')}:${String(photo.minute).padStart(2,'0')}` });
+  }
+  if (typeof checkAchievements === 'function') checkAchievements();
+  updatePhotoUI();
+}
+
+function openPhotoGallery() {
+  const modal = document.getElementById('photoModal');
+  if (modal) {
+    modal.classList.add('show');
+    updatePhotoGrid();
+  }
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playUIClick === 'function') playUIClick();
+}
+
+function closePhotoGallery() {
+  const modal = document.getElementById('photoModal');
+  if (modal) modal.classList.remove('show');
+}
+
+function updatePhotoGrid() {
+  const grid = document.getElementById('photoGrid');
+  if (!grid) return;
+  if (!photoGallery || photoGallery.length === 0) {
+    grid.innerHTML = '<div class="photo-empty">ยังไม่มีรูป / No photos yet<br>กด F2 หรือปุ่ม 📸 เพื่อถ่าย</div>';
+    return;
+  }
+  grid.innerHTML = '';
+  for (const p of photoGallery) {
+    const item = document.createElement('div');
+    item.className = 'photo-item';
+    item.innerHTML = `
+      <img src="${p.dataURL}" alt="Day ${p.day} ${p.zoneName}">
+      <div class="photo-meta">
+        <span>Day ${p.day} · ${p.zoneName}</span>
+        <span>${String(p.hour).padStart(2,'0')}:${String(p.minute).padStart(2,'0')}</span>
+      </div>
+    `;
+    grid.appendChild(item);
+  }
+}
+
+function updatePhotoUI() {
+  updatePhotoGrid();
 }
 
 function openFridgeModal() {
@@ -3565,6 +3704,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyN') { if(typeof nextDay === 'function') nextDay(); e.preventDefault(); return; }
   if (e.code === 'KeyW') { if(typeof openWardrobe === 'function') { openWardrobe(); e.preventDefault(); return; } }
   if (e.code === 'KeyP') { if(typeof openPhone === 'function') { openPhone(); e.preventDefault(); return; } }
+  if (e.code === 'F2') { e.preventDefault(); if(typeof takePhoto === 'function') takePhoto(); return; }
   state.keys[e.code] = true;
   if (e.code === 'Digit1') switchZone(1);
   if (e.code === 'Digit2') switchZone(2);
@@ -3844,6 +3984,8 @@ document.getElementById('wardrobeCloseBtn').addEventListener('click', closeWardr
 document.getElementById('phoneFab').addEventListener('click', openPhone);
 document.getElementById('phoneCloseBtn').addEventListener('click', closePhone);
 document.getElementById('fridgeCloseBtn').addEventListener('click', closeFridgeModal);
+document.getElementById('photoFab').addEventListener('click', openPhotoGallery);
+document.getElementById('photoCloseBtn').addEventListener('click', closePhotoGallery);
 
 // Phase 11: New Game button
 function newGame() {
@@ -3876,6 +4018,10 @@ function newGame() {
   state._eatenFoods = [];
   state._eatenCount = 0;
   state._hungryWarned = false;
+  // Phase 24: Reset photos
+  state._photoCount = 0;
+  photoGallery = [];
+  try { localStorage.removeItem('tsl-photos-v1'); } catch (e) {}
   // Phase 17: Clear phone messages
   if (typeof state_phone !== 'undefined') {
     state_phone.messages = [];
@@ -3959,6 +4105,21 @@ setTimeout(() => {
     spawnCatsInZones();
   }
 }, 2000);
+
+// Phase 24: Load saved photos
+setTimeout(() => {
+  try {
+    const saved = localStorage.getItem('tsl-photos-v1');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        photoGallery = parsed;
+        if (state) state._photoCount = photoGallery.length;
+        updatePhotoUI();
+      }
+    }
+  } catch (e) { /* ignore */ }
+}, 2500);
 
 // Expose for debugging/testing (after all functions defined)
 window.lights = lights;
@@ -4053,6 +4214,12 @@ window.buyFood = buyFood;
 window.openFridgeModal = openFridgeModal;
 window.closeFridgeModal = closeFridgeModal;
 window.isNearFridge = isNearFridge;
+// Phase 24
+Object.defineProperty(window, 'photoGallery', { get: () => photoGallery });
+window.takePhoto = takePhoto;
+window.openPhotoGallery = openPhotoGallery;
+window.closePhotoGallery = closePhotoGallery;
+window.updatePhotoUI = updatePhotoUI;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
