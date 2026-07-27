@@ -67,6 +67,28 @@
     .touch-controls { display: block; }
   }
 
+  /* Phase 17: Phone/Messages */
+  .phone-fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); border: 2px solid white; transition: transform 0.2s; }
+  .phone-fab:hover { transform: scale(1.08); }
+  .phone-fab .badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 10px; background: #F44336; color: white; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .phone-modal { position: fixed; bottom: 0; right: 0; width: min(380px, 100vw); height: min(560px, 80vh); background: linear-gradient(180deg, #F8FAFC, #ECEFF1); border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.2); z-index: 43; display: none; flex-direction: column; overflow: hidden; }
+  .phone-modal.show { display: flex; }
+  .phone-header { background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; padding: 0.8rem 1rem; display: flex; justify-content: space-between; align-items: center; }
+  .phone-title { font-family: 'Fraunces', serif; font-size: 1.1rem; }
+  .phone-close { background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+  .phone-messages { flex: 1; overflow-y: auto; padding: 0.5rem; }
+  .phone-msg { background: white; border-radius: 12px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .phone-msg-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+  .phone-msg-avatar { font-size: 1.2rem; }
+  .phone-msg-name { font-weight: 600; font-size: 0.85rem; color: var(--primary); }
+  .phone-msg-time { font-size: 0.7rem; color: var(--text-soft); margin-left: auto; }
+  .phone-msg-text { font-size: 0.85rem; color: var(--text); line-height: 1.4; }
+  .phone-msg-unread { border-left: 3px solid #4CAF50; }
+  .phone-empty { text-align: center; color: var(--text-soft); padding: 2rem 1rem; font-size: 0.85rem; }
+  .phone-reply { display: flex; gap: 0.4rem; padding: 0.6rem; background: white; border-top: 1px solid rgba(0,0,0,0.08); }
+  .phone-reply-btn { flex: 1; background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0.5rem; font-size: 0.8rem; cursor: pointer; }
+  .phone-reply-btn:hover { background: #1a3a52; }
+
   /* Phase 14: Wardrobe modal */
   .wardrobe-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 42; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
   .wardrobe-modal.show { display: flex; }
@@ -246,6 +268,18 @@
   <div class="achievements-panel" id="achievementsPanel" style="display:none">
     <div class="achievements-title">🏆 ความสำเร็จ / Achievements</div>
     <div class="achievements-list" id="achievementsList"></div>
+  </div>
+
+  <!-- Phase 17: Phone FAB + modal -->
+  <div class="phone-fab" id="phoneFab" title="เปิดโทรศัพท์ / Open phone (M)">📱<span class="badge" id="phoneBadge" style="display:none">0</span></div>
+  <div class="phone-modal" id="phoneModal">
+    <div class="phone-header">
+      <div class="phone-title">📱 ข้อความ / Messages</div>
+      <button class="phone-close" id="phoneCloseBtn">×</button>
+    </div>
+    <div class="phone-messages" id="phoneMessages">
+      <div class="phone-empty">ยังไม่มีข้อความ / No messages yet</div>
+    </div>
   </div>
 
   <!-- Phase 14: Wardrobe modal -->
@@ -903,6 +937,7 @@ function saveGame() {
       currentOutfit: state.currentOutfit,
       outfitsUsed: [...(state.outfitsUsed || [])],
       bikeDistance: state.bikeDistance || 0,
+      phoneMessages: (state_phone && state_phone.messages) ? [...state_phone.messages] : [],
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -941,6 +976,11 @@ function applySave(data) {
   if (data.currentOutfit !== undefined) state.currentOutfit = data.currentOutfit;
   if (data.outfitsUsed) state.outfitsUsed = [...data.outfitsUsed];
   if (data.bikeDistance !== undefined) state.bikeDistance = data.bikeDistance;
+  if (data.phoneMessages && Array.isArray(data.phoneMessages)) {
+    if (typeof state_phone === 'undefined') window.state_phone = { messages: [], lastMessageHour: -1, lastMessageDay: 0 };
+    state_phone.messages = [...data.phoneMessages];
+    if (typeof updatePhoneUI === 'function') updatePhoneUI();
+  }
   return true;
 }
 
@@ -1513,6 +1553,8 @@ function updateStationTrain(dt) {
 // If zone changes, NPC is removed from old zone's scene and added to new zone's scene.
 
 let lastScheduleHour = -1;
+let lastPhoneMessageHour = -1;
+let lastPhoneMessageDay = 0;
 let npcLocations = {}; // npcType → { zone, x, z, rotY }
 
 // Schedule: hour → location for each NPC type
@@ -1610,6 +1652,124 @@ function initNPCLocations() {
       npcLocations[npcType] = { zone: loc.zone, x: loc.x, z: loc.z, rotY: loc.rotY || 0 };
     }
   }
+}
+
+// ========== PHASE 17: PHONE / MESSAGES SYSTEM ==========
+let state_phone = {
+  messages: [],  // { id, from, avatar, text, time, day, hour, read }
+  lastMessageHour: -1,
+  lastMessageDay: 0
+};
+
+const PHONE_MESSAGES = {
+  // Hour-based messages (sent at specific hour, only once per day)
+  // Each NPC can send a message at a specific hour
+  mom: {
+    7: { avatar: '👩', text: 'อรุณสวัสดิ์จ้า! อย่าลืมกินข้าวเช้านะ / Good morning! Don\'t forget breakfast' },
+    12: { avatar: '👩', text: 'กินข้าวเที่ยงหรือยัง? / Have you eaten lunch?' },
+    19: { avatar: '👩', text: 'กลับบ้านเร็วๆ นะจ๊ะ / Come home early' },
+    22: { avatar: '👩', text: 'เข้านอนได้แล้วจ้า / Time to sleep' }
+  },
+  yui: {
+    9:  { avatar: '🌸', text: 'เจอกันที่โรงเรียนนะ! / See you at school!' },
+    12: { avatar: '🌸', text: 'กินเบนโตะด้วยกันมั้ย? / Want to eat bento together?' },
+    15: { avatar: '🌸', text: 'กลับบ้านด้วยกันมั้ย? / Going home together?' }
+  },
+  senpai_msg: {
+    7:  { avatar: '🎀', text: 'อรุณสวัสดิ์จ้ะ! วันนี้เป็นไงบ้าง / Good morning! How\'s your day?' },
+    18: { avatar: '🎀', text: 'กลับมาเร็วๆ นะ / Come back soon!' }
+  }
+};
+
+function addPhoneMessage(from, avatar, text, hour, day) {
+  if (typeof state_phone === 'undefined') state_phone = { messages: [] };
+  // Avoid duplicate (same from, hour, day)
+  if (state_phone.messages.some(m => m.from === from && m.hour === hour && m.day === day)) return;
+  const msg = {
+    id: Date.now() + Math.random(),
+    from, avatar, text,
+    time: `${String(hour).padStart(2,'0')}:00`,
+    day: day || state.day,
+    hour,
+    read: false
+  };
+  state_phone.messages.unshift(msg);
+  updatePhoneUI();
+  // Show toast
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({ icon: '💬', name: `ข้อความจาก ${from}`, desc: text.substring(0, 50) + (text.length > 50 ? '...' : '') });
+  }
+  if (typeof playTone === 'function') {
+    playTone(880, 0.1, 'sine', 0.12);
+    setTimeout(() => playTone(1100, 0.1, 'sine', 0.1), 100);
+  }
+}
+
+function updatePhoneUI() {
+  const badge = document.getElementById('phoneBadge');
+  const container = document.getElementById('phoneMessages');
+  if (!badge || !container) return;
+  const unreadCount = (state_phone.messages || []).filter(m => !m.read).length;
+  if (unreadCount > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
+  } else {
+    badge.style.display = 'none';
+  }
+  // Render messages
+  if (!state_phone.messages || state_phone.messages.length === 0) {
+    container.innerHTML = '<div class="phone-empty">ยังไม่มีข้อความ / No messages yet</div>';
+    return;
+  }
+  container.innerHTML = '';
+  for (const m of state_phone.messages) {
+    const div = document.createElement('div');
+    div.className = 'phone-msg' + (m.read ? '' : ' phone-msg-unread');
+    div.innerHTML = `
+      <div class="phone-msg-header">
+        <span class="phone-msg-avatar">${m.avatar}</span>
+        <span class="phone-msg-name">${m.from}</span>
+        <span class="phone-msg-time">Day ${m.day} · ${m.time}</span>
+      </div>
+      <div class="phone-msg-text">${m.text}</div>
+    `;
+    div.addEventListener('click', () => { m.read = true; updatePhoneUI(); });
+    container.appendChild(div);
+  }
+}
+
+function checkPhoneMessages() {
+  if (!state || !state.gameTime) return;
+  const h = Math.floor(state.gameTime.hour);
+  const d = state.day;
+  if (d === state_phone.lastMessageDay && h === state_phone.lastMessageHour) return;
+  state_phone.lastMessageHour = h;
+  state_phone.lastMessageDay = d;
+  // Check each sender
+  for (const [sender, hourMap] of Object.entries(PHONE_MESSAGES)) {
+    if (hourMap[h]) {
+      addPhoneMessage(sender, hourMap[h].avatar, hourMap[h].text, h, d);
+    }
+  }
+}
+
+function openPhone() {
+  const modal = document.getElementById('phoneModal');
+  if (modal) {
+    modal.classList.add('show');
+    // Mark all as read
+    if (state_phone.messages) {
+      state_phone.messages.forEach(m => m.read = true);
+    }
+    updatePhoneUI();
+  }
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playUIClick === 'function') playUIClick();
+}
+
+function closePhone() {
+  const modal = document.getElementById('phoneModal');
+  if (modal) modal.classList.remove('show');
 }
 
 // ========== PHASE 9: SAKURA PETALS ==========
@@ -1775,6 +1935,12 @@ function updateTimeUI() {
   if (typeof updateNPCSchedules === 'function' && (h !== lastScheduleHour)) {
     lastScheduleHour = h;
     updateNPCSchedules(h);
+  }
+  // Phase 17: Check phone messages on hour change
+  if (typeof checkPhoneMessages === 'function' && (h !== lastPhoneMessageHour || state.day !== lastPhoneMessageDay)) {
+    lastPhoneMessageHour = h;
+    lastPhoneMessageDay = state.day;
+    checkPhoneMessages();
   }
 }
 
@@ -2672,6 +2838,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyL') { manualLoad(); e.preventDefault(); return; }
   if (e.code === 'KeyN') { if(typeof nextDay === 'function') nextDay(); e.preventDefault(); return; }
   if (e.code === 'KeyW') { if(typeof openWardrobe === 'function') { openWardrobe(); e.preventDefault(); return; } }
+  if (e.code === 'KeyP') { if(typeof openPhone === 'function') { openPhone(); e.preventDefault(); return; } }
   state.keys[e.code] = true;
   if (e.code === 'Digit1') switchZone(1);
   if (e.code === 'Digit2') switchZone(2);
@@ -2891,10 +3058,12 @@ document.getElementById('saveBtn').addEventListener('click', manualSave);
 document.getElementById('loadBtn').addEventListener('click', manualLoad);
 document.getElementById('wardrobeBtn').addEventListener('click', openWardrobe);
 document.getElementById('wardrobeCloseBtn').addEventListener('click', closeWardrobe);
+document.getElementById('phoneFab').addEventListener('click', openPhone);
+document.getElementById('phoneCloseBtn').addEventListener('click', closePhone);
 
 // Phase 11: New Game button
 function newGame() {
-  if (!confirm('เริ่มเกมใหม่? / Start new game? (Save will be cleared)')) return;
+  if (!window._newGameNoConfirm && !confirm('เริ่มเกมใหม่? / Start new game? (Save will be cleared)')) return;
   if (typeof deleteSave === 'function') deleteSave();
   // Reset state
   state.currentZone = 1;
@@ -2914,6 +3083,15 @@ function newGame() {
   state.ridingBike = false;
   state.currentBike = null;
   state.bikeDistance = 0;
+  // Phase 17: Clear phone messages
+  if (typeof state_phone !== 'undefined') {
+    state_phone.messages = [];
+    state_phone.lastMessageHour = -1;
+    state_phone.lastMessageDay = 0;
+    if (typeof updatePhoneUI === 'function') updatePhoneUI();
+  }
+  lastPhoneMessageHour = -1;
+  lastPhoneMessageDay = 0;
   // Clear schedule UI
   for (let z = 1; z <= 5; z++) {
     const el = document.getElementById('sched-' + z);
@@ -3044,6 +3222,15 @@ window.updateNPCSchedules = updateNPCSchedules;
 window.initNPCLocations = initNPCLocations;
 window.getNPCLocationForHour = getNPCLocationForHour;
 Object.defineProperty(window, 'lastScheduleHour', { get: () => lastScheduleHour });
+// Phase 17
+Object.defineProperty(window, 'state_phone', { get: () => state_phone });
+window.openPhone = openPhone;
+window.closePhone = closePhone;
+window.checkPhoneMessages = checkPhoneMessages;
+window.addPhoneMessage = addPhoneMessage;
+window.newGame = newGame;
+Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
+Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
 Object.defineProperty(window, 'trainState', { get: () => trainState });
 // Phase 9
