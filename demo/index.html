@@ -132,6 +132,28 @@
   .tutorial-btn.skip { background: transparent; color: var(--text-soft); border: 1px solid var(--border); }
   .tutorial-key { display: inline-block; background: var(--bg-warm); color: var(--primary); padding: 0.2rem 0.6rem; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; border: 1px solid var(--border); margin: 0 0.2rem; }
 
+  /* Phase 28: Save Slot Modal */
+  .save-slot-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 60; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 1rem; }
+  .save-slot-modal.show { display: flex; }
+  .save-slot-content { background: linear-gradient(180deg, #FAF6EE, #FFFFFF); border-radius: 20px; padding: 1.5rem; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 2px solid var(--border); }
+  .save-slot-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .save-slot-title { font-family: 'Fraunces', serif; font-size: 1.5rem; color: var(--primary); }
+  .save-slot-close { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0.5rem 1rem; cursor: pointer; }
+  .save-slot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; }
+  .save-slot-card { background: white; border: 2px solid var(--border); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .save-slot-card.occupied { border-color: #4CAF50; }
+  .save-slot-card.empty { opacity: 0.6; }
+  .save-slot-num { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--primary); font-weight: 600; }
+  .save-slot-date { font-size: 0.75rem; color: var(--text-soft); }
+  .save-slot-info { font-size: 0.8rem; line-height: 1.5; }
+  .save-slot-info div { margin: 0.2rem 0; }
+  .save-slot-empty-text { font-size: 0.85rem; color: var(--text-soft); font-style: italic; padding: 1rem 0; }
+  .save-slot-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: auto; }
+  .save-slot-btn { flex: 1; min-width: 70px; padding: 0.5rem 0.7rem; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: white; }
+  .save-slot-btn.save { background: #4CAF50; }
+  .save-slot-btn.load { background: #2196F3; }
+  .save-slot-btn.delete { background: #F44336; }
+
   /* Phase 17: Phone/Messages */
   .phone-fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); border: 2px solid white; transition: transform 0.2s; }
   .phone-fab:hover { transform: scale(1.08); }
@@ -334,6 +356,17 @@
   <div class="achievements-panel" id="achievementsPanel" style="display:none">
     <div class="achievements-title">🏆 ความสำเร็จ / Achievements</div>
     <div class="achievements-list" id="achievementsList"></div>
+  </div>
+
+  <!-- Phase 28: Save Slot Modal -->
+  <div class="save-slot-modal" id="saveSlotModal">
+    <div class="save-slot-content">
+      <div class="save-slot-header">
+        <div class="save-slot-title" id="saveSlotTitle">💾 บันทึก / Save</div>
+        <button class="save-slot-close" id="saveSlotCloseBtn">×</button>
+      </div>
+      <div class="save-slot-grid" id="saveSlotGrid"></div>
+    </div>
   </div>
 
   <!-- Phase 27: Bus modal -->
@@ -1242,6 +1275,40 @@ function deleteSave() {
   localStorage.removeItem(SAVE_KEY);
 }
 
+// ========== PHASE 28: SAVE SLOTS ==========
+function getSaveSlot(slot) {
+  if (slot === 0) return localStorage.getItem(SAVE_KEY);  // auto-save / current
+  return localStorage.getItem('tsl-save-slot-' + slot);
+}
+
+function setSaveSlot(slot, data) {
+  if (slot === 0) localStorage.setItem(SAVE_KEY, data);
+  else localStorage.setItem('tsl-save-slot-' + slot, data);
+}
+
+function deleteSaveSlot(slot) {
+  if (slot === 0) localStorage.removeItem(SAVE_KEY);
+  else localStorage.removeItem('tsl-save-slot-' + slot);
+}
+
+function getSaveSlotMeta(slot) {
+  const raw = getSaveSlot(slot);
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw);
+    return {
+      day: data.day || 1,
+      hour: data.gameTime?.hour || 7,
+      minute: data.gameTime?.minute || 0,
+      yen: data.yen || 0,
+      zone: data.currentZone || 1,
+      zoneName: (typeof ZONES !== 'undefined' && ZONES[data.currentZone]) ? ZONES[data.currentZone].name : '?',
+      achievements: (data.achievements || []).length,
+      savedAt: data.savedAt || 0
+    };
+  } catch (e) { return null; }
+}
+
 // Auto-save every 30s
 setInterval(() => {
   if (typeof saveGame === 'function') saveGame();
@@ -1253,34 +1320,100 @@ window.addEventListener('beforeunload', () => {
 });
 
 function manualSave() {
-  if (saveGame()) {
-    const btn = document.getElementById('saveBtn');
-    if (btn) {
-      btn.classList.add('saved');
-      btn.textContent = '✓';
-      setTimeout(() => { btn.classList.remove('saved'); btn.textContent = '💾'; }, 1500);
-    }
-  }
+  // Phase 28: Show save slot picker
+  openSaveSlotModal('save');
 }
 
 function manualLoad() {
-  const data = loadGame();
-  if (data) {
-    applySave(data);
-    // Trigger UI updates
-    if (typeof switchZone === 'function') switchZone(state.currentZone);
-    if (typeof updateTimeUI === 'function') updateTimeUI();
-    const btn = document.getElementById('loadBtn');
-    if (btn) {
-      btn.textContent = '✓';
-      setTimeout(() => { btn.textContent = '📂'; }, 1500);
+  // Phase 28: Show load slot picker
+  openSaveSlotModal('load');
+}
+
+function openSaveSlotModal(mode) {
+  const modal = document.getElementById('saveSlotModal');
+  if (!modal) return;
+  const title = document.getElementById('saveSlotTitle');
+  if (title) title.textContent = mode === 'save' ? '💾 บันทึก / Save' : '📂 โหลด / Load';
+  const grid = document.getElementById('saveSlotGrid');
+  if (grid) {
+    grid.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const meta = getSaveSlotMeta(i);
+      const card = document.createElement('div');
+      card.className = 'save-slot-card' + (meta ? ' occupied' : ' empty');
+      const dateStr = meta ? new Date(meta.savedAt).toLocaleString() : 'ว่าง / Empty';
+      card.innerHTML = `
+        <div class="save-slot-num">Slot ${i + 1}</div>
+        <div class="save-slot-date">${dateStr}</div>
+        ${meta ? `
+          <div class="save-slot-info">
+            <div>📅 Day ${meta.day} · ${String(meta.hour).padStart(2,'0')}:${String(meta.minute).padStart(2,'0')}</div>
+            <div>${['🏠','🏫','🚉','🛍️','⛩️'][meta.zone-1]} ${meta.zoneName} · Zone 0${meta.zone}</div>
+            <div>💴 ${meta.yen.toLocaleString()} เยน · 🏆 ${meta.achievements}</div>
+          </div>
+        ` : '<div class="save-slot-empty-text">ยังว่าง / Empty slot</div>'}
+        <div class="save-slot-actions">
+          ${mode === 'save' ? `<button class="save-slot-btn save" data-slot="${i}">💾 บันทึก</button>` : ''}
+          ${mode === 'load' && meta ? `<button class="save-slot-btn load" data-slot="${i}">📂 โหลด</button>` : ''}
+          ${meta ? `<button class="save-slot-btn delete" data-slot="${i}">🗑️ ลบ</button>` : ''}
+        </div>
+      `;
+      grid.appendChild(card);
     }
-  } else {
-    const btn = document.getElementById('loadBtn');
-    if (btn) {
-      btn.textContent = '✗';
-      setTimeout(() => { btn.textContent = '📂'; }, 1500);
-    }
+    // Bind buttons
+    grid.querySelectorAll('.save-slot-btn.save').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const slot = parseInt(btn.dataset.slot);
+        const data = saveGame();
+        if (data) {
+          setSaveSlot(slot, data);
+          if (typeof showAchievementToast === 'function') {
+            showAchievementToast({ icon: '💾', name: `บันทึก Slot ${slot+1}! / Saved to Slot ${slot+1}!` });
+          }
+          if (typeof playUIClick === 'function') playUIClick();
+          setTimeout(() => closeSaveSlotModal(), 500);
+        }
+      });
+    });
+    grid.querySelectorAll('.save-slot-btn.load').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const slot = parseInt(btn.dataset.slot);
+        const raw = getSaveSlot(slot);
+        if (raw) {
+          const data = JSON.parse(raw);
+          applySave(data);
+          if (typeof switchZone === 'function') switchZone(state.currentZone);
+          if (typeof showAchievementToast === 'function') {
+            showAchievementToast({ icon: '📂', name: `โหลด Slot ${slot+1}! / Loaded Slot ${slot+1}!`, desc: `Day ${data.day} · ${data.gameTime?.hour}:${String(data.gameTime?.minute || 0).padStart(2,'0')}` });
+          }
+          if (typeof playUIClick === 'function') playUIClick();
+          closeSaveSlotModal();
+        }
+      });
+    });
+    grid.querySelectorAll('.save-slot-btn.delete').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const slot = parseInt(btn.dataset.slot);
+        if (confirm(`ลบ Slot ${slot+1}? / Delete Slot ${slot+1}?`)) {
+          deleteSaveSlot(slot);
+          openSaveSlotModal(mode);  // refresh
+        }
+      });
+    });
+  }
+  modal.classList.add('show');
+  if (typeof initAudio === 'function') initAudio();
+}
+
+function closeSaveSlotModal() {
+  const modal = document.getElementById('saveSlotModal');
+  if (modal) modal.classList.remove('show');
+  // Also trigger the save button visual
+  const btn = document.getElementById('saveBtn');
+  if (btn) {
+    btn.classList.add('saved');
+    btn.textContent = '✓';
+    setTimeout(() => { btn.classList.remove('saved'); btn.textContent = '💾'; }, 1500);
   }
 }
 
@@ -4531,6 +4664,7 @@ document.getElementById('photoCloseBtn').addEventListener('click', closePhotoGal
 document.getElementById('tutNextBtn').addEventListener('click', nextTutorialStep);
 document.getElementById('tutSkipBtn').addEventListener('click', skipTutorial);
 document.getElementById('busCloseBtn').addEventListener('click', closeBusModal);
+document.getElementById('saveSlotCloseBtn').addEventListener('click', closeSaveSlotModal);
 
 // Phase 11: New Game button
 function newGame() {
@@ -4805,6 +4939,12 @@ window.takeBus = takeBus;
 window.isNearBusStop = isNearBusStop;
 window.openBusModal = openBusModal;
 window.closeBusModal = closeBusModal;
+// Phase 28
+window.openSaveSlotModal = openSaveSlotModal;
+window.closeSaveSlotModal = closeSaveSlotModal;
+window.getSaveSlotMeta = getSaveSlotMeta;
+window.setSaveSlot = setSaveSlot;
+window.deleteSaveSlot = deleteSaveSlot;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
