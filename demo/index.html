@@ -1009,6 +1009,15 @@ function tryAutoLoad() {
       if (typeof updateTimeUI === 'function') updateTimeUI();
       if (typeof updateHUD === 'function') updateHUD();
       if (typeof updateAchievementsHUD === 'function') updateAchievementsHUD();
+      // Phase 16: Re-initialize NPC locations based on saved time
+      setTimeout(() => {
+        if (typeof initNPCLocations === 'function') {
+          initNPCLocations();
+          if (state && state.currentZone && typeof placeNPCs === 'function') {
+            placeNPCs(state.currentZone);
+          }
+        }
+      }, 200);
       // Re-apply outfit (deferred so playerModel is built)
       setTimeout(() => {
         if (typeof applyOutfit === 'function' && state.currentOutfit) {
@@ -1498,6 +1507,111 @@ function updateStationTrain(dt) {
   }
 }
 
+// ========== PHASE 16: NPC SCHEDULE SYSTEM ==========
+// Each NPC has a schedule: { hour: { zone, x, z, rotY } }
+// At each hour boundary, NPC teleports to that location.
+// If zone changes, NPC is removed from old zone's scene and added to new zone's scene.
+
+let lastScheduleHour = -1;
+let npcLocations = {}; // npcType → { zone, x, z, rotY }
+
+// Schedule: hour → location for each NPC type
+// Zone codes: 1=Home, 2=School, 3=Station, 4=Shopping, 5=Shrine
+const NPC_SCHEDULES = {
+  senpai: {
+    7:  { zone: 1, x: 0,    z: -3, rotY: 0 },          // 7am: at home
+    9:  { zone: 2, x: -5,   z: 5, rotY: 0 },          // 9am: at school (entrance)
+    12: { zone: 2, x: 3,    z: 4, rotY: -Math.PI/2 }, // noon: school lunch
+    15: { zone: 4, x: -2,   z: 4, rotY: 0 },          // 3pm: shopping
+    17: { zone: 1, x: 0,    z: -3, rotY: 0 },         // 5pm: back home
+    19: { zone: 1, x: 0,    z: -3, rotY: 0 },         // 7pm: home
+    22: { zone: 1, x: 0,    z: -3, rotY: 0 }          // 10pm: home
+  },
+  classmate: {  // Yui (zone 2)
+    7:  { zone: 1, x: 3,    z: 4, rotY: 0 },          // morning at home
+    9:  { zone: 2, x: 4,    z: 0, rotY: -Math.PI/2 },  // school
+    12: { zone: 2, x: 0,    z: 4, rotY: 0 },          // lunch
+    15: { zone: 2, x: 4,    z: 0, rotY: -Math.PI/2 },  // back to class
+    17: { zone: 4, x: 3,    z: -3, rotY: Math.PI },    // shopping
+    19: { zone: 1, x: 3,    z: 4, rotY: 0 },          // home
+    22: { zone: 1, x: 3,    z: 4, rotY: 0 }
+  },
+  classmate2: {  // Aoi (zone 2)
+    7:  { zone: 1, x: 5,    z: 4, rotY: 0 },
+    9:  { zone: 2, x: -4,   z: 2, rotY: Math.PI/2 },
+    12: { zone: 3, x: -2,   z: 4, rotY: Math.PI },   // lunch at station
+    15: { zone: 2, x: -4,   z: 2, rotY: Math.PI/2 },
+    17: { zone: 5, x: 0,    z: 4, rotY: 0 },          // shrine visit
+    19: { zone: 1, x: 5,    z: 4, rotY: 0 },
+    22: { zone: 1, x: 5,    z: 4, rotY: 0 }
+  },
+  attendant: {  // Conductor (zone 3)
+    6:  { zone: 3, x: 0,    z: 2, rotY: 0 },
+    12: { zone: 3, x: 0,    z: 2, rotY: 0 },
+    18: { zone: 3, x: 0,    z: 2, rotY: 0 },
+    22: { zone: 3, x: 0,    z: 2, rotY: 0 }   // always at station
+  },
+  shopkeeper: {  // Shopkeeper (zone 4)
+    9:  { zone: 4, x: -3,   z: 4, rotY: Math.PI/4 },
+    12: { zone: 4, x: -3,   z: 4, rotY: Math.PI/4 },
+    15: { zone: 4, x: -3,   z: 4, rotY: Math.PI/4 },
+    19: { zone: 4, x: -3,   z: 4, rotY: Math.PI/4 },
+    21: { zone: 1, x: -3,   z: -5, rotY: 0 }   // goes home after closing
+  },
+  miko: {  // Miko (zone 5)
+    6:  { zone: 5, x: 0,    z: 2, rotY: 0 },
+    12: { zone: 5, x: 0,    z: 2, rotY: 0 },
+    18: { zone: 5, x: 0,    z: 2, rotY: 0 },
+    21: { zone: 1, x: 4,    z: 5, rotY: 0 }   // miko goes home at night
+  }
+};
+
+function getNPCLocationForHour(npcType, hour) {
+  const schedule = NPC_SCHEDULES[npcType];
+  if (!schedule) return null;
+  // Find the latest hour ≤ given hour
+  const hours = Object.keys(schedule).map(Number).sort((a, b) => a - b);
+  let result = schedule[hours[0]];
+  for (const h of hours) {
+    if (h <= hour) result = schedule[h];
+    else break;
+  }
+  return result;
+}
+
+function updateNPCSchedules(hour) {
+  if (typeof scene === 'undefined' || !scene) return;
+  const defs = NPC_DEFS;
+  const allNpcTypes = new Set();
+  // Collect all NPC types from all zones
+  for (const z in defs) {
+    for (const def of defs[z]) allNpcTypes.add(def.type);
+  }
+  // Update each NPC's location
+  for (const npcType of allNpcTypes) {
+    const loc = getNPCLocationForHour(npcType, hour);
+    if (!loc) continue;
+    const old = npcLocations[npcType];
+    if (!old || old.zone !== loc.zone || old.x !== loc.x || old.z !== loc.z) {
+      npcLocations[npcType] = { zone: loc.zone, x: loc.x, z: loc.z, rotY: loc.rotY || 0 };
+    }
+  }
+  // If player is currently in a zone, refresh NPCs there
+  if (state && state.currentZone && typeof placeNPCs === 'function') {
+    placeNPCs(state.currentZone);
+  }
+}
+// Initialize NPC locations on boot
+function initNPCLocations() {
+  const initHour = 8; // Start at 8am
+  for (const npcType in NPC_SCHEDULES) {
+    const loc = getNPCLocationForHour(npcType, initHour);
+    if (loc) {
+      npcLocations[npcType] = { zone: loc.zone, x: loc.x, z: loc.z, rotY: loc.rotY || 0 };
+    }
+  }
+}
+
 // ========== PHASE 9: SAKURA PETALS ==========
 let sakuraGroup = null;
 let sakuraPetals = [];
@@ -1657,6 +1771,11 @@ function updateTimeUI() {
   document.body.classList.add(`time-${tod}`);
   // Update sun position + lighting
   updateSunForTime(h, m);
+  // Phase 16: Update NPC schedules on hour change
+  if (typeof updateNPCSchedules === 'function' && (h !== lastScheduleHour)) {
+    lastScheduleHour = h;
+    updateNPCSchedules(h);
+  }
 }
 
 function updateSunForTime(hour, minute) {
@@ -2256,12 +2375,21 @@ function placeNPCs(zoneNum) {
   });
   // Clear in place (don't reassign — window.currentZoneNPCs reference must stay valid)
   currentZoneNPCs.length = 0;
-  const defs = NPC_DEFS[zoneNum] || [];
-  defs.forEach((def) => {
-    const model = buildNPC(def.type, def.x, def.z, def.rotY);
+  // Phase 16: Show only NPCs whose scheduled location is in this zone
+  const allNpcs = {};
+  for (const z in NPC_DEFS) {
+    for (const def of NPC_DEFS[z]) {
+      if (!allNpcs[def.type]) allNpcs[def.type] = def;
+    }
+  }
+  for (const npcType in allNpcs) {
+    const loc = npcLocations[npcType];
+    if (!loc || loc.zone !== zoneNum) continue;
+    const def = allNpcs[npcType];
+    const model = buildNPC(def.type, loc.x, loc.z, loc.rotY);
     scene.add(model);
     currentZoneNPCs.push({ model, def, firstVisit: true });
-  });
+  }
 }
 
 function updateNPCs() {
@@ -2844,6 +2972,16 @@ setTimeout(() => {
   if (typeof checkAchievements === 'function') checkAchievements();
 }, 1500);
 
+// Phase 16: Initialize NPC schedules at 8am
+setTimeout(() => {
+  if (typeof initNPCLocations === 'function') {
+    initNPCLocations();
+    if (state && state.currentZone && typeof placeNPCs === 'function') {
+      placeNPCs(state.currentZone);
+    }
+  }
+}, 1800);
+
 // Expose for debugging/testing (after all functions defined)
 window.lights = lights;
 window.state = state;
@@ -2899,6 +3037,13 @@ window.updateBicycleProximity = updateBicycleProximity;
 window.nearestBicycle = nearestBicycle;
 window.buildStationTrain = buildStationTrain;
 window.stationTrain = stationTrain;
+// Phase 16
+window.NPC_SCHEDULES = NPC_SCHEDULES;
+Object.defineProperty(window, 'npcLocations', { get: () => npcLocations });
+window.updateNPCSchedules = updateNPCSchedules;
+window.initNPCLocations = initNPCLocations;
+window.getNPCLocationForHour = getNPCLocationForHour;
+Object.defineProperty(window, 'lastScheduleHour', { get: () => lastScheduleHour });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
 Object.defineProperty(window, 'trainState', { get: () => trainState });
 // Phase 9
