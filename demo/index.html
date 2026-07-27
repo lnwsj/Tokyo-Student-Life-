@@ -878,6 +878,11 @@ function initAudio() {
     ambientGain = audioCtx.createGain();
     ambientGain.gain.value = 0.5;
     ambientGain.connect(masterGain);
+    // Phase 26: Start BGM on first user interaction
+    if (!bgmState.isPlaying && !soundMuted) {
+      bgmState.currentTime = getBGMTimePreset();
+      startBGM();
+    }
   } catch (e) {
     console.warn('Web Audio not supported', e);
   }
@@ -901,6 +906,103 @@ function playTone(freq, dur, type = 'sine', vol = 0.2) {
 // Play a chord (multiple freqs at once)
 function playChord(freqs, dur, type = 'sine', vol = 0.1) {
   freqs.forEach(f => playTone(f, dur, type, vol));
+}
+
+// ========== PHASE 26: BGM SYSTEM ==========
+let bgmState = {
+  enabled: false,
+  currentTime: null,    // 'morning' | 'noon' | 'sunset' | 'night'
+  currentZone: null,    // 1-5
+  scheduled: [],
+  isPlaying: false
+};
+
+// C major pentatonic + ambient pads
+const BGM_PRESETS = {
+  morning: {  // เช้า - นุ่มนวล สดใส
+    baseFreqs: [261.63, 329.63, 392.00, 523.25],  // C E G C
+    chordDur: 8,
+    waveType: 'sine',
+    interval: 4000
+  },
+  noon: {  // เที่ยง - สดใส มีชีวิตชีวา
+    baseFreqs: [293.66, 369.99, 440.00, 587.33],  // D F# A D
+    chordDur: 6,
+    waveType: 'triangle',
+    interval: 3500
+  },
+  sunset: {  // เย็น - อบอุ่น นุ่มนวล
+    baseFreqs: [220.00, 277.18, 329.63, 440.00],  // A C# E A
+    chordDur: 10,
+    waveType: 'sine',
+    interval: 5000
+  },
+  night: {  // กลางคืน - เงียบสงัด ลึกลับ
+    baseFreqs: [130.81, 196.00, 261.63, 329.63],  // C G C E (low)
+    chordDur: 12,
+    waveType: 'sine',
+    interval: 6000
+  }
+};
+
+function getBGMTimePreset() {
+  if (!state || !state.gameTime) return 'noon';
+  const h = state.gameTime.hour;
+  if (h >= 6 && h < 11) return 'morning';
+  if (h >= 11 && h < 15) return 'noon';
+  if (h >= 15 && h < 19) return 'sunset';
+  return 'night';
+}
+
+function startBGM() {
+  if (bgmState.isPlaying) return;
+  if (!audioCtx) return;
+  if (soundMuted) return;
+  bgmState.isPlaying = true;
+  bgmState.enabled = true;
+  scheduleNextBGMNote();
+}
+
+function stopBGM() {
+  bgmState.isPlaying = false;
+  bgmState.enabled = false;
+  // Clear all scheduled notes
+  bgmState.scheduled.forEach(id => clearTimeout(id));
+  bgmState.scheduled = [];
+}
+
+function scheduleNextBGMNote() {
+  if (!bgmState.isPlaying) return;
+  if (soundMuted) {
+    stopBGM();
+    return;
+  }
+  const preset = BGM_PRESETS[bgmState.currentTime || 'noon'];
+  if (!preset) return;
+  // Play a chord (one of the base freqs, picked by random + variation)
+  const baseIdx = Math.floor(Math.random() * preset.baseFreqs.length);
+  const baseFreq = preset.baseFreqs[baseIdx];
+  // Play arpeggio (3 notes over chordDur)
+  const arpeggio = [baseFreq, baseFreq * 1.25, baseFreq * 1.5];  // root, M3, P5
+  for (let i = 0; i < arpeggio.length; i++) {
+    setTimeout(() => {
+      if (bgmState.isPlaying && !soundMuted) {
+        playTone(arpeggio[i], preset.chordDur / 3, preset.waveType, 0.05);
+      }
+    }, i * (preset.chordDur * 250));  // stagger
+  }
+  // Schedule next chord
+  const id = setTimeout(scheduleNextBGMNote, preset.interval);
+  bgmState.scheduled.push(id);
+}
+
+function updateBGMForTime() {
+  if (!bgmState.isPlaying) return;
+  const newTime = getBGMTimePreset();
+  if (newTime !== bgmState.currentTime) {
+    bgmState.currentTime = newTime;
+    // BGM will pick up new preset on next chord
+  }
 }
 
 // Play filtered noise (for wind, crowd, etc.)
@@ -2533,6 +2635,7 @@ function updateStationTrain(dt) {
 let lastScheduleHour = -1;
 let lastPhoneMessageHour = -1;
 let lastPhoneMessageDay = 0;
+let lastBGMHour = -1;
 let npcLocations = {}; // npcType → { zone, x, z, rotY }
 
 // Schedule: hour → location for each NPC type
@@ -2929,6 +3032,11 @@ function updateTimeUI() {
   if (typeof updateNPCSchedules === 'function' && (h !== lastScheduleHour)) {
     lastScheduleHour = h;
     updateNPCSchedules(h);
+  }
+  // Phase 26: Update BGM time preset on hour change
+  if (typeof updateBGMForTime === 'function' && (h !== lastBGMHour)) {
+    lastBGMHour = h;
+    updateBGMForTime();
   }
   // Phase 17: Check phone messages on hour change
   if (typeof checkPhoneMessages === 'function' && (h !== lastPhoneMessageHour || state.day !== lastPhoneMessageDay)) {
@@ -4381,6 +4489,13 @@ window.nextTutorialStep = nextTutorialStep;
 window.skipTutorial = skipTutorial;
 window.finishTutorial = finishTutorial;
 window.TUTORIAL_STEPS = TUTORIAL_STEPS;
+// Phase 26
+Object.defineProperty(window, 'bgmState', { get: () => bgmState });
+window.startBGM = startBGM;
+window.stopBGM = stopBGM;
+window.updateBGMForTime = updateBGMForTime;
+window.getBGMTimePreset = getBGMTimePreset;
+window.BGM_PRESETS = BGM_PRESETS;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
