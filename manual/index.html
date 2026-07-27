@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📖 Tokyo Student Life — คู่มือการใช้งาน / User Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAF6EE;
+    --bg-warm: #F5EBD8;
+    --bg-card: #FFFDF8;
+    --primary: #2D4A6B;
+    --primary-light: #4A6B8A;
+    --accent: #E08E45;
+    --accent2: #C84B5A;
+    --accent3: #6B9080;
+    --text: #2A2A2A;
+    --text-soft: #5C5C5C;
+    --border: #E0D5C0;
+    --shadow: 0 4px 20px rgba(45, 74, 107, 0.08);
+    --shadow-lg: 0 8px 40px rgba(45, 74, 107, 0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+  /* === HERO === */
+  .hero {
+    background: linear-gradient(135deg, #2D4A6B 0%, #1a3a52 50%, #2D4A6B 100%);
+    color: white;
+    padding: 4rem 2rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 30%, rgba(255, 200, 100, 0.15), transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 100, 100, 0.1), transparent 50%);
+    pointer-events: none;
+  }
+  .hero-content { position: relative; max-width: 900px; margin: 0 auto; }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    line-height: 1.1;
+  }
+  .hero-sub {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+  }
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.4rem;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: none;
+    cursor: pointer;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 4px 12px rgba(224, 142, 69, 0.4);
+  }
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(8px);
+  }
+  .btn-github {
+    background: #1a1a1a;
+    color: white;
+  }
+  /* === TABS === */
+  .tab-bar {
+    background: var(--bg-warm);
+    border-bottom: 2px solid var(--border);
+    padding: 0.5rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  .tab-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0.3rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .tab {
+    padding: 0.7rem 1.1rem;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-soft);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .tab:hover { background: rgba(45, 74, 107, 0.08); color: var(--primary); }
+  .tab.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(45, 74, 107, 0.3);
+  }
+  /* === CONTAINER === */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  /* === CARDS === */
+  .card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-family: 'Fraunces', serif;
+    color: var(--primary);
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card h3 {
+    font-family: 'Fraunces', serif;
+    color: var(--primary);
+    font-size: 1.2rem;
+    margin: 1.5rem 0 0.5rem;
+  }
+  .card p { margin-bottom: 0.8rem; }
+  .card .lead { font-size: 1.05rem; color: var(--text-soft); }
+  /* === SHOT GRID === */
+  .shot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .shot {
+    background: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .shot:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .shot img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-bottom: 1px solid var(--border);
+  }
+  .shot-caption {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-soft);
+  }
+  .shot-caption strong { color: var(--primary); }
+  .shot-caption .en { font-size: 0.85rem; opacity: 0.85; }
+  /* === INFO BOX === */
+  .info-box {
+    background: linear-gradient(135deg, rgba(107, 144, 128, 0.1), rgba(107, 144, 128, 0.05));
+    border-left: 4px solid var(--accent3);
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+  }
+  .tip-box {
+    background: linear-gradient(135deg, rgba(45, 74, 107, 0.08), rgba(45, 74, 107, 0.04));
+    border-left: 4px solid var(--primary);
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+  }
+  .warning-box {
+    background: linear-gradient(135deg, rgba(224, 142, 69, 0.1), rgba(224, 142, 69, 0.05));
+    border-left: 4px solid var(--accent);
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+  }
+  /* === KEYBOARD === */
+  .key-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+  .key-table th, .key-table td {
+    padding: 0.6rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .key-table th { background: var(--bg-warm); color: var(--primary); font-weight: 600; }
+  .key {
+    display: inline-block;
+    background: var(--bg-warm);
+    color: var(--primary);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 0 var(--border);
+  }
+  /* === ACHIEVEMENT GRID === */
+  .ach-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.7rem;
+    margin: 1rem 0;
+  }
+  .ach {
+    background: var(--bg-warm);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .ach-icon { font-size: 1.4rem; }
+  .ach-info { flex: 1; min-width: 0; }
+  .ach-name { font-weight: 600; font-size: 0.85rem; color: var(--primary); }
+  .ach-desc { font-size: 0.75rem; color: var(--text-soft); }
+  /* === ZONE LIST === */
+  .zone-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  .zone {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .zone-icon { font-size: 2rem; }
+  .zone-name {
+    font-family: 'Fraunces', serif;
+    color: var(--primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0.3rem 0;
+  }
+  .zone-jp { color: var(--accent); font-size: 0.85rem; font-weight: 500; }
+  .zone-desc { font-size: 0.85rem; color: var(--text-soft); margin-top: 0.4rem; }
+  /* === OUTFIT GRID === */
+  .outfit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+  }
+  .outfit {
+    background: var(--bg-warm);
+    border-radius: 10px;
+    padding: 1rem 0.7rem;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .outfit-icon { font-size: 2rem; }
+  .outfit-name { font-weight: 600; color: var(--primary); margin-top: 0.4rem; font-size: 0.9rem; }
+  .outfit-jp { font-size: 0.8rem; color: var(--text-soft); }
+  /* === FOOTER === */
+  footer {
+    background: var(--primary);
+    color: rgba(255, 255, 255, 0.85);
+    padding: 2rem 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  /* === UTILS === */
+  .pill {
+    display: inline-block;
+    background: var(--bg-warm);
+    color: var(--primary);
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-right: 0.3rem;
+  }
+  .pill.green { background: #E6F4E6; color: #2D6B3A; }
+  .pill.orange { background: #FFE9D4; color: #C46A1F; }
+  .pill.blue { background: #D4E4F0; color: var(--primary); }
+  /* Mobile */
+  @media (max-width: 768px) {
+    .tab { padding: 0.5rem 0.8rem; font-size: 0.82rem; }
+    .container { padding: 1rem; }
+    .shot-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">📖 USER MANUAL · คู่มือฉบับเต็ม</div>
+    <h1>🎮 Tokyo Student Life</h1>
+    <p class="hero-sub">東京学生生活 · คู่มือการเล่นเกมชีวิตนักเรียนญี่ปุ่น 3D</p>
+    <p class="hero-sub" style="font-size:0.95rem;opacity:0.7">A cozy slice-of-life walking sim · 5 zones · 19 phases · Bilingual TH+EN</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="https://otz231bk31f19.space.minimax.io" target="_blank">🎮 เปิดเกม / Play Now</a>
+      <a class="btn btn-secondary" href="#section-start">📖 เริ่มอ่าน / Start Reading</a>
+      <a class="btn btn-github" href="https://github.com/lnwsj/Tokyo-Student-Life-" target="_blank">💻 GitHub</a>
+    </div>
+  </div>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <div class="tab-inner">
+    <button class="tab active" data-tab="start">🚀 เริ่มต้น / Start</button>
+    <button class="tab" data-tab="zones">🗺️ 5 โซน / Zones</button>
+    <button class="tab" data-tab="time">⏰ กลางวัน-กลางคืน / Day-Night</button>
+    <button class="tab" data-tab="npcs">👥 NPCs & บทสนทนา / Dialogue</button>
+    <button class="tab" data-tab="interior">🏠 ภายในบ้าน / Home Interior</button>
+    <button class="tab" data-tab="features">✨ ฟีเจอร์ / Features</button>
+    <button class="tab" data-tab="achievements">🏆 ความสำเร็จ / Achievements</button>
+    <button class="tab" data-tab="shortcuts">⌨️ คีย์ลัด / Shortcuts</button>
+    <button class="tab" data-tab="faq">❓ FAQ</button>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- SECTION: START -->
+<div id="section-start" class="section active">
+  <div class="card">
+    <h2>🚀 ยินดีต้อนรับสู่โตเกียว! / Welcome to Tokyo!</h2>
+    <p class="lead">เกมจำลองชีวิตนักเรียนหญิงญี่ปุ่น เดินสำรวจ 5 โซน คุยกับ NPC เปลี่ยนชุด ขี่จักรยาน เข้าบ้านนอน ปลดล็อค achievement</p>
+    <p class="lead">A cozy slice-of-life walking sim. Explore 5 zones, talk to NPCs, change outfits, ride a bike, go home to sleep, unlock achievements.</p>
+
+    <h3>🎯 เป้าหมาย / Goal</h3>
+    <p>• ทำภารกิจประจำวันให้ครบ 5 อย่าง → จบ 1 วัน → ได้ achievement<br>
+    • คุยกับ NPC ให้ครบทุกคน / Talk to every NPC<br>
+    • ปลดล็อค 12 achievements + สำรวจทุกโซน</p>
+
+    <div class="tip-box">
+      <strong>💡 เริ่มเกม:</strong> โหลดเสร็จ → ผู้เล่นอยู่ที่ <span class="pill orange">🏠 Home</span> เวลา 07:00 เช้า → กดปุ่ม 1-5 หรือคลิกโซนด้านล่างขวาเพื่อเดินทาง<br>
+      <strong>💡 Quick start:</strong> Game loads at <span class="pill orange">🏠 Home</span> at 07:00. Press 1-5 or click zone buttons (bottom right).
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🖥️ HUD ที่ต้องรู้ / HUD Explained</h2>
+    <div class="shot-grid">
+      <div class="shot">
+        <img src="shots/01-home-morning.png" alt="HUD overview">
+        <div class="shot-caption"><strong>หน้าจอหลัก</strong><br>
+          <span class="en">Top-left: HP, Stamina, Yen. Top-center: เวลา + ความเร็ว. Top-right: Schedule panel. Bottom-right: zone buttons. Bottom-left: achievements.</span>
+        </div>
+      </div>
+      <div class="shot">
+        <img src="shots/33-time-controls.png" alt="Time controls">
+        <div class="shot-caption"><strong>⏸ 1x 2x 4x ควบคุมเวลา</strong><br>
+          <span class="en">Pause + 3 speed levels. 1 game minute per 1 real second at 1x.</span>
+        </div>
+      </div>
+      <div class="shot">
+        <img src="shots/34-toolbar-buttons.png" alt="Toolbar">
+        <div class="shot-caption"><strong>แถบเครื่องมือ</strong><br>
+          <span class="en">🔊 mute · 💾 save · 📂 load · 🔄 new game · 👗 wardrobe · 📱 phone</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🎮 การควบคุม / Controls</h2>
+    <table class="key-table">
+      <thead><tr><th>ปุ่ม / Key</th><th>การทำงาน / Action</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span> หรือ <span class="key">↑</span> <span class="key">←</span> <span class="key">↓</span> <span class="key">→</span></td><td>เดิน / Walk</td></tr>
+        <tr><td><span class="key">Shift</span></td><td>วิ่ง / Run (เร็วขึ้น)</td></tr>
+        <tr><td><span class="key">Space</span></td><td>กระโดด / Jump</td></tr>
+        <tr><td><span class="key">E</span></td><td>คุย / ซื้อของ / ขึ้นรถ / เข้าบ้าน</td></tr>
+        <tr><td><span class="key">1</span> - <span class="key">5</span></td><td>สลับโซน / Switch zone</td></tr>
+        <tr><td><span class="key">W</span></td><td>เปิดตู้เสื้อผ้า / Wardrobe</td></tr>
+        <tr><td><span class="key">P</span></td><td>เปิดโทรศัพท์ / Phone</td></tr>
+        <tr><td><span class="key">M</span></td><td>ปิดเสียง / Mute</td></tr>
+        <tr><td><span class="key">S</span></td><td>บันทึกเกม / Save</td></tr>
+        <tr><td><span class="key">L</span></td><td>โหลดเกม / Load</td></tr>
+        <tr><td><span class="key">N</span></td><td>ข้ามไปวันถัดไป / Next day</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SECTION: ZONES -->
+<div id="section-zones" class="section">
+  <div class="card">
+    <h2>🗺️ 5 โซนในเกม / 5 Zones</h2>
+    <p class="lead">เกมมี 5 โซนให้สำรวจ แต่ละโซนมีบรรยากาศและ NPC ต่างกัน</p>
+    <p class="lead">Five unique zones, each with its own atmosphere, NPCs, and activities.</p>
+
+    <div class="zone-list">
+      <div class="zone">
+        <div class="zone-icon">🏠</div>
+        <div class="zone-name">Home</div>
+        <div class="zone-jp">ホーム · บ้าน</div>
+        <div class="zone-desc">อพาร์ตเมนต์เริ่มต้น มีจักรยาน 2 คัน เข้าไปข้างในได้<br>Starting apartment, 2 bicycles, enter the home interior</div>
+      </div>
+      <div class="zone">
+        <div class="zone-icon">🏫</div>
+        <div class="zone-name">School</div>
+        <div class="zone-jp">学校 · โรงเรียน</div>
+        <div class="zone-desc">โรงเรียนมัธยม ต้นซากุระ ม้านั่ง<br>High school with sakura trees + benches</div>
+      </div>
+      <div class="zone">
+        <div class="zone-icon">🚉</div>
+        <div class="zone-name">Station</div>
+        <div class="zone-jp">駅 · สถานี</div>
+        <div class="zone-desc">สถานีรถไฟ JR มีตู้ขายน้ำ + รถไฟเคลื่อนที่<br>JR station with vending machines + moving train</div>
+      </div>
+      <div class="zone">
+        <div class="zone-icon">🛍️</div>
+        <div class="zone-name">Shopping</div>
+        <div class="zone-jp">商店街 · ย่านช้อปปิ้ง</div>
+        <div class="zone-desc">ตลาดกลางคืน + LittlestTokyo GLB 3D<br>Shopping street with real 3D LittlestTokyo model</div>
+      </div>
+      <div class="zone">
+        <div class="zone-icon">⛩️</div>
+        <div class="zone-name">Shrine</div>
+        <div class="zone-jp">神社 · ศาลเจ้า</div>
+        <div class="zone-desc">ศาลเจ้าโบราณ มีโทริอิ ต้นไม้<br>Ancient shrine with torii gates + trees</div>
+      </div>
+    </div>
+
+    <h3>📸 ทุกโซน / All Zones</h3>
+    <div class="shot-grid">
+      <div class="shot">
+        <img src="shots/03-zone1-home.png" alt="Home zone">
+        <div class="shot-caption"><strong>🏠 Home · บ้าน</strong><br><span class="en">อพาร์ตเมนต์ 2 หลัง · 2 bicycles parked</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/04-zone2-school.png" alt="School zone">
+        <div class="shot-caption"><strong>🏫 School · โรงเรียน</strong><br><span class="en">ตึกโรงเรียน · ต้นซากุระ · ม้านั่ง</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/05-zone3-station.png" alt="Station zone">
+        <div class="shot-caption"><strong>🚉 Station · สถานี</strong><br><span class="en">JR Yamanote station with moving train</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/06-zone4-shop.png" alt="Shopping zone">
+        <div class="shot-caption"><strong>🛍️ Shopping · ย่านช้อปปิ้ง</strong><br><span class="en">LittlestTokyo GLB model as 3D backdrop</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/07-zone5-shrine.png" alt="Shrine zone">
+        <div class="shot-caption"><strong>⛩️ Shrine · ศาลเจ้า</strong><br><span class="en">Ancient torii gate + miko</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: TIME -->
+<div id="section-time" class="section">
+  <div class="card">
+    <h2>⏰ ระบบกลางวัน-กลางคืน / Day/Night Cycle</h2>
+    <p class="lead">เกมมีวงจร 24 ชั่วโมง · แสง เสียง และ NPC เปลี่ยนตามเวลา</p>
+    <p class="lead">24-hour cycle · Lighting, sounds, and NPC locations all change with time.</p>
+
+    <div class="info-box">
+      <strong>🌅 5 ช่วงเวลา / 5 Time Periods:</strong><br>
+      • เช้า (Morning) 06:00-10:00 — แสงทองอ่อน ๆ<br>
+      • เที่ยง (Noon) 11:00-14:00 — แสงแดดจัด<br>
+      • บ่าย (Afternoon) 15:00-16:59<br>
+      • เย็น (Sunset) 17:00-18:59 — ส้มอุ่น<br>
+      • กลางคืน (Night) 19:00-05:59 — น้ำเงินเข้ม
+    </div>
+
+    <div class="shot-grid">
+      <div class="shot">
+        <img src="shots/08-morning-7am.png" alt="Morning">
+        <div class="shot-caption"><strong>☀️ เช้า / Morning · 07:00</strong><br><span class="en">Soft golden light, peaceful atmosphere</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/09-noon-12pm.png" alt="Noon">
+        <div class="shot-caption"><strong>🌞 เที่ยง / Noon · 12:00</strong><br><span class="en">Bright daylight, strong shadows</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/10-sunset-18pm.png" alt="Sunset">
+        <div class="shot-caption"><strong>🌅 เย็น / Sunset · 18:00</strong><br><span class="en">Warm orange glow, beautiful shadows</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/11-night-22pm.png" alt="Night">
+        <div class="shot-caption"><strong>🌙 กลางคืน / Night · 22:00</strong><br><span class="en">Dark blue, stars, lamps light up</span></div>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <strong>⏩ เร่งเวลา:</strong> กด <span class="key">2x</span> หรือ <span class="key">4x</span> เพื่อให้เวลาเดินเร็วขึ้น (มีประโยชน์ตอนรอเหตุการณ์)<br>
+      <strong>⏩ Speed up:</strong> Click <span class="key">2x</span>/<span class="key">4x</span> for fast-forward (useful when waiting for events).
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: NPCS -->
+<div id="section-npcs" class="section">
+  <div class="card">
+    <h2>👥 NPC 5 ตัว & ตารางเวลา / 5 NPCs & Schedules</h2>
+    <p class="lead">NPC แต่ละตัวมีตารางเวลาเป็นของตัวเอง — เดินไปหาตามเวลาที่เหมาะสม</p>
+    <p class="lead">Each NPC has their own daily schedule — find them at the right time and place.</p>
+
+    <h3>📅 ตารางเวลา / NPC Schedule</h3>
+    <table class="key-table">
+      <thead><tr><th>NPC</th><th>7am</th><th>9am</th><th>12pm</th><th>3pm</th><th>5pm+</th></tr></thead>
+      <tbody>
+        <tr><td><strong>🎀 Senpai</strong></td><td>🏠 Home</td><td>🏫 School</td><td>🍱 Lunch</td><td>🛍️ Shop</td><td>🏠 Home</td></tr>
+        <tr><td><strong>🌸 Yui</strong></td><td>🏠 Home</td><td>🏫 School</td><td>🍱 Lunch</td><td>🏫 Class</td><td>🛍️ Shop → 🏠</td></tr>
+        <tr><td><strong>🎀 Aoi</strong></td><td>🏠 Home</td><td>🏫 School</td><td>🚉 Station</td><td>🏫 Class</td><td>⛩️ Shrine → 🏠</td></tr>
+        <tr><td><strong>👔 Conductor</strong></td><td colspan="5">🚉 ที่สถานีตลอด / Always at station</td></tr>
+        <tr><td><strong>🛍️ Shopkeeper</strong></td><td colspan="3">🛍️ ที่ร้าน / At shop (9am-7pm)</td><td colspan="2">🏠 Home (9pm)</td></tr>
+        <tr><td><strong>⛩️ Miko</strong></td><td colspan="3">⛩️ ที่ศาลเจ้า / At shrine (6am-9pm)</td><td colspan="2">🏠 Home (9pm)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>💬 บทสนทนาตัวอย่าง / Sample Dialogues</h3>
+    <div class="shot-grid">
+      <div class="shot">
+        <img src="shots/12-npc-yui-dialogue.png" alt="Yui dialogue">
+        <div class="shot-caption"><strong>🌸 Yui (เพื่อนร่วมชั้น)</strong><br><span class="en">"เจอกันที่โรงเรียนนะ! / See you at school!"</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/13-npc-senpai-dialogue.png" alt="Senpai dialogue">
+        <div class="shot-caption"><strong>🎀 Senpai (รุ่นพี่)</strong><br><span class="en">"อรุณสวัสดิ์! วันนี้เป็นไงบ้าง / Good morning!"</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/14-npc-attendant-dialogue.png" alt="Attendant dialogue">
+        <div class="shot-caption"><strong>👔 Conductor (เจ้าหน้าที่)</strong><br><span class="en">Bilingual info about train schedule</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/15-npc-shopkeeper-dialogue.png" alt="Shopkeeper">
+        <div class="shot-caption"><strong>🛍️ Shopkeeper (เจ้าของร้าน)</strong><br><span class="en">Sells 4 drinks at vending machine</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/16-npc-miko-dialogue.png" alt="Miko">
+        <div class="shot-caption"><strong>⛩️ Miko (มิโกะ)</strong><br><span class="en">Shrine blessing dialogue</span></div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>🎮 วิธีคุย:</strong> เดินเข้าไปใกล้ NPC ในระยะ 2.5 หน่วย → กด <span class="key">E</span> เพื่อเริ่มบทสนทนา<br>
+      <strong>🎮 How to talk:</strong> Walk within 2.5 units of an NPC → press <span class="key">E</span> to start dialogue.
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: INTERIOR -->
+<div id="section-interior" class="section">
+  <div class="card">
+    <h2>🏠 ภายในบ้าน / Home Interior</h2>
+    <p class="lead">กด <span class="key">E</span> ที่ประตูบ้าน (โซน 🏠 Home) เพื่อเข้าไปข้างใน</p>
+    <p class="lead">Press <span class="key">E</span> at the home door (in 🏠 Home zone) to enter the interior.</p>
+
+    <div class="info-box">
+      <strong>🛏️ เฟอร์นิเจอร์ภายใน / Interior Furniture:</strong><br>
+      • เตียงนอน (ผ้าห่มชมพู + หมอน)<br>
+      • โต๊ะทำงาน + แล็ปท็อป (จอเรืองแสง)<br>
+      • โทรทัศน์ + ตู้เย็น<br>
+      • เสื่อทาทามิ + หมอนอิง<br>
+      • หน้าต่าง (มีแสงส่องเข้าตามเวลา)<br>
+      • โคมไฟเพดาน
+    </div>
+
+    <div class="shot-grid">
+      <div class="shot">
+        <img src="shots/17-interior-morning.png" alt="Interior morning">
+        <div class="shot-caption"><strong>☀️ เช้า / Morning</strong><br><span class="en">Cream walls, soft natural light from window</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/18-interior-sunset.png" alt="Interior sunset">
+        <div class="shot-caption"><strong>🌅 เย็น / Sunset</strong><br><span class="en">Warm orange tint fills the room</span></div>
+      </div>
+      <div class="shot">
+        <img src="shots/19-interior-night.png" alt="Interior night">
+        <div class="shot-caption"><strong>🌙 กลางคืน / Night</strong><br><span class="en">Dark blue + lamp dominant + Night Owl achievement!</span></div>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <strong>🚪 ทางออก:</strong> เดินไปที่ประตูสีเขียวเรืองแสง → กด <span class="key">E</span> เพื่อออก<br>
+      <strong>🚪 Exit:</strong> Walk to the glowing green door → press <span class="key">E</span> to leave.
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: FEATURES -->
+<div id="section-features" class="section">
+  <div class="card">
+    <h2>✨ ฟีเจอร์หลัก / Key Features</h2>
+
+    <h3>🥤 ตู้ขายน้ำ / Vending Machine (สถานี)</h3>
+    <div class="shot-grid">
+      <div class="shot">
+        <img src="shots/20-vending-machine.png" alt="Vending machine">
+        <div class="shot-caption"><strong>ตู้ขายน้ำ / Vending Machine</strong><br>
+          <span class="en">4 drinks: water ¥100 / tea ¥150 / cola ¥180 / milk ¥200</span>
+        </div>
+      </div>
+      <div class="shot">
+        <img src="shots/20b-vending-modal.png" alt="Vending modal">
+        <div class="shot-caption"><strong>Modal ซื้อของ / Buy modal</strong><br><span class="en">Stamina +20~50 per drink</span></div>
+      </div>
+    </div>
+    <div class="info-box"><strong>📍 ตำแหน่ง:</strong> สถานีรถไฟ (โซน 🚉) — เดินเข้าไปใกล้ ๆ แล้วกด E<br><strong>📍 Location:</strong> 🚉 Station — walk close + press E</div>
+
+    <h3>👗 ตู้เสื้อผ้า / Wardrobe (5 ชุด)</h3>
+    <p>กด <span class="key">W</span> หรือคลิกปุ่ม 👗 เพื่อเปลี่ยนชุด — <strong>5 ชุด</strong> ให้เลือก</p>
+    <div class="outfit-grid">
+      <div class="outfit"><div class="outfit-icon">🎀</div><div class="outfit-name">School</div><div class="outfit-jp">制服</div></div>
+      <div class="outfit"><div class="outfit-icon">👕</div><div class="outfit-name">Casual</div><div class="outfit-jp">私服</div></div>
+      <div class="outfit"><div class="outfit-icon">⛩️</div><div class="outfit-name">Miko</div><div class="outfit-jp">巫女</div></div>
+      <div class="outfit"><div class="outfit-icon">🌙</div><div class="outfit-name">Pajamas</div><div class="outfit-jp">パジャマ</div></div>
+      <div class="outfit"><div class="outfit-icon">🏃‍♀️</div><div class="outfit-name">Gym</div><div class="outfit-jp">体操服</div></div>
+    </div>
+    <div class="shot-grid">
+      <div class="shot"><img src="shots/21-wardrobe-school.png" alt="School outfit"><div class="shot-caption"><strong>🎀 School (default)</strong></div></div>
+      <div class="shot"><img src="shots/22-wardrobe-casual.png" alt="Casual outfit"><div class="shot-caption"><strong>👕 Casual</strong></div></div>
+      <div class="shot"><img src="shots/23-wardrobe-miko.png" alt="Miko outfit"><div class="shot-caption"><strong>⛩️ Miko (red hakama)</strong></div></div>
+      <div class="shot"><img src="shots/24-wardrobe-pajamas.png" alt="Pajamas outfit"><div class="shot-caption"><strong>🌙 Pajamas (pink hair)</strong></div></div>
+      <div class="shot"><img src="shots/25-wardrobe-gym.png" alt="Gym outfit"><div class="shot-caption"><strong>🏃‍♀️ Gym (green sports)</strong></div></div>
+    </div>
+
+    <h3>📱 โทรศัพท์ / Phone</h3>
+    <p>กด <span class="key">P</span> หรือคลิกปุ่ม 📱 มุมขวาล่าง — <strong>3 คนส่งข้อความ</strong> ตามช่วงเวลา</p>
+    <div class="shot-grid">
+      <div class="shot">
+        <img src="shots/26-phone-messages.png" alt="Phone messages">
+        <div class="shot-caption"><strong>📱 Phone · 6 ข้อความ</strong><br>
+          <span class="en">👩 mom · 🌸 yui · 🎀 senpai — bilingual messages</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>🚲 จักรยาน / Bicycle</h3>
+    <div class="shot-grid">
+      <div class="shot">
+        <img src="shots/28-bike-mounted.png" alt="Bicycle">
+        <div class="shot-caption"><strong>🚲 ขึ้นจักรยาน / Mounted</strong><br>
+          <span class="en">1.8x speed boost + spinning wheels + bell sound</span>
+        </div>
+      </div>
+    </div>
+    <div class="info-box"><strong>📍 ตำแหน่ง:</strong> โซน 🏠 Home (มี 2 คัน)<br>เดินเข้าไป → กด <span class="key">E</span> ขึ้น → กด <span class="key">E</span> ลง</div>
+
+    <h3>🚃 รถไฟ / Train (สถานี)</h3>
+    <div class="shot-grid">
+      <div class="shot">
+        <img src="shots/29-train-stopped.png" alt="Train">
+        <div class="shot-caption"><strong>🚃 JR Yamanote Train</strong><br>
+          <span class="en">3 cars, green + red, arrives/stops/departs cycle</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: ACHIEVEMENTS -->
+<div id="section-achievements" class="section">
+  <div class="card">
+    <h2>🏆 ความสำเร็จ / 12 Achievements</h2>
+    <p class="lead">ปลดล็อค 12 achievements โดยการเล่นตามปกติ</p>
+    <p class="lead">Unlock 12 achievements through natural gameplay.</p>
+
+    <div class="ach-grid">
+      <div class="ach"><div class="ach-icon">👟</div><div class="ach-info"><div class="ach-name">First Steps</div><div class="ach-desc">เดิน 50 เมตร / Walk 50m</div></div></div>
+      <div class="ach"><div class="ach-icon">🗺️</div><div class="ach-info"><div class="ach-name">World Wanderer</div><div class="ach-desc">สำรวจ 5 โซน / Visit 5 zones</div></div></div>
+      <div class="ach"><div class="ach-icon">📅</div><div class="ach-info"><div class="ach-name">Day Master</div><div class="ach-desc">เล่นถึงวันที่ 3 / Reach Day 3</div></div></div>
+      <div class="ach"><div class="ach-icon">🦉</div><div class="ach-info"><div class="ach-name">Night Owl</div><div class="ach-desc">อยู่หลัง 22:00 / Stay past 22:00</div></div></div>
+      <div class="ach"><div class="ach-icon">🐦</div><div class="ach-info"><div class="ach-name">Early Bird</div><div class="ach-desc">ตื่นก่อน 7:00 / Wake before 7:00</div></div></div>
+      <div class="ach"><div class="ach-icon">💬</div><div class="ach-info"><div class="ach-name">Chatterbox</div><div class="ach-desc">คุย 10 ครั้ง / 10 NPC talks</div></div></div>
+      <div class="ach"><div class="ach-icon">🛍️</div><div class="ach-info"><div class="ach-name">Shopaholic</div><div class="ach-desc">ซื้อ 3 เครื่องดื่ม / 3 drinks bought</div></div></div>
+      <div class="ach"><div class="ach-icon">🌟</div><div class="ach-info"><div class="ach-name">Completionist</div><div class="ach-desc">จบวัน 1 / Complete Day 1</div></div></div>
+      <div class="ach"><div class="ach-icon">👗</div><div class="ach-info"><div class="ach-name">Fashionista</div><div class="ach-desc">ใส่ 3 ชุด / 3 outfits</div></div></div>
+      <div class="ach"><div class="ach-icon">💃</div><div class="ach-info"><div class="ach-name">Wardrobe Master</div><div class="ach-desc">ใส่ครบ 5 ชุด / All 5 outfits</div></div></div>
+      <div class="ach"><div class="ach-icon">🚲</div><div class="ach-info"><div class="ach-name">First Ride</div><div class="ach-desc">ขึ้นจักรยานครั้งแรก / Mount bike</div></div></div>
+      <div class="ach"><div class="ach-icon">🏁</div><div class="ach-info"><div class="ach-name">Cyclist</div><div class="ach-desc">ขี่จักรยาน 200 เมตร / Ride 200m</div></div></div>
+    </div>
+
+    <div class="shot-grid">
+      <div class="shot">
+        <img src="shots/27-achievements-all.png" alt="All achievements">
+        <div class="shot-caption"><strong>ทั้งหมด 12 อันปลดล็อค / All 12 unlocked</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: SHORTCUTS -->
+<div id="section-shortcuts" class="section">
+  <div class="card">
+    <h2>⌨️ คีย์ลัดทั้งหมด / All Shortcuts</h2>
+    <table class="key-table">
+      <thead><tr><th>ปุ่ม / Key</th><th>การทำงาน / Action</th><th>หมวด / Category</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">W</span> <span class="key">A</span> <span class="key">S</span> <span class="key">D</span></td><td>เดิน / Walk</td><td>การเคลื่อนที่ / Movement</td></tr>
+        <tr><td><span class="key">Shift</span></td><td>วิ่ง / Run</td><td>การเคลื่อนที่ / Movement</td></tr>
+        <tr><td><span class="key">Space</span></td><td>กระโดด / Jump</td><td>การเคลื่อนที่ / Movement</td></tr>
+        <tr><td><span class="key">1</span> - <span class="key">5</span></td><td>สลับโซน / Switch zone</td><td>นำทาง / Navigation</td></tr>
+        <tr><td><span class="key">E</span></td><td>คุย / ซื้อ / ขึ้นรถ / เข้าบ้าน</td><td>โต้ตอบ / Interact</td></tr>
+        <tr><td><span class="key">W</span></td><td>เปิดตู้เสื้อผ้า / Wardrobe</td><td>เมนู / Menu</td></tr>
+        <tr><td><span class="key">P</span></td><td>เปิดโทรศัพท์ / Phone</td><td>เมนู / Menu</td></tr>
+        <tr><td><span class="key">M</span></td><td>ปิดเสียง / Mute</td><td>ระบบ / System</td></tr>
+        <tr><td><span class="key">S</span></td><td>บันทึก / Save</td><td>ระบบ / System</td></tr>
+        <tr><td><span class="key">L</span></td><td>โหลด / Load</td><td>ระบบ / System</td></tr>
+        <tr><td><span class="key">N</span></td><td>ข้ามวัน / Next day</td><td>ระบบ / System</td></tr>
+      </tbody>
+    </table>
+    <div class="info-box">
+      <strong>📱 Mobile:</strong> มีปุ่มสัมผัสด้านล่างซ้าย — D-pad + E + Jump + Wardrobe + Phone<br>
+      <strong>📱 Mobile:</strong> Touch buttons (bottom-left): D-pad, E, Jump, Wardrobe, Phone
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: FAQ -->
+<div id="section-faq" class="section">
+  <div class="card">
+    <h2>❓ คำถามที่พบบ่อย / FAQ</h2>
+
+    <h3>❓ เกมนี้เล่นฟรีมั้ย? / Is this free?</h3>
+    <p>✅ ใช่! เป็น open-source เกม — เล่นฟรีบนเว็บ + ดูซอร์สโค้ดบน GitHub<br>
+    Yes! Open-source, free to play, source code on GitHub.</p>
+
+    <h3>❓ ต้องติดตั้งอะไรมั้ย? / Do I need to install anything?</h3>
+    <p>❌ ไม่ต้อง — เปิดผ่านเบราว์เซอร์ (Chrome/Firefox/Safari) ได้เลย<br>
+    No — just open in a modern browser. Works on desktop + mobile.</p>
+
+    <h3>❓ บันทึกเกมได้มั้ย? / Can I save?</h3>
+    <p>✅ ได้ — กด <span class="key">S</span> หรือคลิก 💾 เกมจะ save ลง localStorage อัตโนมัติทุก 30 วินาที<br>
+    Yes — press <span class="key">S</span> or click 💾. Auto-saves every 30s to browser localStorage.</p>
+
+    <h3>❓ ทำไม NPC หายไป? / Why did the NPC disappear?</h3>
+    <p>NPC แต่ละตัวมีตารางเวลา — เปลี่ยนเวลาแล้ว NPC อาจย้ายไปโซนอื่น<br>
+    Each NPC has a schedule. Change the time and they may be in a different zone now.</p>
+
+    <h3>❓ เปลี่ยนชุดยังไง? / How to change outfit?</h3>
+    <p>กด <span class="key">W</span> หรือคลิกปุ่ม 👗 ที่มุมขวา — เลือก 1 ใน 5 ชุด<br>
+    Press <span class="key">W</span> or click 👗 button (right side) — choose from 5 outfits.</p>
+
+    <h3>❓ ซื้อของตรงไหน? / Where to buy?</h3>
+    <p>ตู้ขายน้ำที่สถานี 🚉 (4 เครื่องดื่ม) — เดินใกล้ ๆ แล้วกด <span class="key">E</span><br>
+    Vending machine at 🚉 Station — walk close + press <span class="key">E</span>.</p>
+
+    <h3>❓ เข้าบ้านยังไง? / How to enter home?</h3>
+    <p>ที่โซน 🏠 Home เดินไปที่ประตูบ้าน → กด <span class="key">E</span> เพื่อเข้าไปข้างใน<br>
+    In 🏠 Home zone, walk to the door → press <span class="key">E</span> to enter.</p>
+
+    <h3>❓ มีรถเมล์/รถไฟใต้ดินมั้ย? / Are there buses/subway?</h3>
+    <p>🚉 มีรถไฟ JR Yamanote 3 ตู้ ที่สถานี (วิ่งอัตโนมัติ) แต่ยังไม่สามารถขึ้นได้<br>
+    🚃 JR train runs automatically at station but you can't board it (yet).</p>
+
+    <h3>❓ Mobile เล่นได้มั้ย? / Mobile-friendly?</h3>
+    <p>✅ ได้ — มี touch controls (D-pad + E + Jump + Wardrobe + Phone) ด้านล่างซ้าย<br>
+    Yes — touch controls (bottom-left) for D-pad, E, Jump, Wardrobe, Phone.</p>
+
+    <h3>❓ ซอร์สโค้ดอยู่ที่ไหน? / Where's source code?</h3>
+    <p>👉 <a href="https://github.com/lnwsj/Tokyo-Student-Life-" target="_blank">github.com/lnwsj/Tokyo-Student-Life-</a> — Public repo, MIT-style license</p>
+
+    <div class="warning-box">
+      <strong>⚠️ ข้อจำกัด / Known Limits:</strong><br>
+      • เกมเป็น demo/sim ไม่มี combat/weapon/horror<br>
+      • Performance ขึ้นกับอุปกรณ์ — ถ้า FPS ต่ำ ลองปิด background tab อื่น<br>
+      • Save เก็บใน browser localStorage (ลบ history = หาย save)
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<footer>
+  <p>🎮 <strong>Tokyo Student Life · 東京学生生活</strong></p>
+  <p>Built with Three.js (vanilla) · Vanilla HTML + CSS + JS · 19 phases · 0 build step</p>
+  <p>📅 Last updated: 2026-07-27 · <a href="https://github.com/lnwsj/Tokyo-Student-Life-" target="_blank">GitHub</a> · <a href="https://otz231bk31f19.space.minimax.io" target="_blank">Play Now</a></p>
+  <p style="margin-top:1rem;opacity:0.6;font-size:0.85rem">© 2026 Mavis · Made with ❤️ for cozy gaming</p>
+</footer>
+
+<script>
+  // Tab navigation
+  const tabs = document.querySelectorAll('.tab');
+  const sections = document.querySelectorAll('.section');
+  function activate(tabName) {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+    sections.forEach(s => s.classList.toggle('active', s.id === 'section-' + tabName));
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    history.replaceState(null, '', '#section-' + tabName);
+  }
+  tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.tab)));
+  // Hash-based routing
+  const initial = (location.hash || '#section-start').replace('#section-', '');
+  activate(initial);
+  window.addEventListener('hashchange', () => {
+    const h = location.hash.replace('#section-', '');
+    activate(h);
+  });
+</script>
+
+</body>
+</html>
