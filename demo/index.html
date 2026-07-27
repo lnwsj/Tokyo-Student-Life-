@@ -70,6 +70,13 @@
   /* Phase 18: Interior mode body */
   body.interior-mode { background: #F5E6D3; }
 
+  /* Phase 22: Sleep fade overlay */
+  .sleep-overlay { position: fixed; inset: 0; background: #000; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 1.2s; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; font-family: 'Fraunces', serif; }
+  .sleep-overlay.show { opacity: 1; pointer-events: all; }
+  .sleep-text { font-size: 2rem; opacity: 0.85; }
+  .sleep-day { font-size: 3rem; margin-top: 1rem; opacity: 0.95; }
+  .sleep-sub { font-size: 1rem; margin-top: 0.5rem; opacity: 0.6; }
+
   /* Phase 17: Phone/Messages */
   .phone-fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); border: 2px solid white; transition: transform 0.2s; }
   .phone-fab:hover { transform: scale(1.08); }
@@ -272,6 +279,13 @@
   <div class="achievements-panel" id="achievementsPanel" style="display:none">
     <div class="achievements-title">🏆 ความสำเร็จ / Achievements</div>
     <div class="achievements-list" id="achievementsList"></div>
+  </div>
+
+  <!-- Phase 22: Sleep fade overlay -->
+  <div class="sleep-overlay" id="sleepOverlay">
+    <div class="sleep-text">อยู่ในความฝัน...</div>
+    <div class="sleep-day" id="sleepDayText">Day 1</div>
+    <div class="sleep-sub" id="sleepSubText">กำลังนอนหลับ...</div>
   </div>
 
   <!-- Phase 17: Phone FAB + modal -->
@@ -945,6 +959,7 @@ function saveGame() {
       catFedCount: state._catFedCount || 0,
       catFedUnique: state._catFedUnique || 0,
       catFedNames: state._fedCatNames || [],
+      wellRested: !!state._wellRested,
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -991,6 +1006,7 @@ function applySave(data) {
   if (data.catFedCount !== undefined) state._catFedCount = data.catFedCount;
   if (data.catFedUnique !== undefined) state._catFedUnique = data.catFedUnique;
   if (data.catFedNames) state._fedCatNames = [...data.catFedNames];
+  if (data.wellRested !== undefined) state._wellRested = data.wellRested;
   return true;
 }
 
@@ -1107,7 +1123,8 @@ const ACHIEVEMENT_DEFS = [
   { id: 'first_ride', icon: '🚲', name: 'ปั่นครั้งแรก / First Ride', desc: 'ขึ้นจักรยาน / Mount a bicycle', check: (s) => s.ridingBike },
   { id: 'cyclist', icon: '🏁', name: 'นักปั่น / Cyclist', desc: 'ปั่น 200 เมตร / Ride 200m', check: (s) => (s.bikeDistance || 0) >= 200 },
   { id: 'cat_friend', icon: '🐱', name: 'เพื่อนแมว / Cat Friend', desc: 'ให้อาหารแมว / Feed a cat', check: (s) => (s._catFedCount || 0) >= 1 },
-  { id: 'cat_whisperer', icon: '🐈', name: 'นิยายแมว / Cat Whisperer', desc: 'ให้อาหารแมว 3 ตัว / Feed 3 different cats', check: (s) => (s._catFedUnique || 0) >= 3 }
+  { id: 'cat_whisperer', icon: '🐈', name: 'นิยายแมว / Cat Whisperer', desc: 'ให้อาหารแมว 3 ตัว / Feed 3 different cats', check: (s) => (s._catFedUnique || 0) >= 3 },
+  { id: 'well_rested', icon: '☀️', name: 'นอนเต็มอิ่ม / Well Rested', desc: 'นอนในเตียง / Sleep in your bed', check: (s) => (s.day || 1) > 1 }
 ];
 
 function checkAchievements() {
@@ -1479,11 +1496,17 @@ function buildHomeInterior() {
   right.position.set(4, wallH/2, 0); group.add(right);
   const bedMat = new THREE.MeshStandardMaterial({ color: 0xE0B4D0, roughness: 0.8 });
   const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(2, 0.4, 1.4), new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.7 }));
-  bedFrame.position.set(-2.5, 0.2, -3); bedFrame.castShadow = true; group.add(bedFrame);
+  bedFrame.position.set(-2.5, 0.2, -3); bedFrame.castShadow = true;
+  bedFrame.userData.isBed = true;
+  group.add(bedFrame);
   const blanket = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.1, 1.3), bedMat);
-  blanket.position.set(-2.5, 0.45, -3); group.add(blanket);
+  blanket.position.set(-2.5, 0.45, -3);
+  blanket.userData.isBed = true;
+  group.add(blanket);
   const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.4), new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.9 }));
-  pillow.position.set(-3.0, 0.5, -3.3); group.add(pillow);
+  pillow.position.set(-3.0, 0.5, -3.3);
+  pillow.userData.isBed = true;
+  group.add(pillow);
   const desk = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.05, 0.8), new THREE.MeshStandardMaterial({ color: 0xA0826D, roughness: 0.7 }));
   desk.position.set(2.3, 0.75, -3); desk.castShadow = true; group.add(desk);
   const deskLeg1 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.75, 0.05), new THREE.MeshStandardMaterial({ color: 0x5C3A21 }));
@@ -1643,6 +1666,17 @@ function updateDoorProximity() {
       } else {
         interiorState.nearExit = false;
       }
+    }
+    // Phase 22: Bed prompt
+    if (isNearBed()) {
+      const prompt = document.getElementById('interact-prompt');
+      if (prompt) {
+        prompt.style.display = 'block';
+        prompt.innerHTML = '[E] นอนหลับ / Sleep (next day)';
+      }
+      interiorState.nearBed = true;
+    } else {
+      interiorState.nearBed = false;
     }
     return;
   }
@@ -1863,7 +1897,6 @@ function feedCat(cat) {
   catState.fedCount++;
   if (state) {
     state._catFedCount = (state._catFedCount || 0) + 1;
-    // Track unique cats
     if (!state._fedCatNames) state._fedCatNames = [];
     if (!state._fedCatNames.includes(cat.name)) {
       state._fedCatNames.push(cat.name);
@@ -1885,6 +1918,83 @@ function feedCat(cat) {
   cat.model.position.y += 0.2;
   setTimeout(() => { if (cat.model) cat.model.position.y = 0; }, 300);
   if (typeof checkAchievements === 'function') checkAchievements();
+}
+
+// ========== PHASE 22: SLEEP SYSTEM ==========
+let sleepState = {
+  isSleeping: false,
+  canSleep: true,  // prevents spam
+  lastSleepDay: 0
+};
+
+function sleepAtBed() {
+  if (!interiorState.active) return false;
+  if (sleepState.isSleeping) return false;
+  if (!sleepState.canSleep) return false;
+  sleepState.isSleeping = true;
+  sleepState.canSleep = false;
+  // Play yawn sound
+  if (typeof playTone === 'function') {
+    playTone(220, 0.4, 'sine', 0.1);
+    setTimeout(() => playTone(180, 0.6, 'sine', 0.08), 200);
+  }
+  // Show fade
+  const overlay = document.getElementById('sleepOverlay');
+  const subText = document.getElementById('sleepSubText');
+  if (subText) subText.textContent = 'กำลังนอนหลับ... / Sleeping...';
+  if (overlay) {
+    setTimeout(() => { overlay.classList.add('show'); }, 100);
+  }
+  // After fade in (1.5s), advance day
+  setTimeout(() => {
+    // Advance day
+    state.day = (state.day || 1) + 1;
+    state.gameTime = { hour: 7, minute: 0 };
+    state.player.x = 0; state.player.y = 0; state.player.z = -1.5;
+    state.player.rot = 0;
+    // Reset stats for new day
+    state.stamina = 100;
+    state._wellRested = true;  // buff for the day
+    // Re-initialize NPC locations
+    if (typeof initNPCLocations === 'function') initNPCLocations();
+    // Update time UI
+    if (typeof updateTimeUI === 'function') updateTimeUI();
+    if (typeof updateHUD === 'function') updateHUD();
+    // Update sleep text
+    const dayText = document.getElementById('sleepDayText');
+    if (dayText) dayText.textContent = `วันที่ ${state.day} / Day ${state.day}`;
+    if (subText) subText.textContent = '☀️ ตื่นแล้ว! / Wake up!';
+    // Achievement: well_rested
+    if (typeof showAchievementToast === 'function') {
+      setTimeout(() => {
+        showAchievementToast({
+          icon: '☀️',
+          name: `วันที่ ${state.day} / Day ${state.day}`,
+          desc: 'ตื่นเช้า! Stamina ฟื้นเต็ม + Well Rested buff'
+        });
+      }, 300);
+    }
+    if (typeof playTone === 'function') {
+      playTone(440, 0.2, 'sine', 0.12);
+      setTimeout(() => playTone(660, 0.2, 'sine', 0.1), 150);
+    }
+  }, 1500);
+  // After fade out (1.5s + 2s display), hide overlay
+  setTimeout(() => {
+    if (overlay) overlay.classList.remove('show');
+    sleepState.isSleeping = false;
+    setTimeout(() => { sleepState.canSleep = true; }, 2000);
+    if (typeof checkAchievements === 'function') checkAchievements();
+  }, 3500);
+  return true;
+}
+
+function isNearBed() {
+  if (!interiorState.active || !playerModel) return false;
+  // Bed is at z=-3, x=-2.5, player needs to be within 1.5 units
+  const dx = playerModel.position.x - (-2.5);
+  const dz = playerModel.position.z - (-3);
+  return Math.sqrt(dx*dx + dz*dz) < 1.8;
 }
 
 function updateBicycleProximity() {
@@ -3354,6 +3464,12 @@ window.addEventListener('keydown', e => {
       e.preventDefault();
       return;
     }
+    // Phase 22: Sleep
+    if (interiorState.active && interiorState.nearBed) {
+      sleepAtBed();
+      e.preventDefault();
+      return;
+    }
   }
   // Phase 21: Cat feeding
   if (e.code === 'KeyE') {
@@ -3763,6 +3879,10 @@ window.updateCats = updateCats;
 window.getNearestCat = getNearestCat;
 window.feedCat = feedCat;
 window.buildCat = buildCat;
+// Phase 22
+Object.defineProperty(window, 'sleepState', { get: () => sleepState });
+window.sleepAtBed = sleepAtBed;
+window.isNearBed = isNearBed;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
