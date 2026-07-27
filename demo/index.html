@@ -942,6 +942,9 @@ function saveGame() {
       outfitsUsed: [...(state.outfitsUsed || [])],
       bikeDistance: state.bikeDistance || 0,
       phoneMessages: (state_phone && state_phone.messages) ? [...state_phone.messages] : [],
+      catFedCount: state._catFedCount || 0,
+      catFedUnique: state._catFedUnique || 0,
+      catFedNames: state._fedCatNames || [],
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -985,6 +988,9 @@ function applySave(data) {
     state_phone.messages = [...data.phoneMessages];
     if (typeof updatePhoneUI === 'function') updatePhoneUI();
   }
+  if (data.catFedCount !== undefined) state._catFedCount = data.catFedCount;
+  if (data.catFedUnique !== undefined) state._catFedUnique = data.catFedUnique;
+  if (data.catFedNames) state._fedCatNames = [...data.catFedNames];
   return true;
 }
 
@@ -1099,7 +1105,9 @@ const ACHIEVEMENT_DEFS = [
   { id: 'fashionista', icon: '👗', name: 'แฟชั่นนิสต้า / Fashionista', desc: 'ลองสวม 3 ชุด / Try 3 outfits', check: (s) => (s.outfitsUsed?.length || 0) >= 3 },
   { id: 'wardrobe_master', icon: '💃', name: 'สาวแฟชั่น / Wardrobe Master', desc: 'ครบทุกชุด / Try all 5 outfits', check: (s) => (s.outfitsUsed?.length || 0) >= 5 },
   { id: 'first_ride', icon: '🚲', name: 'ปั่นครั้งแรก / First Ride', desc: 'ขึ้นจักรยาน / Mount a bicycle', check: (s) => s.ridingBike },
-  { id: 'cyclist', icon: '🏁', name: 'นักปั่น / Cyclist', desc: 'ปั่น 200 เมตร / Ride 200m', check: (s) => (s.bikeDistance || 0) >= 200 }
+  { id: 'cyclist', icon: '🏁', name: 'นักปั่น / Cyclist', desc: 'ปั่น 200 เมตร / Ride 200m', check: (s) => (s.bikeDistance || 0) >= 200 },
+  { id: 'cat_friend', icon: '🐱', name: 'เพื่อนแมว / Cat Friend', desc: 'ให้อาหารแมว / Feed a cat', check: (s) => (s._catFedCount || 0) >= 1 },
+  { id: 'cat_whisperer', icon: '🐈', name: 'นิยายแมว / Cat Whisperer', desc: 'ให้อาหารแมว 3 ตัว / Feed 3 different cats', check: (s) => (s._catFedUnique || 0) >= 3 }
 ];
 
 function checkAchievements() {
@@ -1659,6 +1667,224 @@ function updateDoorProximity() {
   } else {
     interiorState.nearDoor = null;
   }
+}
+
+// ========== PHASE 21: STRAY CAT SYSTEM ==========
+let cats = [];  // Array of { model, name, mood, lastMoveTime, targetX, targetZ, zone, following }
+let catState = { lastFeedTime: 0, fedCount: 0, followCount: 0 };
+
+const CAT_NAMES = ['Mochi', 'Sora', 'Yuki', 'Kuro', 'Mikan', 'Tama'];
+const CAT_COLORS = [0xFFAA66, 0xCCCCCC, 0xFFFFFF, 0x222222, 0xFFB347, 0xCC8866];
+
+function buildCat(name, x, z, rotY = 0, colorHex = 0xFFAA66) {
+  const root = new THREE.Group();
+  root.position.set(x, 0, z);
+  root.rotation.y = rotY;
+  root.name = 'cat-' + name;
+  root.userData = { isCat: true, name, animPhase: Math.random() * Math.PI * 2 };
+
+  const fur = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.85 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 });
+  const pink = new THREE.MeshStandardMaterial({ color: 0xFFB6C1, roughness: 0.7 });
+  const white = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.7 });
+
+  // Body (elongated)
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 0.3), fur);
+  body.position.y = 0.18; body.castShadow = true; root.add(body);
+
+  // Head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 8), fur);
+  head.position.set(0.32, 0.28, 0); head.castShadow = true; root.add(head);
+
+  // Ears (triangular)
+  const earL = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.12, 4), fur);
+  earL.position.set(0.32, 0.45, 0.1); root.add(earL);
+  const earR = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.12, 4), fur);
+  earR.position.set(0.32, 0.45, -0.1); root.add(earR);
+
+  // Eyes
+  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 4), dark);
+  eyeL.position.set(0.46, 0.31, 0.06); root.add(eyeL);
+  const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 4), dark);
+  eyeR.position.set(0.46, 0.31, -0.06); root.add(eyeR);
+
+  // Nose
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 4), pink);
+  nose.position.set(0.48, 0.27, 0); root.add(nose);
+
+  // Tail (curved cylinder)
+  const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.02, 0.4, 8), fur);
+  tail.position.set(-0.28, 0.32, 0); tail.rotation.z = 0.6; root.add(tail);
+  root.userData.tail = tail;
+
+  // 4 legs
+  const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.18, 6);
+  const legPositions = [[0.18, 0.09, 0.1], [0.18, 0.09, -0.1], [-0.18, 0.09, 0.1], [-0.18, 0.09, -0.1]];
+  const legs = [];
+  for (const [lx, ly, lz] of legPositions) {
+    const leg = new THREE.Mesh(legGeo, fur);
+    leg.position.set(lx, ly, lz); root.add(leg);
+    legs.push(leg);
+  }
+  root.userData.legs = legs;
+
+  return root;
+}
+
+function spawnCatsInZones() {
+  // Clear existing
+  cats.forEach(c => { if (c.model.parent) c.model.parent.remove(c.model); });
+  cats.length = 0;
+
+  // Spawn 1-2 cats per zone, deterministic but random per session
+  const zoneConfigs = {
+    1: [{x: -5, z: 3}, {x: 6, z: -4}],  // Home
+    2: [{x: 5, z: 5}, {x: -6, z: 2}],   // School
+    3: [{x: -4, z: 5}, {x: 6, z: 4}],   // Station
+    4: [{x: 4, z: 3}, {x: -4, z: -2}],  // Shop
+    5: [{x: -3, z: -3}, {x: 4, z: 1}]   // Shrine
+  };
+  let catIdx = 0;
+  for (const zone in zoneConfigs) {
+    for (const pos of zoneConfigs[zone]) {
+      const name = CAT_NAMES[catIdx % CAT_NAMES.length];
+      const color = CAT_COLORS[catIdx % CAT_COLORS.length];
+      const model = buildCat(name, pos.x, pos.z, Math.random() * Math.PI * 2, color);
+      cats.push({
+        model, name,
+        zone: parseInt(zone),
+        targetX: pos.x, targetZ: pos.z,
+        lastMoveTime: 0,
+        nextMoveIn: 3 + Math.random() * 5,
+        mood: 'wander',  // 'wander' | 'follow' | 'sleep'
+        followTimer: 0
+      });
+      catIdx++;
+    }
+  }
+  // Add cats to their zone's scene
+  for (const c of cats) {
+    if (c.zone === state.currentZone) {
+      scene.add(c.model);
+    }
+  }
+}
+
+function updateCats(dt) {
+  if (!playerModel || !state) return;
+  const time = state.gameTime.hour;
+  const isNight = time < 6 || time >= 19;
+
+  for (const c of cats) {
+    if (c.zone !== state.currentZone) continue;
+
+    const cpos = c.model.position;
+    const ppos = playerModel.position;
+    const dx = ppos.x - cpos.x;
+    const dz = ppos.z - cpos.z;
+    const distToPlayer = Math.sqrt(dx*dx + dz*dz);
+
+    // Mood logic
+    if (isNight) {
+      c.mood = 'sleep';
+    } else if (c.followTimer > 0) {
+      c.followTimer -= dt;
+      c.mood = c.followTimer > 0 ? 'follow' : 'wander';
+    } else if (distToPlayer < 3) {
+      c.mood = 'follow';
+    } else {
+      c.mood = 'wander';
+    }
+
+    // Movement
+    let moveX = 0, moveZ = 0;
+    if (c.mood === 'follow' && distToPlayer > 1.5) {
+      // Move toward player
+      moveX = (dx / distToPlayer) * 1.5;
+      moveZ = (dz / distToPlayer) * 1.5;
+    } else if (c.mood === 'wander') {
+      c.nextMoveIn -= dt;
+      if (c.nextMoveIn <= 0) {
+        c.targetX = cpos.x + (Math.random() - 0.5) * 4;
+        c.targetZ = cpos.z + (Math.random() - 0.5) * 4;
+        c.nextMoveIn = 3 + Math.random() * 5;
+      }
+      const tdx = c.targetX - cpos.x;
+      const tdz = c.targetZ - cpos.z;
+      const tdist = Math.sqrt(tdx*tdx + tdz*tdz);
+      if (tdist > 0.1) {
+        moveX = (tdx / tdist) * 0.8;
+        moveZ = (tdz / tdist) * 0.8;
+        c.model.rotation.y = Math.atan2(tdx, tdz);
+      }
+    }
+
+    c.model.position.x += moveX * dt;
+    c.model.position.z += moveZ * dt;
+    c.model.position.y = c.mood === 'sleep' ? 0.15 : 0;
+
+    // Animation (bob + leg walk)
+    c.model.userData.animPhase += dt * 4;
+    const phase = c.model.userData.animPhase;
+    if (c.mood !== 'sleep') {
+      c.model.position.y = Math.abs(Math.sin(phase * 2)) * 0.05;
+      if (c.model.userData.legs) {
+        for (let i = 0; i < c.model.userData.legs.length; i++) {
+          c.model.userData.legs[i].position.y = 0.09 + (i % 2 === 0 ? Math.sin(phase) * 0.03 : Math.cos(phase) * 0.03);
+        }
+      }
+      if (c.model.userData.tail) {
+        c.model.userData.tail.rotation.z = 0.6 + Math.sin(phase * 0.5) * 0.2;
+      }
+    } else {
+      if (c.model.userData.legs) {
+        for (const leg of c.model.userData.legs) leg.position.y = 0.09;
+      }
+    }
+  }
+}
+
+function getNearestCat() {
+  if (!playerModel) return null;
+  let nearest = null, minDist = 2.0;
+  for (const c of cats) {
+    if (c.zone !== state.currentZone) continue;
+    const dx = c.model.position.x - playerModel.position.x;
+    const dz = c.model.position.z - playerModel.position.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    if (dist < minDist) { minDist = dist; nearest = c; }
+  }
+  return nearest;
+}
+
+function feedCat(cat) {
+  if (!cat) return;
+  cat.followTimer = 60;  // Follow for 60 seconds
+  catState.fedCount++;
+  if (state) {
+    state._catFedCount = (state._catFedCount || 0) + 1;
+    // Track unique cats
+    if (!state._fedCatNames) state._fedCatNames = [];
+    if (!state._fedCatNames.includes(cat.name)) {
+      state._fedCatNames.push(cat.name);
+    }
+    state._catFedUnique = state._fedCatNames.length;
+  }
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({
+      icon: '🐱',
+      name: `ให้อาหาร ${cat.name} / Fed ${cat.name}`,
+      desc: 'เดินตาม 1 นาที / Follows you for 1 min'
+    });
+  }
+  if (typeof playTone === 'function') {
+    playTone(880, 0.1, 'sine', 0.1);
+    setTimeout(() => playTone(1100, 0.15, 'sine', 0.08), 100);
+  }
+  // Heart particle (simple visual)
+  cat.model.position.y += 0.2;
+  setTimeout(() => { if (cat.model) cat.model.position.y = 0; }, 300);
+  if (typeof checkAchievements === 'function') checkAchievements();
 }
 
 function updateBicycleProximity() {
@@ -3009,6 +3235,11 @@ async function switchZone(zone) {
     buildSimpleZone(zone);
     placeNPCs(zone);
   }
+  // Phase 21: Move cats to this zone's scene
+  for (const c of cats) {
+    if (c.model.parent) c.model.parent.remove(c.model);
+    if (c.zone === zone) scene.add(c.model);
+  }
   
   // Mark schedule as visited
   const schedEl = document.getElementById('sched-' + zone);
@@ -3120,6 +3351,15 @@ window.addEventListener('keydown', e => {
     }
     if (interiorState.nearDoor && !interiorState.active) {
       enterHome();
+      e.preventDefault();
+      return;
+    }
+  }
+  // Phase 21: Cat feeding
+  if (e.code === 'KeyE') {
+    const cat = getNearestCat && getNearestCat();
+    if (cat) {
+      feedCat(cat);
       e.preventDefault();
       return;
     }
@@ -3244,6 +3484,7 @@ function update() {
   if (typeof updateBicycleProximity === 'function') updateBicycleProximity();
   if (typeof updateDoorProximity === 'function') updateDoorProximity();
   if (typeof updateStationTrain === 'function') updateStationTrain(dt);
+  if (typeof updateCats === 'function') updateCats(dt);
   if (typeof spinBikeWheels === 'function') spinBikeWheels(dt, (state.keys && (state.keys.KeyW || state.keys.KeyA || state.keys.KeyS || state.keys.KeyD || state.keys.ArrowUp || state.keys.ArrowDown || state.keys.ArrowLeft || state.keys.ArrowRight)));
   if (typeof updateStationTrain === 'function') updateStationTrain(dt);
   if (typeof checkAchievements === 'function') checkAchievements();
@@ -3351,6 +3592,10 @@ function newGame() {
   state.ridingBike = false;
   state.currentBike = null;
   state.bikeDistance = 0;
+  // Phase 21: Reset cat state
+  state._catFedCount = 0;
+  state._catFedUnique = 0;
+  state._fedCatNames = [];
   // Phase 17: Clear phone messages
   if (typeof state_phone !== 'undefined') {
     state_phone.messages = [];
@@ -3428,6 +3673,13 @@ setTimeout(() => {
   }
 }, 1800);
 
+// Phase 21: Spawn cats
+setTimeout(() => {
+  if (typeof spawnCatsInZones === 'function') {
+    spawnCatsInZones();
+  }
+}, 2000);
+
 // Expose for debugging/testing (after all functions defined)
 window.lights = lights;
 window.state = state;
@@ -3503,6 +3755,14 @@ window.enterHome = enterHome;
 window.exitHome = exitHome;
 window.updateDoorProximity = updateDoorProximity;
 window.applyInteriorTimeOfDay = applyInteriorTimeOfDay;
+// Phase 21
+Object.defineProperty(window, 'cats', { get: () => cats });
+Object.defineProperty(window, 'catState', { get: () => catState });
+window.spawnCatsInZones = spawnCatsInZones;
+window.updateCats = updateCats;
+window.getNearestCat = getNearestCat;
+window.feedCat = feedCat;
+window.buildCat = buildCat;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
