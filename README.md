@@ -5,6 +5,7 @@
 > **Ghibli-pastel modern · Bilingual Thai + English · Three.js (vanilla)**
 
 🌐 **Live Demo (Phase 18 - latest):** [https://otz231bk31f19.space.minimax.io](https://otz231bk31f19.space.minimax.io)
+📖 **User Manual:** [https://7wx5v6yixjcta.space.minimax.io](https://7wx5v6yixjcta.space.minimax.io) — bilingual interactive guide (36 screenshots)
 🎮 **GitHub:** [lnwsj/Tokyo-Student-Life-](https://github.com/lnwsj/Tokyo-Student-Life-)
 📅 **Started:** 2026-07-12 · **Phases complete:** 0-18 (19/19)
 
