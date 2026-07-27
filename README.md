@@ -7,7 +7,7 @@
 🌐 **Live Demo (Phase 18 - latest):** [https://otz231bk31f19.space.minimax.io](https://otz231bk31f19.space.minimax.io)
 📖 **User Manual:** [https://7wx5v6yixjcta.space.minimax.io](https://7wx5v6yixjcta.space.minimax.io) — bilingual interactive guide (36 screenshots)
 🎮 **GitHub:** [lnwsj/Tokyo-Student-Life-](https://github.com/lnwsj/Tokyo-Student-Life-)
-📅 **Started:** 2026-07-12 · **Phases complete:** 0-18 (19/19)
+📅 **Started:** 2026-07-12 · **Phases complete:** 0-31 (32/32)
 
 ---
 
@@ -344,6 +344,45 @@
 **Live demo (Phase 18):** https://otz231bk31f19.space.minimax.io
 
 ---
+
+
+### 💾 NEW: Save Slots (Phase 28)
+
+- ✅ **3 save slots** — manual save/load with slot picker
+- ✅ **Slot cards** — show Day/time/zone/yen/achievements
+- ✅ **Delete slot** — confirm dialog before delete
+- ✅ **Auto-save** still uses slot 0 (30s + on unload)
+- ✅ Modal title: '💾 บันทึก / Save' or '📂 โหลด / Load'
+
+### 💌 NEW: Phone Reply (Phase 29)
+
+- ✅ **3 quick replies** per sender (mom/yui/senpai_msg)
+- ✅ **Relationship system** — each reply adds relationship value
+- ✅ **Auto-reply** from sender after you reply
+- ✅ **Bilingual replies** with emoji
+- ✅ Replied message shows reply text in green box
+- ✅ 2 achievements: social_butterfly (3 replies), best_friend (5+ relationship)
+
+### 🍳 NEW: Cooking Minigame (Phase 30)
+
+- ✅ **E at table** in home interior opens cook modal
+- ✅ **4 recipes**: onigiri (4 beats), miso soup (5), bento (6), ramen (8)
+- ✅ **Timing bar** — Space key on the beat (700ms cycle)
+- ✅ **3 results**: perfect (<5% diff), hit (<12%), miss
+- ✅ **Score system** — perfect×100 + hit×50, bonus x1.0-1.5x
+- ✅ **Stamina reward** — recipe.stamina × bonus, capped at 100/150
+- ✅ 2 achievements: home_chef, master_chef
+
+### 🌸 NEW: Seasons (Phase 31)
+
+- ✅ **4 seasons** cycle every 4 days: spring → summer → autumn → winter
+- ✅ **Tree colors** change with season
+  - Spring: pink sakura (0xFFB6C1), fresh green trees
+  - Summer: deep green trees (0x2D6B2D)
+  - Autumn: orange-red trees (0xFF6B35)
+  - Winter: icy blue-white trees (0xD4E5F0)
+- ✅ **Auto-apply** on day change (sleep)
+- ✅ Achievement: four_seasons (reach day 4)
 
 ## 📂 Project Structure
 
