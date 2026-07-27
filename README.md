@@ -4,9 +4,9 @@
 > **A cozy slice-of-life walking sim — 5 zones in modern Tokyo**
 > **Ghibli-pastel modern · Bilingual Thai + English · Three.js (vanilla)**
 
-🌐 **Live Demo:** [https://r2633qqnal4d.space.minimax.io](https://r2633qqnal4d.space.minimax.io)
+🌐 **Live Demo (Phase 18 - latest):** [https://otz231bk31f19.space.minimax.io](https://otz231bk31f19.space.minimax.io)
 🎮 **GitHub:** [lnwsj/Tokyo-Student-Life-](https://github.com/lnwsj/Tokyo-Student-Life-)
-📅 **Started:** 2026-07-12 · **Phases complete:** 0-6 (6/13)
+📅 **Started:** 2026-07-12 · **Phases complete:** 0-18 (19/19)
 
 ---
 
@@ -246,6 +246,101 @@
 | 0 JS errors | ✅ |
 
 **Live demo (Phase 15):** https://hk87oq2c8c0n.space.minimax.io
+
+### 📅 NEW: NPC Schedule System (Phase 16)
+
+- ✅ **6 NPCs with per-NPC schedule** — Each NPC has a `NPC_SCHEDULES` dict: `{ hour: { zone, x, z, rotY } }`
+- ✅ **Time-based movement** — At each hour boundary, NPCs teleport to their scheduled location
+- ✅ **Senpai (รุ่นพีซัง)** — 7am home, 9am school, 12pm lunch, 3pm shopping, 5pm+ home
+- ✅ **Yui (classmate)** — 7am home, 9am school, 12pm lunch, 3pm class, 5pm shopping, 7pm home
+- ✅ **Aoi (classmate2)** — 7am home, 9am school, 12pm station, 3pm class, 5pm shrine, 7pm home
+- ✅ **Conductor (attendant)** — Always at station
+- ✅ **Shopkeeper** — 9am-7pm at shop, 9pm at home
+- ✅ **Miko (มิโกะ)** — 6am-9pm at shrine, 9pm at home
+- ✅ **Zone filtering** — `placeNPCs(zone)` only shows NPCs whose `npcLocations[type].zone === currentZone`
+- ✅ **getNPCLocationForHour** — Finds latest hour ≤ given hour (cascading schedule)
+- ✅ **Save/load preserves schedules** — `initNPCLocations()` re-runs after auto-load
+- ✅ **lastScheduleHour tracker** — Only updates on hour change, no per-frame work
+
+#### Phase 16 Test Results
+| Test | Result |
+|------|--------|
+| Initial 6 NPCs initialized | ✅ |
+| 8am School: empty (Senpai+Yui at home) | ✅ |
+| 8am Home: senpai + classmate | ✅ |
+| 10am School: both moved to school | ✅ |
+| 17pm Home: senpai back | ✅ |
+| 17pm Shop: classmate + shopkeeper | ✅ |
+| 22pm Home: 4 NPCs (all back) | ✅ |
+| 22pm Shrine: empty (miko went home) | ✅ |
+| Save/load: NPC locations restored | ✅ |
+| 0 JS errors | ✅ |
+
+### 📱 NEW: Phone / Messages System (Phase 17)
+
+- ✅ **Phone FAB** — Floating 📱 button bottom-right, with red unread badge
+- ✅ **Phone modal** — Slide-up panel with green header + scrollable message list
+- ✅ **3 senders, 9 messages** —
+  - 👩 **mom**: 7am (breakfast), 12pm (lunch), 19pm (come home), 22pm (sleep)
+  - 🌸 **yui**: 9am (school), 12pm (bento), 15pm (go home)
+  - 🎀 **senpai**: 7am (morning), 18pm (come back)
+- ✅ **Bilingual** — Every message is Thai + English
+- ✅ **Unique avatars** — Each sender has emoji avatar (👩/🌸/🎀)
+- ✅ **Time/day stamp** — Each message shows "Day N · HH:00"
+- ✅ **Unread state** — Green left border + bold text until read
+- ✅ **Toast on new message** — Achievement-style toast with sender + preview
+- ✅ **Sound** — 2-tone chime when new message arrives
+- ✅ **P key shortcut** — Open phone (also click FAB)
+- ✅ **Save/load** — `phoneMessages` array persisted
+- ✅ **newGame reset** — Clears all messages, resets hour/day tracker
+
+#### Phase 17 Test Results
+| Test | Result |
+|------|--------|
+| 7am: mom + senpai messages | ✅ |
+| 9am: yui message | ✅ |
+| 12pm: mom + yui lunch | ✅ |
+| 22pm: 6 total messages | ✅ |
+| Phone modal opens, all visible | ✅ |
+| Save/load: 6 messages preserved | ✅ |
+| KeyP shortcut opens phone | ✅ |
+| newGame clears messages | ✅ |
+| 0 JS errors | ✅ |
+
+### 🏠 NEW: Home Interior (Phase 18)
+
+- ✅ **Separate interior scene** — 8x8 cozy apartment with cream walls + wooden floor
+- ✅ **Furniture** — Bed (pink blanket), desk+laptop, TV, fridge, tatami, futon cushion, window
+- ✅ **Ceiling lamp** — Cone-shaped shade with cord
+- ✅ **Enter via door** — Walk up to home door in Zone 1, press E → enter
+- ✅ **Exit via green door** — Glowing green door inside, E to exit back to Zone 1
+- ✅ **Body class swap** — Removes Ghibli bg, sets cream `interior-mode` body
+- ✅ **Time-of-day tints** — Interior scene has its own lighting that matches time:
+  - Morning (7-11): cream walls, soft sun
+  - Noon (11-14): brighter, sun stronger
+  - Sunset (17-19): warm orange tint
+  - Night (19+): dark blue bg, dim ambient, lamp dominant
+- ✅ **applyInteriorTimeOfDay** — Updates lights each frame while inside
+- ✅ **Camera positioning** — Player placed at z=-1.5 so camera (z+4) is in-room
+- ✅ **Player reparenting** — Player model moves into interior scene on enter, back on exit
+- ✅ **Auto-save compatible** — Interior state resets on reload (returns to Zone 1)
+- ✅ **New achievement** — Night Owl unlocks at 22:00 even inside
+
+#### Phase 18 Test Results
+| Test | Result |
+|------|--------|
+| Near door: '[E] เข้าบ้าน' prompt | ✅ |
+| E enters, scene.visible=false | ✅ |
+| Interior visible: bed, desk, window, tatami, lamp | ✅ |
+| Move W/D inside works | ✅ |
+| Near exit: '[E] ออกจากบ้าน' prompt | ✅ |
+| E exits, scene.visible=true | ✅ |
+| Morning (07:02): cream walls, soft light | ✅ |
+| Sunset (18:00): warm orange tint | ✅ |
+| Night (22:00): dark blue + lamp + Night Owl | ✅ |
+| 0 JS errors | ✅ |
+
+**Live demo (Phase 18):** https://otz231bk31f19.space.minimax.io
 
 ---
 
