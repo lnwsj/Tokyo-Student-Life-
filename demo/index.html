@@ -170,6 +170,45 @@
   .phone-reply-btn { background: #4CAF50; color: white; border: none; border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; }
   .phone-msg-reply-text { margin-top: 0.5rem; padding: 0.5rem; background: rgba(76, 175, 80, 0.1); border-radius: 6px; font-size: 0.85rem; color: #2D6B3A; }
 
+  /* Phase 30: Cooking Minigame */
+  .cook-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .cook-modal.show { display: flex; }
+  .cook-content { background: linear-gradient(180deg, #FFF3E0, #FFFFFF); border-radius: 20px; padding: 1.5rem 2rem; max-width: 600px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 2px solid #FF9800; }
+  .cook-header { text-align: center; margin-bottom: 1rem; }
+  .cook-title { font-family: 'Fraunces', serif; font-size: 1.4rem; color: #E65100; }
+  .cook-recipes { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.7rem; }
+  .cook-recipe-card { background: white; border: 2px solid #FF9800; border-radius: 12px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .cook-recipe-card:hover { background: #FFF3E0; transform: translateY(-3px); }
+  .cook-recipe-emoji { font-size: 2.5rem; }
+  .cook-recipe-name { font-weight: 600; font-size: 0.85rem; margin-top: 0.3rem; color: var(--primary); }
+  .cook-recipe-info { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.2rem; }
+  .cook-timing-header { text-align: center; margin-bottom: 1rem; }
+  .cook-recipe-emoji-large { font-size: 3rem; }
+  .cook-recipe-name-large { font-family: 'Fraunces', serif; font-size: 1.2rem; color: var(--primary); margin: 0.3rem 0; }
+  .cook-progress { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: #E65100; }
+  .cook-instruction { font-size: 0.9rem; margin-top: 0.3rem; color: var(--text-soft); }
+  .cook-instruction kbd { background: #FF9800; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+  .cook-bar { position: relative; height: 28px; background: #E0E0E0; border-radius: 14px; overflow: hidden; margin: 0.8rem 0; }
+  .cook-bar-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #FFB74D, #FF9800); transition: width 0.05s linear; }
+  .cook-bar-target { position: absolute; top: 0; height: 100%; width: 4px; background: #F44336; box-shadow: 0 0 8px rgba(244,67,54,0.8); transform: translateX(-2px); }
+  .cook-feedback { text-align: center; font-size: 1.2rem; font-weight: 700; min-height: 1.5rem; padding: 0.5rem; }
+  .cook-feedback.perfect { color: #4CAF50; }
+  .cook-feedback.hit { color: #2196F3; }
+  .cook-feedback.miss { color: #F44336; }
+  .cook-result { text-align: center; }
+  .cook-score { font-size: 1.1rem; margin: 0.5rem 0; color: var(--primary); }
+  .cook-score strong { font-size: 1.5rem; color: #E65100; }
+  .cook-stats { display: flex; gap: 0.5rem; justify-content: center; margin: 0.5rem 0; }
+  .cook-stat { padding: 0.3rem 0.7rem; border-radius: 12px; font-size: 0.8rem; color: white; }
+  .cook-stat.perfect { background: #4CAF50; }
+  .cook-stat.hit { background: #2196F3; }
+  .cook-stat.miss { background: #F44336; }
+  .cook-bonus { font-size: 1.1rem; color: #FF9800; font-weight: 600; margin-top: 0.5rem; }
+  .cook-earned { font-size: 1.3rem; color: #4CAF50; font-weight: 700; margin-top: 0.5rem; }
+  .cook-again-btn, .cook-done-btn { margin: 0.5rem 0.3rem; padding: 0.6rem 1.2rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+  .cook-again-btn { background: #FF9800; color: white; }
+  .cook-done-btn { background: var(--primary); color: white; }
+
   /* Phase 17: Phone/Messages */
   .phone-fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); border: 2px solid white; transition: transform 0.2s; }
   .phone-fab:hover { transform: scale(1.08); }
@@ -372,6 +411,16 @@
   <div class="achievements-panel" id="achievementsPanel" style="display:none">
     <div class="achievements-title">🏆 ความสำเร็จ / Achievements</div>
     <div class="achievements-list" id="achievementsList"></div>
+  </div>
+
+  <!-- Phase 30: Cooking Modal -->
+  <div class="cook-modal" id="cookModal">
+    <div class="cook-content">
+      <div class="cook-header">
+        <div class="cook-title">🍳 ทำอาหาร / Cooking</div>
+      </div>
+      <div class="cook-body" id="cookBody"></div>
+    </div>
   </div>
 
   <!-- Phase 29: Reply Modal -->
@@ -1236,6 +1285,8 @@ function saveGame() {
       busRides: state._busRides || 0,
       relationships: state._relationships || {},
       replyCount: state._replyCount || 0,
+      cookingCount: state._cookingCount || 0,
+      cookingScore: state._cookingScore || 0,
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -1293,6 +1344,8 @@ function applySave(data) {
   if (data.busRides !== undefined) state._busRides = data.busRides;
   if (data.relationships) state._relationships = data.relationships;
   if (data.replyCount !== undefined) state._replyCount = data.replyCount;
+  if (data.cookingCount !== undefined) state._cookingCount = data.cookingCount;
+  if (data.cookingScore !== undefined) state._cookingScore = data.cookingScore;
   return true;
 }
 
@@ -1518,7 +1571,9 @@ const ACHIEVEMENT_DEFS = [
   { id: 'bus_rider', icon: '🚌', name: 'นั่งรถเมล์ / Bus Rider', desc: 'ขึ้นรถเมล์ครั้งแรก / Take bus first time', check: (s) => (s._busRides || 0) >= 1 },
   { id: 'commuter', icon: '🚆', name: 'คนเดินทาง / Commuter', desc: 'ขึ้นรถเมล์ 3 ครั้ง / Take bus 3 times', check: (s) => (s._busRides || 0) >= 3 },
   { id: 'social_butterfly', icon: '💌', name: 'เข้าสังคม / Social Butterfly', desc: 'ตอบกลับ 3 ข้อความ / Reply 3 messages', check: (s) => (s._replyCount || 0) >= 3 },
-  { id: 'best_friend', icon: '💕', name: 'เพื่อนซี้ / Best Friend', desc: 'relationship 5+ กับใครก็ได้ / 5+ relationship with anyone', check: (s) => s._relationships && Object.values(s._relationships).some(v => v >= 5) }
+  { id: 'best_friend', icon: '💕', name: 'เพื่อนซี้ / Best Friend', desc: 'relationship 5+ กับใครก็ได้ / 5+ relationship with anyone', check: (s) => s._relationships && Object.values(s._relationships).some(v => v >= 5) },
+  { id: 'home_chef', icon: '🍳', name: 'เชฟบ้าน / Home Chef', desc: 'ทำอาหาร 1 ครั้ง / Cook 1 time', check: (s) => (s._cookingCount || 0) >= 1 },
+  { id: 'master_chef', icon: '👨‍🍳', name: 'เชฟมาสเตอร์ / Master Chef', desc: 'ทำอาหาร 5 ครั้ง / Cook 5 times', check: (s) => (s._cookingCount || 0) >= 5 }
 ];
 
 function checkAchievements() {
@@ -1921,7 +1976,9 @@ function buildHomeInterior() {
   const fridgeDoor = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.04), new THREE.MeshStandardMaterial({ color: 0xE0E0E0, roughness: 0.3, metalness: 0.5 }));
   fridgeDoor.position.set(3.81, 1.2, 3.3); group.add(fridgeDoor);
   const table = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.6), new THREE.MeshStandardMaterial({ color: 0x6B4423, roughness: 0.7 }));
-  table.position.set(2, 0.15, 0); group.add(table);
+  table.position.set(2, 0.15, 0);
+  table.userData.isCookTable = true;
+  group.add(table);
   const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.7), new THREE.MeshStandardMaterial({ color: 0xC44569, roughness: 0.9 }));
   cushion.position.set(2, 0.1, 1.5); group.add(cushion);
   const windowFrame = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.2, 0.05), new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.2, emissive: 0xFFFFEE, emissiveIntensity: 0.4 }));
@@ -2117,6 +2174,17 @@ function updateDoorProximity() {
       prompt.style.display = 'block';
       prompt.innerHTML = `[B] ขึ้นรถเมล์ ${BUS_FARE} เยน / Take bus`;
     }
+  }
+  // Phase 30: Cook table prompt
+  if (interiorState.active && typeof isNearCookTable === 'function' && isNearCookTable()) {
+    const prompt = document.getElementById('interact-prompt');
+    if (prompt) {
+      prompt.style.display = 'block';
+      prompt.innerHTML = '[E] ทำอาหาร / Cook (minigame)';
+    }
+    interiorState.nearCookTable = true;
+  } else {
+    interiorState.nearCookTable = false;
   }
 }
 
@@ -3117,6 +3185,203 @@ function getReplyAck(from) {
     senpai_msg: '🎀 ดีใจนะ / So happy'
   };
   return acks[from] || '😊 OK!';
+}
+
+// ========== PHASE 30: COOKING MINIGAME ==========
+let cookState = {
+  active: false,
+  step: 0,           // 0=recipe select, 1=timing, 2=done
+  recipe: null,
+  score: 0,
+  pattern: [],       // for timing
+  patternIndex: 0,
+  lastPressTime: 0,
+  beatInterval: 700,  // ms per beat
+  results: []        // array of 'hit' | 'miss' | 'perfect'
+};
+
+const COOK_RECIPES = [
+  { id: 'rice', name: 'ข้าวปั้น / Onigiri', emoji: '🍙', beats: 4, stamina: 30 },
+  { id: 'soup', name: 'ซุปมิโสะ / Miso Soup', emoji: '🍲', beats: 5, stamina: 50 },
+  { id: 'bento', name: 'เบนโตะ / Bento Box', emoji: '🍱', beats: 6, stamina: 80 },
+  { id: 'ramen', name: 'ราเมง / Ramen', emoji: '🍜', beats: 8, stamina: 120 }
+];
+
+function isNearCookTable() {
+  if (!interiorState.active || !playerModel) return false;
+  // Cook table at x=2, z=0
+  const dx = playerModel.position.x - 2;
+  const dz = playerModel.position.z;
+  return Math.sqrt(dx*dx + dz*dz) < 1.5;
+}
+
+function openCookModal() {
+  cookState.active = true;
+  cookState.step = 0;
+  cookState.score = 0;
+  cookState.results = [];
+  renderCookStep();
+  const modal = document.getElementById('cookModal');
+  if (modal) modal.classList.add('show');
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playUIClick === 'function') playUIClick();
+}
+
+function renderCookStep() {
+  const body = document.getElementById('cookBody');
+  if (!body) return;
+  if (cookState.step === 0) {
+    body.innerHTML = `
+      <div class="cook-recipes">
+        ${COOK_RECIPES.map((r, i) => `
+          <div class="cook-recipe-card" data-idx="${i}">
+            <div class="cook-recipe-emoji">${r.emoji}</div>
+            <div class="cook-recipe-name">${r.name}</div>
+            <div class="cook-recipe-info">${r.beats} จังหวะ · +${r.stamina} stamina</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    body.querySelectorAll('.cook-recipe-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const idx = parseInt(card.dataset.idx);
+        cookState.recipe = COOK_RECIPES[idx];
+        cookState.step = 1;
+        cookState.patternIndex = 0;
+        cookState.results = [];
+        renderCookStep();
+        startCookTiming();
+      });
+    });
+  } else if (cookState.step === 1) {
+    const r = cookState.recipe;
+    body.innerHTML = `
+      <div class="cook-timing-header">
+        <div class="cook-recipe-emoji-large">${r.emoji}</div>
+        <div class="cook-recipe-name-large">${r.name}</div>
+        <div class="cook-progress">${cookState.patternIndex}/${r.beats}</div>
+        <div class="cook-instruction">กด <kbd>Space</kbd> ตามจังหวะ! / Press Space on the beat!</div>
+      </div>
+      <div class="cook-bar">
+        <div class="cook-bar-fill" id="cookBarFill"></div>
+        <div class="cook-bar-target" id="cookBarTarget"></div>
+      </div>
+      <div class="cook-feedback" id="cookFeedback">พร้อม! / Ready...</div>
+    `;
+  } else if (cookState.step === 2) {
+    const r = cookState.recipe;
+    const total = cookState.results.length;
+    const perfect = cookState.results.filter(r => r === 'perfect').length;
+    const hit = cookState.results.filter(r => r === 'hit').length;
+    const miss = cookState.results.filter(r => r === 'miss').length;
+    const score = perfect * 100 + hit * 50;
+    const bonus = score > 200 ? 1.5 : (score > 100 ? 1.2 : 1.0);
+    const earned = Math.floor(r.stamina * bonus);
+    body.innerHTML = `
+      <div class="cook-result">
+        <div class="cook-recipe-emoji-large">${r.emoji}</div>
+        <div class="cook-recipe-name-large">${r.name}</div>
+        <div class="cook-score">คะแนน / Score: <strong>${score}</strong></div>
+        <div class="cook-stats">
+          <span class="cook-stat perfect">${perfect} perfect</span>
+          <span class="cook-stat hit">${hit} hit</span>
+          <span class="cook-stat miss">${miss} miss</span>
+        </div>
+        <div class="cook-bonus">โบนัส x${bonus.toFixed(1)}</div>
+        <div class="cook-earned">+${earned} stamina!</div>
+        <button class="cook-again-btn" id="cookAgainBtn">ทำอีก / Cook again</button>
+        <button class="cook-done-btn" id="cookDoneBtn">เสร็จ / Done</button>
+      </div>
+    `;
+    document.getElementById('cookAgainBtn').addEventListener('click', () => {
+      cookState.step = 0;
+      cookState.recipe = null;
+      renderCookStep();
+    });
+    document.getElementById('cookDoneBtn').addEventListener('click', closeCookModal);
+    // Apply stamina
+    if (state) {
+      state.stamina = Math.min(state._wellRested ? 150 : 100, state.stamina + earned);
+      if (state._wellRested) {
+        state.stamina = Math.min(150, state.stamina);
+      }
+      state._cookingCount = (state._cookingCount || 0) + 1;
+      state._cookingScore = (state._cookingScore || 0) + score;
+      if (typeof updateHUD === 'function') updateHUD();
+    }
+    if (typeof playTone === 'function') {
+      playTone(660, 0.15, 'sine', 0.12);
+      setTimeout(() => playTone(880, 0.15, 'sine', 0.1), 100);
+    }
+    if (typeof showAchievementToast === 'function') {
+      showAchievementToast({ icon: r.emoji, name: 'ทำอาหารเสร็จ! / Cooking done!', desc: `${score} คะแนน · +${earned} stamina` });
+    }
+    if (typeof checkAchievements === 'function') checkAchievements();
+  }
+}
+
+function startCookTiming() {
+  cookState.pattern = [];
+  for (let i = 0; i < cookState.recipe.beats; i++) {
+    cookState.pattern.push(Math.random() * 0.6 + 0.2);  // target 20-80% of bar
+  }
+  cookState.patternIndex = 0;
+  // Animate bar
+  let animStart = performance.now();
+  let beatIdx = 0;
+  const beatLoop = () => {
+    if (!cookState.active || cookState.step !== 1) return;
+    const now = performance.now();
+    const elapsed = (now - animStart) / 1000;
+    const cyclePos = (elapsed % (cookState.beatInterval / 1000)) / (cookState.beatInterval / 1000);
+    const fill = document.getElementById('cookBarFill');
+    const target = document.getElementById('cookBarTarget');
+    if (fill) fill.style.width = (cyclePos * 100) + '%';
+    if (target && beatIdx < cookState.pattern.length) {
+      target.style.left = (cookState.pattern[beatIdx] * 100) + '%';
+    }
+    requestAnimationFrame(beatLoop);
+  };
+  requestAnimationFrame(beatLoop);
+}
+
+function cookPress() {
+  if (cookState.step !== 1 || !cookState.active) return;
+  if (cookState.patternIndex >= cookState.recipe.beats) return;
+  const fill = document.getElementById('cookBarFill');
+  if (!fill) return;
+  const fillWidth = parseFloat(fill.style.width) || 0;
+  const target = cookState.pattern[cookState.patternIndex] * 100;
+  const diff = Math.abs(fillWidth - target);
+  let result = 'miss';
+  if (diff < 5) result = 'perfect';
+  else if (diff < 12) result = 'hit';
+  cookState.results.push(result);
+  // Feedback
+  const fb = document.getElementById('cookFeedback');
+  if (fb) {
+    fb.textContent = result === 'perfect' ? '✨ PERFECT!' : (result === 'hit' ? '✓ HIT' : '✗ MISS');
+    fb.className = 'cook-feedback ' + result;
+  }
+  if (typeof playTone === 'function') {
+    const freq = result === 'perfect' ? 880 : (result === 'hit' ? 660 : 220);
+    playTone(freq, 0.1, 'triangle', 0.12);
+  }
+  cookState.patternIndex++;
+  if (cookState.patternIndex >= cookState.recipe.beats) {
+    setTimeout(() => {
+      cookState.step = 2;
+      renderCookStep();
+    }, 500);
+  } else {
+    renderCookStep();  // update progress
+  }
+}
+
+function closeCookModal() {
+  const modal = document.getElementById('cookModal');
+  if (modal) modal.classList.remove('show');
+  cookState.active = false;
 }
 
 function checkPhoneMessages() {
@@ -4516,6 +4781,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyN') { if(typeof nextDay === 'function') nextDay(); e.preventDefault(); return; }
   if (e.code === 'KeyW') { if(typeof openWardrobe === 'function') { openWardrobe(); e.preventDefault(); return; } }
   if (e.code === 'KeyP') { if(typeof openPhone === 'function') { openPhone(); e.preventDefault(); return; } }
+  if (e.code === 'Space' && cookState.active && cookState.step === 1) { e.preventDefault(); cookPress(); return; }
   if (e.code === 'F2') { e.preventDefault(); if(typeof takePhoto === 'function') takePhoto(); return; }
   // Phase 27: Bus selection
   if (e.code === 'KeyB' && typeof isNearBusStop === 'function' && isNearBusStop()) {
@@ -4582,6 +4848,12 @@ window.addEventListener('keydown', e => {
     // Phase 23: Fridge (only if not sleeping/exiting)
     if (interiorState.active && interiorState.nearFridge) {
       openFridgeModal();
+      e.preventDefault();
+      return;
+    }
+    // Phase 30: Cooking table
+    if (interiorState.active && typeof isNearCookTable === 'function' && isNearCookTable()) {
+      openCookModal();
       e.preventDefault();
       return;
     }
@@ -5095,6 +5367,13 @@ window.closeReplyModal = closeReplyModal;
 window.sendReply = sendReply;
 window.getReplyAck = getReplyAck;
 window.REPLY_OPTIONS = REPLY_OPTIONS;
+// Phase 30
+Object.defineProperty(window, 'cookState', { get: () => cookState });
+window.COOK_RECIPES = COOK_RECIPES;
+window.openCookModal = openCookModal;
+window.closeCookModal = closeCookModal;
+window.cookPress = cookPress;
+window.isNearCookTable = isNearCookTable;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
