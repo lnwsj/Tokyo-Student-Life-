@@ -209,6 +209,28 @@
   .cook-again-btn { background: #FF9800; color: white; }
   .cook-done-btn { background: var(--primary); color: white; }
 
+  /* Phase 32: Stats Page */
+  .stats-fab { position: fixed; bottom: 16rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #9C27B0, #7B1FA2); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(156, 39, 176, 0.4); border: 2px solid white; transition: transform 0.2s; }
+  .stats-fab:hover { transform: scale(1.08); }
+  .stats-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 55; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 1rem; }
+  .stats-modal.show { display: flex; }
+  .stats-content { background: linear-gradient(180deg, #FAF6EE, #FFFFFF); border-radius: 20px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 2px solid #9C27B0; }
+  .stats-header { background: linear-gradient(135deg, #9C27B0, #7B1FA2); color: white; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+  .stats-title { font-family: 'Fraunces', serif; font-size: 1.3rem; }
+  .stats-close { background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+  .stats-body { padding: 1.5rem; }
+  .stats-section { margin-bottom: 1.5rem; }
+  .stats-section-title { font-family: 'Fraunces', serif; font-size: 1.1rem; color: #7B1FA2; margin-bottom: 0.7rem; padding-bottom: 0.3rem; border-bottom: 2px solid rgba(156, 39, 176, 0.2); }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.6rem; }
+  .stats-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 0.7rem; text-align: center; }
+  .stats-card-icon { font-size: 1.4rem; }
+  .stats-card-value { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 600; color: var(--primary); margin: 0.2rem 0; }
+  .stats-card-label { font-size: 0.75rem; color: var(--text-soft); }
+  .stats-achievement-bar { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 1rem; }
+  .stats-bar-label { display: flex; justify-content: space-between; margin-bottom: 0.3rem; font-size: 0.85rem; }
+  .stats-bar-bg { background: rgba(156, 39, 176, 0.1); border-radius: 6px; height: 10px; overflow: hidden; }
+  .stats-bar-fill { background: linear-gradient(90deg, #9C27B0, #E91E63); height: 100%; border-radius: 6px; transition: width 0.3s; }
+
   /* Phase 17: Phone/Messages */
   .phone-fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); border: 2px solid white; transition: transform 0.2s; }
   .phone-fab:hover { transform: scale(1.08); }
@@ -411,6 +433,18 @@
   <div class="achievements-panel" id="achievementsPanel" style="display:none">
     <div class="achievements-title">🏆 ความสำเร็จ / Achievements</div>
     <div class="achievements-list" id="achievementsList"></div>
+  </div>
+
+  <!-- Phase 32: Stats Modal -->
+  <button class="stats-fab" id="statsFab" title="สถิติ / Stats">📊</button>
+  <div class="stats-modal" id="statsModal">
+    <div class="stats-content">
+      <div class="stats-header">
+        <div class="stats-title">📊 สถิติ / Stats</div>
+        <button class="stats-close" id="statsCloseBtn">×</button>
+      </div>
+      <div class="stats-body" id="statsBody"></div>
+    </div>
   </div>
 
   <!-- Phase 30: Cooking Modal -->
@@ -1662,7 +1696,9 @@ function openVendingMachine() {
 function buyDrink(drink) {
   if (state.yen < drink.price) return;
   state.yen -= drink.price;
+  state._totalYenSpent = (state._totalYenSpent || 0) + drink.price;
   state.stamina = Math.min(100, state.stamina + drink.stamina);
+  state._totalStaminaGained = (state._totalStaminaGained || 0) + drink.stamina;
   state.stats.drinksBought = (state.stats.drinksBought || 0) + 1;
   updateHUD();
   // Animate: replace card with 'drinking' message
@@ -2507,7 +2543,9 @@ function buyFood(foodId) {
     return false;
   }
   state.yen -= food.price;
+  state._totalYenSpent = (state._totalYenSpent || 0) + food.price;
   state.stamina = Math.min(state._wellRested ? 150 : 100, state.stamina + food.hunger);
+  state._totalStaminaGained = (state._totalStaminaGained || 0) + food.hunger;
   if (!state._eatenFoods) state._eatenFoods = [];
   if (!state._eatenFoods.includes(foodId)) state._eatenFoods.push(foodId);
   state._eatenCount = (state._eatenCount || 0) + 1;
@@ -3307,6 +3345,7 @@ function renderCookStep() {
     // Apply stamina
     if (state) {
       state.stamina = Math.min(state._wellRested ? 150 : 100, state.stamina + earned);
+      state._totalStaminaGained = (state._totalStaminaGained || 0) + earned;
       if (state._wellRested) {
         state.stamina = Math.min(150, state.stamina);
       }
@@ -3387,6 +3426,96 @@ function closeCookModal() {
   const modal = document.getElementById('cookModal');
   if (modal) modal.classList.remove('show');
   cookState.active = false;
+}
+
+// ========== PHASE 32: STATS PAGE ==========
+function getLifetimeStats() {
+  if (!state) return {};
+  return {
+    daysPlayed: (state.day || 1) - 1,
+    totalDistance: state.stats?.distanceWalked || 0,
+    npcsTalked: state.stats?.npcsTalked || 0,
+    drinksBought: state.stats?.drinksBought || 0,
+    busesTaken: state._busRides || 0,
+    repliesSent: state._replyCount || 0,
+    photosTaken: state._photoCount || 0,
+    mealsEaten: state._eatenCount || 0,
+    mealsCooked: state._cookingCount || 0,
+    catsFed: state._catFedCount || 0,
+    totalYenSpent: state._totalYenSpent || 0,
+    totalStamina: state._totalStaminaGained || 0,
+    timesSlept: Math.max(0, (state.day || 1) - 1),
+    currentDay: state.day || 1,
+    currentZone: state.currentZone || 1,
+    achievementsUnlocked: (state.achievements || []).length,
+    bestRelationship: state._relationships ? Math.max(0, ...Object.values(state._relationships)) : 0,
+    cookingScore: state._cookingScore || 0
+  };
+}
+
+function openStats() {
+  const modal = document.getElementById('statsModal');
+  const body = document.getElementById('statsBody');
+  if (!modal || !body) return;
+  const s = getLifetimeStats();
+  const totalAch = 22;
+  const pct = Math.round((s.achievementsUnlocked / totalAch) * 100);
+  body.innerHTML = `
+    <div class="stats-achievement-bar">
+      <div class="stats-bar-label">
+        <span>🏆 Achievements</span>
+        <strong>${s.achievementsUnlocked}/${totalAch} (${pct}%)</strong>
+      </div>
+      <div class="stats-bar-bg"><div class="stats-bar-fill" style="width: ${pct}%"></div></div>
+    </div>
+    <div class="stats-section">
+      <div class="stats-section-title">⏱️ เวลา / Time</div>
+      <div class="stats-grid">
+        <div class="stats-card"><div class="stats-card-icon">📅</div><div class="stats-card-value">${s.currentDay}</div><div class="stats-card-label">วันปัจจุบัน / Current Day</div></div>
+        <div class="stats-card"><div class="stats-card-icon">🌙</div><div class="stats-card-value">${s.timesSlept}</div><div class="stats-card-label">จำนวนครั้งที่นอน / Times Slept</div></div>
+        <div class="stats-card"><div class="stats-card-icon">📍</div><div class="stats-card-value">Z0${s.currentZone}</div><div class="stats-card-label">โซนปัจจุบัน / Current Zone</div></div>
+      </div>
+    </div>
+    <div class="stats-section">
+      <div class="stats-section-title">🚶 การเคลื่อนไหว / Movement</div>
+      <div class="stats-grid">
+        <div class="stats-card"><div class="stats-card-icon">👟</div><div class="stats-card-value">${Math.round(s.totalDistance)}</div><div class="stats-card-label">เมตรที่เดิน / Meters Walked</div></div>
+        <div class="stats-card"><div class="stats-card-icon">🚌</div><div class="stats-card-value">${s.busesTaken}</div><div class="stats-card-label">ครั้งที่ขึ้นรถเมล์ / Bus Rides</div></div>
+      </div>
+    </div>
+    <div class="stats-section">
+      <div class="stats-section-title">💬 ปฏิสัมพันธ์ / Social</div>
+      <div class="stats-grid">
+        <div class="stats-card"><div class="stats-card-icon">👥</div><div class="stats-card-value">${s.npcsTalked}</div><div class="stats-card-label">ครั้งที่คุย / NPCs Talked</div></div>
+        <div class="stats-card"><div class="stats-card-icon">💌</div><div class="stats-card-value">${s.repliesSent}</div><div class="stats-card-label">ข้อความที่ตอบ / Replies Sent</div></div>
+        <div class="stats-card"><div class="stats-card-icon">💕</div><div class="stats-card-value">${s.bestRelationship}</div><div class="stats-card-label">ความสัมพันธ์สูงสุด / Best Relationship</div></div>
+      </div>
+    </div>
+    <div class="stats-section">
+      <div class="stats-section-title">🍱 อาหาร / Food</div>
+      <div class="stats-grid">
+        <div class="stats-card"><div class="stats-card-icon">🥤</div><div class="stats-card-value">${s.drinksBought}</div><div class="stats-card-label">เครื่องดื่ม / Drinks Bought</div></div>
+        <div class="stats-card"><div class="stats-card-icon">🍽️</div><div class="stats-card-value">${s.mealsEaten}</div><div class="stats-card-label">มื้อที่ทาน / Meals Eaten</div></div>
+        <div class="stats-card"><div class="stats-card-icon">🍳</div><div class="stats-card-value">${s.mealsCooked}</div><div class="stats-card-label">ครั้งที่ทำอาหาร / Cooked</div></div>
+        <div class="stats-card"><div class="stats-card-icon">👨‍🍳</div><div class="stats-card-value">${s.cookingScore}</div><div class="stats-card-label">คะแนนรวม / Cooking Score</div></div>
+      </div>
+    </div>
+    <div class="stats-section">
+      <div class="stats-section-title">🐱 สัตว์เลี้ยง / Pets</div>
+      <div class="stats-grid">
+        <div class="stats-card"><div class="stats-card-icon">🐱</div><div class="stats-card-value">${s.catsFed}</div><div class="stats-card-label">แมวที่ให้อาหาร / Cats Fed</div></div>
+        <div class="stats-card"><div class="stats-card-icon">📸</div><div class="stats-card-value">${s.photosTaken}</div><div class="stats-card-label">รูปที่ถ่าย / Photos Taken</div></div>
+      </div>
+    </div>
+  `;
+  modal.classList.add('show');
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playUIClick === 'function') playUIClick();
+}
+
+function closeStats() {
+  const modal = document.getElementById('statsModal');
+  if (modal) modal.classList.remove('show');
 }
 
 function checkPhoneMessages() {
@@ -5126,6 +5255,8 @@ document.getElementById('tutNextBtn').addEventListener('click', nextTutorialStep
 document.getElementById('tutSkipBtn').addEventListener('click', skipTutorial);
 document.getElementById('busCloseBtn').addEventListener('click', closeBusModal);
 document.getElementById('saveSlotCloseBtn').addEventListener('click', closeSaveSlotModal);
+document.getElementById('statsFab').addEventListener('click', openStats);
+document.getElementById('statsCloseBtn').addEventListener('click', closeStats);
 
 // Phase 11: New Game button
 function newGame() {
@@ -5162,6 +5293,9 @@ function newGame() {
   state._photoCount = 0;
   photoGallery = [];
   try { localStorage.removeItem('tsl-photos-v1'); } catch (e) {}
+  // Phase 32: Reset stats tracking
+  state._totalYenSpent = 0;
+  state._totalStaminaGained = 0;
   // Phase 25: Reset tutorial
   try { localStorage.removeItem('tsl-tutorial-done'); } catch (e) {}
   tutorialState.completed = false;
@@ -5431,6 +5565,10 @@ window.isNearCookTable = isNearCookTable;
 window.SEASON_PRESETS = SEASON_PRESETS;
 window.getSeasonForDay = getSeasonForDay;
 window.applySeasonVisuals = applySeasonVisuals;
+// Phase 32
+window.openStats = openStats;
+window.closeStats = closeStats;
+window.getLifetimeStats = getLifetimeStats;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
