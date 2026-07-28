@@ -4,10 +4,10 @@
 > **A cozy slice-of-life walking sim — 5 zones in modern Tokyo**
 > **Ghibli-pastel modern · Bilingual Thai + English · Three.js (vanilla)**
 
-🌐 **Live Demo (Phase 18 - latest):** [https://otz231bk31f19.space.minimax.io](https://otz231bk31f19.space.minimax.io)
+🌐 **Live Demo (Phase 35 - latest):** [https://acbno7fqcbiix.space.minimax.io](https://acbno7fqcbiix.space.minimax.io)
 📖 **User Manual:** [https://7wx5v6yixjcta.space.minimax.io](https://7wx5v6yixjcta.space.minimax.io) — bilingual interactive guide (36 screenshots)
 🎮 **GitHub:** [lnwsj/Tokyo-Student-Life-](https://github.com/lnwsj/Tokyo-Student-Life-)
-📅 **Started:** 2026-07-12 · **Phases complete:** 0-31 (32/32)
+📅 **Started:** 2026-07-12 · **Phases complete:** 0-35 (36/36)
 
 ---
 
@@ -42,6 +42,114 @@
 - ✅ **Zone 4 special** — uses real **LittlestTokyo.glb** as the 3D backdrop
 - ✅ **HUD** — HP/stamina/yen, time, zone name (Thai + JP + EN), zone buttons
 - ✅ **Controls** — WASD/arrows walk · Shift run · Space jump · 1-5 switch zone · mouse/touch rotate
+
+### 🐱 NEW: Stray Cat System (Phase 21)
+- 10 แมวจร (2 ตัวต่อโซน), 6 ชื่อ
+- 3 อารมณ์ (เดิน/ตาม/นอน)
+- กด E ให้อาหาร → ตาม 60 วินาที
+- กลางคืน = นอน
+- 2 achievement (cat_friend / cat_whisperer)
+
+### 😴 NEW: Sleep System (Phase 22)
+- เตียง tagged isBed
+- sleepAtBed() with fade overlay
+- Day advance + 7am reset + stamina refill
+- _wellRested buff (cap 150)
+- Achievement well_rested
+
+### 🍱 NEW: Hunger/Eat System (Phase 23)
+- 4 FOODS (onigiri/sandwich/bento/ramen)
+- ตู้เย็นในบ้าน
+- 1.2/s walk drain 0.3/s bike
+- เตือน hungry ที่ <30
+- 2 achievement (first_meal / gourmet)
+
+### 📸 NEW: Photo Mode (Phase 24)
+- F2 = ถ่ายรูป
+- Gallery modal 4 คอลัมน์
+- 20 photos ใน localStorage 'tsl-photos-v1'
+- Flash effect + shutter sound
+- 2 achievement (photographer / shutterbug)
+
+### 📚 NEW: Tutorial Overlay (Phase 25)
+- 6-step first-run guide
+- Modal with popIn animation
+- Esc to skip
+- localStorage 'tsl-tutorial-done'
+
+### 🎵 NEW: BGM System (Phase 26)
+- Procedural Web Audio synth
+- 4 time-of-day presets
+- C major pentatonic arpeggios
+- Auto-starts on first user gesture
+
+### 🚌 NEW: Bus System (Phase 27)
+- 5 bus stops + yellow bus
+- 50 yen fare per ride
+- B key opens bus modal
+- 4 zone cards (skip current)
+- 2 achievement (bus_rider / commuter)
+
+### 💾 NEW: Save Slots (Phase 28)
+- 3 named slots (0=auto, 1-2=manual)
+- Slot cards with Day/time/zone/yen/achievements
+- Delete with confirm
+- Modal replaces direct save/load
+
+### 💌 NEW: Phone Reply (Phase 29)
+- 3 quick replies per sender
+- Relationship system (+ value)
+- Auto-reply from sender
+- 2 achievement (social_butterfly / best_friend)
+
+### 🍳 NEW: Cooking Minigame (Phase 30)
+- E at table in home interior
+- 4 recipes (onigiri → ramen)
+- Timing bar with Space key
+- Score → bonus (1.0-1.5x) → stamina
+- 2 achievement (home_chef / master_chef)
+
+### 🌸 NEW: Seasons (Phase 31)
+- 4 seasons (spring/summer/autumn/winter)
+- วนรอบทุก 4 วัน
+- ต้นไม้เปลี่ยนสี
+- Achievement four_seasons
+
+### 📊 NEW: Stats Page (Phase 32)
+- 17 stat fields, 5 sections
+- Achievement progress bar
+- FAB 📊 button
+- Track yen spent + stamina gained
+
+### 🎣 NEW: Fishing Minigame (Phase 33)
+- 2 ponds at shrine
+- 6 FISH_TYPES (koi/tai/maguro/kujira/tako/umi)
+- Waiting→bite→pull flow
+- 1.5s catch window with Space key
+- 2 achievement (first_fish / master_angler)
+
+### 🌸 NEW: Sakura Festival (Phase 34)
+- Day 7 special event
+- 80 sakura petals falling
+- 5 festival lanterns (1/zone)
+- Achievement festival_goer
+
+### 🔊 NEW: NPC Voice (Phase 35)
+- 5 synthesized speech MP3s
+- 6 NPC types (senpai/classmate/attendant/shopkeeper/miko)
+- playNPCVoice() in startDialogue()
+- Auto-cache + skip when muted
+
+### 🏆 28 Achievements (Phase 13-35)
+1. first_steps 👟 2. world_wanderer 🗺️ 3. day_master 📅 4. night_owl 🦉 5. early_bird 🐦
+6. chatterbox 💬 7. shopaholic 🛍️ 8. completionist 🌟 9. fashionista 👗 10. wardrobe_master 💃
+11. first_ride 🚲 12. cyclist 🏁 13. cat_friend 🐱 14. cat_whisperer 🐈 15. well_rested ☀️
+16. first_meal 🍱 17. gourmet 🍜 18. photographer 📸 19. shutterbug 🎞️
+20. bus_rider 🚌 21. commuter 🚆 22. social_butterfly 💌 23. best_friend 💕
+24. home_chef 🍳 25. master_chef 👨‍🍳 26. four_seasons 🌸 27. first_fish 🐟 28. master_angler 🎣
+29. festival_goer 🌸
+
+## 🌟 What's Done (Phase 7-20) / ทำอะไรไปแล้ว
 
 ### 🌅 NEW: Day/Night Cycle (Phase 7)
 
@@ -519,7 +627,7 @@ tokyo-student-life/
 | **Lighting** | 3-point + HDR | procedural, no HDR download |
 | **Materials** | MeshStandardMaterial / PBR | 25 procedural |
 | **Physics** | (planned) Rapier3D | not yet active |
-| **Audio** | (planned) Web Audio API | procedural — no asset files |
+| **Audio** | Web Audio API + batch_synthesize_speech | procedural BGM + 5 NPC voice MP3s |
 | **Frontend** | vanilla HTML/CSS/JS | no build step, no framework |
 | **Languages** | TH + EN (UI) + JA (in-scene) | i18n via JSON files |
 | **Deploy** | space.minimax.io (CDN) | single static folder |
