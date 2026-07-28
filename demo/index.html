@@ -1353,6 +1353,7 @@ function saveGame() {
       cookingScore: state._cookingScore || 0,
       fishCaught: state._fishCaught || 0,
       caughtFishTypes: state._caughtFishTypes || [],
+      festivalSeen: state._festivalSeen || 0,
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -1414,6 +1415,7 @@ function applySave(data) {
   if (data.cookingScore !== undefined) state._cookingScore = data.cookingScore;
   if (data.fishCaught !== undefined) state._fishCaught = data.fishCaught;
   if (data.caughtFishTypes) state._caughtFishTypes = [...data.caughtFishTypes];
+  if (data.festivalSeen !== undefined) state._festivalSeen = data.festivalSeen;
   return true;
 }
 
@@ -1644,7 +1646,8 @@ const ACHIEVEMENT_DEFS = [
   { id: 'master_chef', icon: '👨‍🍳', name: 'เชฟมาสเตอร์ / Master Chef', desc: 'ทำอาหาร 5 ครั้ง / Cook 5 times', check: (s) => (s._cookingCount || 0) >= 5 },
   { id: 'four_seasons', icon: '🌸', name: 'สี่ฤดู / Four Seasons', desc: 'เล่นครบ 4 วัน (4 seasons)', check: (s) => (s.day || 1) >= 4 },
   { id: 'first_fish', icon: '🐟', name: 'ปลาตัวแรก / First Fish', desc: 'จับปลาตัวแรก / Catch first fish', check: (s) => (s._fishCaught || 0) >= 1 },
-  { id: 'master_angler', icon: '🎣', name: 'ชาวประมง / Master Angler', desc: 'จับปลา 5 ตัว / Catch 5 fish', check: (s) => (s._fishCaught || 0) >= 5 }
+  { id: 'master_angler', icon: '🎣', name: 'ชาวประมง / Master Angler', desc: 'จับปลา 5 ตัว / Catch 5 fish', check: (s) => (s._fishCaught || 0) >= 5 },
+  { id: 'festival_goer', icon: '🌸', name: 'เทศกาลซากุระ / Sakura Festival', desc: 'อยู่ในเทศกาล Day 7 / See Day 7 festival', check: (s) => (s._festivalSeen || 0) >= 1 }
 ];
 
 function checkAchievements() {
@@ -2543,6 +2546,12 @@ function sleepAtBed() {
     // Phase 31: Apply new season
     if (typeof applySeasonVisuals === 'function') {
       applySeasonVisuals(getSeasonForDay(state.day));
+    }
+    // Phase 34: Sakura Festival (Day 7)
+    if (state && state.day === 7) {
+      if (!festivalState.active && typeof startFestival === 'function') startFestival();
+    } else if (festivalState.active) {
+      if (typeof stopFestival === 'function') stopFestival();
     }
     if (typeof playTone === 'function') {
       playTone(440, 0.2, 'sine', 0.12);
@@ -3760,6 +3769,112 @@ function closeFishingModal() {
   fishState.active = false;
   fishState.phase = 'idle';
   fishState.caught = null;
+}
+
+// ========== PHASE 34: SAKURA FESTIVAL (Day 7) ==========
+let festivalState = {
+  active: false,
+  petals: [],
+  petalGroup: null,
+  lanterns: [],
+  triggerDay: 7
+};
+
+function isFestivalDay() {
+  if (!state) return false;
+  return state.day === festivalState.triggerDay;
+}
+
+function buildSakuraPetal() {
+  const colors = [0xFFB6C1, 0xFFC0CB, 0xFF9EB5, 0xFFD1DC];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  const petal = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.15, 0.15),
+    new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
+  );
+  petal.userData.fallSpeed = 0.3 + Math.random() * 0.5;
+  petal.userData.swayAmp = 0.5 + Math.random() * 0.5;
+  petal.userData.swaySpeed = 0.5 + Math.random() * 1.0;
+  petal.userData.swayPhase = Math.random() * Math.PI * 2;
+  petal.userData.startY = 8 + Math.random() * 4;
+  petal.userData.rotSpeed = (Math.random() - 0.5) * 2;
+  petal.position.set((Math.random() - 0.5) * 30, petal.userData.startY, (Math.random() - 0.5) * 30);
+  petal.rotation.z = Math.random() * Math.PI * 2;
+  return petal;
+}
+
+function startFestival() {
+  if (festivalState.active) return;
+  festivalState.active = true;
+  if (typeof scene === 'undefined' || !scene) return;
+  // Create petal group
+  const group = new THREE.Group();
+  group.name = 'festival-petals';
+  for (let i = 0; i < 80; i++) {
+    const petal = buildSakuraPetal();
+    group.add(petal);
+    festivalState.petals.push(petal);
+  }
+  scene.add(group);
+  festivalState.petalGroup = group;
+  // Add festival lanterns at each zone center
+  const ZONE_CENTERS = { 1: { x: 0, z: 0 }, 2: { x: 0, z: 0 }, 3: { x: 0, z: 0 }, 4: { x: 0, z: 0 }, 5: { x: 0, z: 0 } };
+  for (const z of [1, 2, 3, 4, 5]) {
+    const lantern = new THREE.Mesh(
+      new THREE.SphereGeometry(0.4, 12, 10),
+      new THREE.MeshStandardMaterial({ color: 0xFF6B6B, emissive: 0xFF3333, emissiveIntensity: 0.5, roughness: 0.4 })
+    );
+    lantern.position.set(ZONE_CENTERS[z].x, 3, ZONE_CENTERS[z].z);
+    lantern.userData.isFestivalLantern = true;
+    scene.add(lantern);
+    festivalState.lanterns.push(lantern);
+  }
+  if (typeof showAchievementToast === 'function') {
+    showAchievementToast({
+      icon: '🌸',
+      name: 'เทศกาลซากุระ! / Sakura Festival!',
+      desc: 'กลีบดอกไม้ร่วงทั่วเมือง! / Petals fall everywhere!'
+    });
+  }
+  if (typeof playTone === 'function') {
+    playTone(880, 0.1, 'sine', 0.1);
+    setTimeout(() => playTone(1100, 0.15, 'sine', 0.1), 100);
+  }
+  if (state) state._festivalSeen = (state._festivalSeen || 0) + 1;
+  if (typeof checkAchievements === 'function') checkAchievements();
+}
+
+function stopFestival() {
+  if (!festivalState.active) return;
+  festivalState.active = false;
+  if (festivalState.petalGroup && festivalState.petalGroup.parent) {
+    festivalState.petalGroup.parent.remove(festivalState.petalGroup);
+  }
+  festivalState.petalGroup = null;
+  festivalState.petals = [];
+  for (const l of festivalState.lanterns) {
+    if (l.parent) l.parent.remove(l);
+  }
+  festivalState.lanterns = [];
+}
+
+function updateFestivalPetals(dt) {
+  if (!festivalState.active || !festivalState.petalGroup) return;
+  for (const petal of festivalState.petals) {
+    petal.position.y -= petal.userData.fallSpeed * dt;
+    petal.position.x += Math.sin(petal.userData.swayPhase + performance.now() * 0.001 * petal.userData.swaySpeed) * petal.userData.swayAmp * dt;
+    petal.position.z += Math.cos(petal.userData.swayPhase + performance.now() * 0.0007 * petal.userData.swaySpeed) * petal.userData.swayAmp * dt * 0.5;
+    petal.rotation.z += petal.userData.rotSpeed * dt;
+    if (petal.position.y < -0.5) {
+      petal.position.y = petal.userData.startY;
+      petal.position.x = (Math.random() - 0.5) * 30;
+      petal.position.z = (Math.random() - 0.5) * 30;
+    }
+  }
+  // Bob festival lanterns
+  for (const l of festivalState.lanterns) {
+    l.position.y = 3 + Math.sin(performance.now() * 0.002 + l.position.x) * 0.1;
+  }
 }
 
 function checkPhoneMessages() {
@@ -5418,6 +5533,7 @@ function update() {
   if (typeof updateStationTrain === 'function') updateStationTrain(dt);
   if (typeof updateCats === 'function') updateCats(dt);
   if (typeof updateBus === 'function') updateBus(dt);
+  if (typeof updateFestivalPetals === 'function') updateFestivalPetals(dt);
   if (typeof spinBikeWheels === 'function') spinBikeWheels(dt, (state.keys && (state.keys.KeyW || state.keys.KeyA || state.keys.KeyS || state.keys.KeyD || state.keys.ArrowUp || state.keys.ArrowDown || state.keys.ArrowLeft || state.keys.ArrowRight)));
   if (typeof updateStationTrain === 'function') updateStationTrain(dt);
   if (typeof checkAchievements === 'function') checkAchievements();
@@ -5668,6 +5784,10 @@ setTimeout(() => {
   if (typeof applySeasonVisuals === 'function' && state) {
     applySeasonVisuals(getSeasonForDay(state.day || 1));
   }
+  // Phase 34: Check festival
+  if (state && state.day === 7 && typeof startFestival === 'function' && !festivalState.active) {
+    startFestival();
+  }
 }, 2800);
 
 // Expose for debugging/testing (after all functions defined)
@@ -5832,6 +5952,13 @@ window.closeFishingModal = closeFishingModal;
 window.fishPull = fishPull;
 window.isNearFishingPond = isNearFishingPond;
 window.buildFishingPond = buildFishingPond;
+// Phase 34
+Object.defineProperty(window, 'festivalState', { get: () => festivalState });
+window.isFestivalDay = isFestivalDay;
+window.startFestival = startFestival;
+window.stopFestival = stopFestival;
+window.updateFestivalPetals = updateFestivalPetals;
+window.buildSakuraPetal = buildSakuraPetal;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
