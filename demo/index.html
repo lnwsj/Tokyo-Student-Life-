@@ -231,6 +231,29 @@
   .stats-bar-bg { background: rgba(156, 39, 176, 0.1); border-radius: 6px; height: 10px; overflow: hidden; }
   .stats-bar-fill { background: linear-gradient(90deg, #9C27B0, #E91E63); height: 100%; border-radius: 6px; transition: width 0.3s; }
 
+  /* Phase 33: Fishing Modal */
+  .fish-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .fish-modal.show { display: flex; }
+  .fish-content { background: linear-gradient(180deg, #B3E5FC, #FFFFFF); border-radius: 20px; padding: 2rem; max-width: 480px; width: 90%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 2px solid #0288D1; }
+  .fish-status { padding: 1rem; }
+  .fish-emoji { font-size: 4rem; display: inline-block; }
+  .fish-emoji.bobbing { animation: fishBob 1s ease-in-out infinite; }
+  .fish-emoji.shaking { animation: fishShake 0.1s ease-in-out infinite; color: #D32F2F; }
+  @keyframes fishBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes fishShake { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-5px); } }
+  .fish-emoji-large { font-size: 5rem; }
+  .fish-message { font-family: 'Fraunces', serif; font-size: 1.3rem; color: var(--primary); margin: 0.5rem 0; }
+  .fish-message.urgent { color: #D32F2F; animation: pulse 0.3s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  .fish-instruction { font-size: 0.9rem; color: var(--text-soft); margin-top: 0.3rem; }
+  .fish-instruction kbd { background: #0288D1; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+  .fish-timer { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: #D32F2F; margin-top: 0.5rem; font-weight: 600; }
+  .fish-name { font-family: 'Fraunces', serif; font-size: 1.2rem; color: var(--primary); margin: 0.5rem 0; }
+  .fish-reward { color: #4CAF50; font-weight: 600; margin: 0.5rem 0; }
+  .fish-again-btn, .fish-done-btn { margin: 0.5rem 0.3rem; padding: 0.6rem 1.2rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+  .fish-again-btn { background: #0288D1; color: white; }
+  .fish-done-btn { background: var(--primary); color: white; }
+
   /* Phase 17: Phone/Messages */
   .phone-fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #66BB6A, #4CAF50); color: white; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 15; box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); border: 2px solid white; transition: transform 0.2s; }
   .phone-fab:hover { transform: scale(1.08); }
@@ -433,6 +456,13 @@
   <div class="achievements-panel" id="achievementsPanel" style="display:none">
     <div class="achievements-title">🏆 ความสำเร็จ / Achievements</div>
     <div class="achievements-list" id="achievementsList"></div>
+  </div>
+
+  <!-- Phase 33: Fishing Modal -->
+  <div class="fish-modal" id="fishModal">
+    <div class="fish-content">
+      <div class="fish-body" id="fishBody"></div>
+    </div>
   </div>
 
   <!-- Phase 32: Stats Modal -->
@@ -1321,6 +1351,8 @@ function saveGame() {
       replyCount: state._replyCount || 0,
       cookingCount: state._cookingCount || 0,
       cookingScore: state._cookingScore || 0,
+      fishCaught: state._fishCaught || 0,
+      caughtFishTypes: state._caughtFishTypes || [],
       savedAt: Date.now()
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -1380,6 +1412,8 @@ function applySave(data) {
   if (data.replyCount !== undefined) state._replyCount = data.replyCount;
   if (data.cookingCount !== undefined) state._cookingCount = data.cookingCount;
   if (data.cookingScore !== undefined) state._cookingScore = data.cookingScore;
+  if (data.fishCaught !== undefined) state._fishCaught = data.fishCaught;
+  if (data.caughtFishTypes) state._caughtFishTypes = [...data.caughtFishTypes];
   return true;
 }
 
@@ -1608,7 +1642,9 @@ const ACHIEVEMENT_DEFS = [
   { id: 'best_friend', icon: '💕', name: 'เพื่อนซี้ / Best Friend', desc: 'relationship 5+ กับใครก็ได้ / 5+ relationship with anyone', check: (s) => s._relationships && Object.values(s._relationships).some(v => v >= 5) },
   { id: 'home_chef', icon: '🍳', name: 'เชฟบ้าน / Home Chef', desc: 'ทำอาหาร 1 ครั้ง / Cook 1 time', check: (s) => (s._cookingCount || 0) >= 1 },
   { id: 'master_chef', icon: '👨‍🍳', name: 'เชฟมาสเตอร์ / Master Chef', desc: 'ทำอาหาร 5 ครั้ง / Cook 5 times', check: (s) => (s._cookingCount || 0) >= 5 },
-  { id: 'four_seasons', icon: '🌸', name: 'สี่ฤดู / Four Seasons', desc: 'เล่นครบ 4 วัน (4 seasons)', check: (s) => (s.day || 1) >= 4 }
+  { id: 'four_seasons', icon: '🌸', name: 'สี่ฤดู / Four Seasons', desc: 'เล่นครบ 4 วัน (4 seasons)', check: (s) => (s.day || 1) >= 4 },
+  { id: 'first_fish', icon: '🐟', name: 'ปลาตัวแรก / First Fish', desc: 'จับปลาตัวแรก / Catch first fish', check: (s) => (s._fishCaught || 0) >= 1 },
+  { id: 'master_angler', icon: '🎣', name: 'ชาวประมง / Master Angler', desc: 'จับปลา 5 ตัว / Catch 5 fish', check: (s) => (s._fishCaught || 0) >= 5 }
 ];
 
 function checkAchievements() {
@@ -2222,6 +2258,14 @@ function updateDoorProximity() {
     interiorState.nearCookTable = true;
   } else {
     interiorState.nearCookTable = false;
+  }
+  // Phase 33: Fishing pond prompt
+  if (!interiorState.active && typeof isNearFishingPond === 'function' && isNearFishingPond()) {
+    const prompt = document.getElementById('interact-prompt');
+    if (prompt) {
+      prompt.style.display = 'block';
+      prompt.innerHTML = '[E] ตกปลา / Fishing (minigame)';
+    }
   }
 }
 
@@ -3516,6 +3560,206 @@ function openStats() {
 function closeStats() {
   const modal = document.getElementById('statsModal');
   if (modal) modal.classList.remove('show');
+}
+
+// ========== PHASE 33: FISHING MINIGAME ==========
+let fishState = {
+  active: false,
+  phase: 'idle',   // 'idle' | 'waiting' | 'bite' | 'catching' | 'result'
+  bobY: 0,         // bobber Y position
+  biteStart: 0,    // when bite started
+  catchWindow: 0,  // ms window to press
+  caught: null
+};
+
+const FISH_TYPES = [
+  { id: 'koi', name: 'ปลาคาราฟ / Koi', emoji: '🐟', rarity: 0.3, stamina: 10, yen: 50 },
+  { id: 'tai', name: 'ปลาไท / Sea Bream', emoji: '🐠', rarity: 0.25, stamina: 15, yen: 80 },
+  { id: 'maguro', name: 'ปลาทูน่า / Tuna', emoji: '🐡', rarity: 0.15, stamina: 25, yen: 150 },
+  { id: 'kujira', name: 'ปลาวาฬ / Whale', emoji: '🐳', rarity: 0.05, stamina: 50, yen: 500 },
+  { id: 'tako', name: 'ปลาหมึก / Octopus', emoji: '🐙', rarity: 0.15, stamina: 20, yen: 120 },
+  { id: 'umi', name: 'หอยทะเล / Sea Shell', emoji: '🐚', rarity: 0.1, stamina: 5, yen: 30 }
+];
+
+function buildFishingPond(x, z) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.userData.isFishingPond = true;
+  // Water surface
+  const water = new THREE.Mesh(
+    new THREE.CircleGeometry(1.5, 24),
+    new THREE.MeshStandardMaterial({ color: 0x4FC3F7, transparent: true, opacity: 0.7, roughness: 0.1, metalness: 0.6 })
+  );
+  water.rotation.x = -Math.PI / 2;
+  water.position.y = 0.05;
+  g.add(water);
+  // Stone border
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const stone = new THREE.Mesh(
+      new THREE.SphereGeometry(0.15, 6, 5),
+      new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.85 })
+    );
+    stone.position.set(Math.cos(angle) * 1.5, 0.1, Math.sin(angle) * 1.5);
+    stone.scale.y = 0.5;
+    g.add(stone);
+  }
+  // Sign post
+  const sign = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.4, 0.05),
+    new THREE.MeshStandardMaterial({ color: 0x4CAF50, roughness: 0.6 })
+  );
+  sign.position.set(0, 1.5, 1.6);
+  g.add(sign);
+  return g;
+}
+
+function isNearFishingPond() {
+  if (!playerModel || interiorState.active) return false;
+  const px = playerModel.position.x, pz = playerModel.position.z;
+  const fishSpots = FISHING_SPOTS[state.currentZone] || [];
+  for (const spot of fishSpots) {
+    const dx = px - spot.x;
+    const dz = pz - spot.z;
+    if (Math.sqrt(dx*dx + dz*dz) < 2.0) return true;
+  }
+  return false;
+}
+
+const FISHING_SPOTS = {
+  5: [{ x: -5, z: 5 }, { x: 5, z: 5 }]  // shrine has 2 ponds
+};
+
+function openFishingModal() {
+  if (fishState.active && fishState.phase !== 'idle') return;
+  fishState.active = true;
+  fishState.phase = 'waiting';
+  renderFishStep();
+  const modal = document.getElementById('fishModal');
+  if (modal) modal.classList.add('show');
+  if (typeof initAudio === 'function') initAudio();
+  if (typeof playUIClick === 'function') playUIClick();
+  // Random bite time: 2-6 seconds
+  setTimeout(() => triggerFishBite(), 2000 + Math.random() * 4000);
+}
+
+function renderFishStep() {
+  const body = document.getElementById('fishBody');
+  if (!body) return;
+  if (fishState.phase === 'waiting') {
+    body.innerHTML = `
+      <div class="fish-status">
+        <div class="fish-emoji bobbing">🎣</div>
+        <div class="fish-message">รอเหยื่อกิน... / Waiting for bite...</div>
+        <div class="fish-instruction">อยู่นิ่ง ๆ รอให้ปลากินเหยื่อ<br>Stay still, wait for fish to bite</div>
+      </div>
+    `;
+  } else if (fishState.phase === 'bite') {
+    const elapsed = Date.now() - fishState.biteStart;
+    const remaining = Math.max(0, 1500 - elapsed);
+    body.innerHTML = `
+      <div class="fish-status bite">
+        <div class="fish-emoji shaking">🐟</div>
+        <div class="fish-message urgent">ดึงเร็ว! / PULL NOW!</div>
+        <div class="fish-instruction">กด <kbd>Space</kbd> หรือคลิกดึงเบ็ด!</div>
+        <div class="fish-timer">เหลือ ${(remaining/1000).toFixed(1)}s</div>
+      </div>
+    `;
+  } else if (fishState.phase === 'catching') {
+    body.innerHTML = `<div class="fish-status"><div class="fish-emoji">⏳</div><div class="fish-message">กำลังดึง... / Reeling in...</div></div>`;
+  } else if (fishState.phase === 'result') {
+    const f = fishState.caught;
+    if (f) {
+      body.innerHTML = `
+        <div class="fish-status success">
+          <div class="fish-emoji-large">${f.emoji}</div>
+          <div class="fish-name">${f.name}</div>
+          <div class="fish-reward">+${f.stamina} stamina · +${f.yen} เยน</div>
+          <button class="fish-again-btn" id="fishAgainBtn">ตกอีก / Fish again</button>
+          <button class="fish-done-btn" id="fishDoneBtn">เสร็จ / Done</button>
+        </div>
+      `;
+    } else {
+      body.innerHTML = `
+        <div class="fish-status miss">
+          <div class="fish-emoji-large">💨</div>
+          <div class="fish-name">หลุด! / Got away!</div>
+          <button class="fish-again-btn" id="fishAgainBtn">ตกอีก / Fish again</button>
+          <button class="fish-done-btn" id="fishDoneBtn">เสร็จ / Done</button>
+        </div>
+      `;
+    }
+    const againBtn = document.getElementById('fishAgainBtn');
+    const doneBtn = document.getElementById('fishDoneBtn');
+    if (againBtn) againBtn.addEventListener('click', () => { fishState.phase = 'waiting'; renderFishStep(); setTimeout(() => triggerFishBite(), 2000 + Math.random() * 4000); });
+    if (doneBtn) doneBtn.addEventListener('click', closeFishingModal);
+  }
+}
+
+function triggerFishBite() {
+  if (!fishState.active) return;
+  fishState.phase = 'bite';
+  fishState.biteStart = Date.now();
+  renderFishStep();
+  // 1.5 second window to catch
+  setTimeout(() => {
+    if (fishState.phase === 'bite') {
+      // Too late, fish got away
+      fishState.caught = null;
+      fishState.phase = 'result';
+      renderFishStep();
+    }
+  }, 1500);
+}
+
+function fishPull() {
+  if (fishState.phase !== 'bite') return;
+  const elapsed = Date.now() - fishState.biteStart;
+  if (elapsed > 1500) {
+    // Too slow
+    fishState.caught = null;
+  } else if (elapsed < 100) {
+    // Too fast (false alarm)
+    fishState.caught = null;
+  } else {
+    // Success! Pick random fish
+    const r = Math.random();
+    let cumulative = 0;
+    let caught = null;
+    for (const fish of FISH_TYPES) {
+      cumulative += fish.rarity;
+      if (r < cumulative) { caught = fish; break; }
+    }
+    if (!caught) caught = FISH_TYPES[0];
+    fishState.caught = caught;
+    // Reward
+    if (state) {
+      state.stamina = Math.min(state._wellRested ? 150 : 100, state.stamina + caught.stamina);
+      state.yen += caught.yen;
+      state._fishCaught = (state._fishCaught || 0) + 1;
+      if (!state._caughtFishTypes) state._caughtFishTypes = [];
+      if (!state._caughtFishTypes.includes(caught.id)) state._caughtFishTypes.push(caught.id);
+      if (typeof updateHUD === 'function') updateHUD();
+    }
+    if (typeof playTone === 'function') {
+      playTone(660, 0.15, 'sine', 0.12);
+      setTimeout(() => playTone(880, 0.2, 'sine', 0.1), 100);
+    }
+    if (typeof showAchievementToast === 'function') {
+      showAchievementToast({ icon: caught.emoji, name: `จับได้! / Caught!`, desc: `${caught.name} · +${caught.yen} เยน` });
+    }
+    if (typeof checkAchievements === 'function') checkAchievements();
+  }
+  fishState.phase = 'result';
+  renderFishStep();
+}
+
+function closeFishingModal() {
+  const modal = document.getElementById('fishModal');
+  if (modal) modal.classList.remove('show');
+  fishState.active = false;
+  fishState.phase = 'idle';
+  fishState.caught = null;
 }
 
 function checkPhoneMessages() {
@@ -4826,6 +5070,9 @@ function buildZoneProps(zoneNum) {
       props.push(buildLantern(-2, 1, 0));
       props.push(buildLantern(2, 1, 0));
       props.push(buildBench(0, 4, Math.PI));
+      // Phase 33: Fishing ponds
+      props.push(buildFishingPond(-5, 5));
+      props.push(buildFishingPond(5, 5));
       // Phase 27: Bus stop
       const busStop = buildBusStop(0, -7, 0);
       props.push(busStop);
@@ -4957,6 +5204,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyW') { if(typeof openWardrobe === 'function') { openWardrobe(); e.preventDefault(); return; } }
   if (e.code === 'KeyP') { if(typeof openPhone === 'function') { openPhone(); e.preventDefault(); return; } }
   if (e.code === 'Space' && cookState.active && cookState.step === 1) { e.preventDefault(); cookPress(); return; }
+  if (e.code === 'Space' && fishState.active && fishState.phase === 'bite') { e.preventDefault(); fishPull(); return; }
   if (e.code === 'F2') { e.preventDefault(); if(typeof takePhoto === 'function') takePhoto(); return; }
   // Phase 27: Bus selection
   if (e.code === 'KeyB' && typeof isNearBusStop === 'function' && isNearBusStop()) {
@@ -5029,6 +5277,12 @@ window.addEventListener('keydown', e => {
     // Phase 30: Cooking table
     if (interiorState.active && typeof isNearCookTable === 'function' && isNearCookTable()) {
       openCookModal();
+      e.preventDefault();
+      return;
+    }
+    // Phase 33: Fishing
+    if (!interiorState.active && typeof isNearFishingPond === 'function' && isNearFishingPond()) {
+      openFishingModal();
       e.preventDefault();
       return;
     }
@@ -5569,6 +5823,15 @@ window.applySeasonVisuals = applySeasonVisuals;
 window.openStats = openStats;
 window.closeStats = closeStats;
 window.getLifetimeStats = getLifetimeStats;
+// Phase 33
+Object.defineProperty(window, 'fishState', { get: () => fishState });
+window.FISH_TYPES = FISH_TYPES;
+window.FISHING_SPOTS = FISHING_SPOTS;
+window.openFishingModal = openFishingModal;
+window.closeFishingModal = closeFishingModal;
+window.fishPull = fishPull;
+window.isNearFishingPond = isNearFishingPond;
+window.buildFishingPond = buildFishingPond;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
