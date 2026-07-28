@@ -3785,7 +3785,72 @@ function isFestivalDay() {
   return state.day === festivalState.triggerDay;
 }
 
+// ========== PHASE 35: NPC VOICE ==========
+let voiceState = {
+  enabled: true,
+  currentAudio: null,
+  audioCache: {}
+};
+
+const NPC_VOICE_MAP = {
+  senpai: 'npc_senpai.mp3',
+  classmate: 'npc_yui.mp3',
+  classmate2: 'npc_yui.mp3',
+  attendant: 'npc_conductor.mp3',
+  shopkeeper: 'npc_shopkeeper.mp3',
+  miko: 'npc_miko.mp3'
+};
+
+function playNPCVoice(npcType) {
+  if (!voiceState.enabled || soundMuted) return;
+  const file = NPC_VOICE_MAP[npcType];
+  if (!file) return;
+  // Stop previous audio
+  if (voiceState.currentAudio) {
+    try { voiceState.currentAudio.pause(); } catch (e) {}
+  }
+  // Use cached or create new
+  let audio = voiceState.audioCache[file];
+  if (!audio) {
+    audio = new Audio(file);
+    voiceState.audioCache[file] = audio;
+  }
+  audio.currentTime = 0;
+  audio.volume = 0.5;
+  audio.play().catch(e => console.warn('Voice play failed:', e));
+  voiceState.currentAudio = audio;
+}
+
 function buildSakuraPetal() {
+
+const NPC_VOICE_MAP = {
+  senpai: 'npc_senpai.mp3',
+  classmate: 'npc_yui.mp3',
+  classmate2: 'npc_yui.mp3',
+  attendant: 'npc_conductor.mp3',
+  shopkeeper: 'npc_shopkeeper.mp3',
+  miko: 'npc_miko.mp3'
+};
+
+function playNPCVoice(npcType) {
+  if (!voiceState.enabled || soundMuted) return;
+  const file = NPC_VOICE_MAP[npcType];
+  if (!file) return;
+  // Stop previous audio
+  if (voiceState.currentAudio) {
+    try { voiceState.currentAudio.pause(); } catch (e) {}
+  }
+  // Use cached or create new
+  let audio = voiceState.audioCache[file];
+  if (!audio) {
+    audio = new Audio(file);
+    voiceState.audioCache[file] = audio;
+  }
+  audio.currentTime = 0;
+  audio.volume = 0.5;
+  audio.play().catch(e => console.warn('Voice play failed:', e));
+  voiceState.currentAudio = audio;
+}
   const colors = [0xFFB6C1, 0xFFC0CB, 0xFF9EB5, 0xFFD1DC];
   const color = colors[Math.floor(Math.random() * colors.length)];
   const petal = new THREE.Mesh(
@@ -4883,6 +4948,10 @@ function startDialogue(npc) {
   if (dialogue.active) return;
   if (typeof initAudio === 'function') initAudio();
   if (typeof playDialogueChime === 'function') playDialogueChime();
+  // Phase 35: Play NPC voice
+  if (npc && npc.def && npc.def.type && typeof playNPCVoice === 'function') {
+    setTimeout(() => playNPCVoice(npc.def.type), 300);
+  }
   // Phase 13: Track NPC talk for achievement
   if (state && state.stats) {
     state.stats.npcsTalked = (state.stats.npcsTalked || 0) + 1;
@@ -5959,6 +6028,10 @@ window.startFestival = startFestival;
 window.stopFestival = stopFestival;
 window.updateFestivalPetals = updateFestivalPetals;
 window.buildSakuraPetal = buildSakuraPetal;
+// Phase 35
+Object.defineProperty(window, 'voiceState', { get: () => voiceState });
+window.NPC_VOICE_MAP = NPC_VOICE_MAP;
+window.playNPCVoice = playNPCVoice;
 Object.defineProperty(window, 'lastPhoneMessageHour', { get: () => lastPhoneMessageHour });
 Object.defineProperty(window, 'lastPhoneMessageDay', { get: () => lastPhoneMessageDay });
 Object.defineProperty(window, 'stationTrain', { get: () => stationTrain });
